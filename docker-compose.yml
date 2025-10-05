@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_USER: db2Buser
+      MYSQL_DATABASE: db2BCRM
+      MYSQL_PASSWORD: root44115!
+      MYSQL_ROOT_PASSWORD: root44115!
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+    driver: local
