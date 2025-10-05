@@ -3,6 +3,12 @@ import Header from "@/components/layout/Header";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Deux Beliers CRM",
+  description: "Deux Beliers CRM",
+};
 
 export default async function Home() {
   const hdrs = await headers();
