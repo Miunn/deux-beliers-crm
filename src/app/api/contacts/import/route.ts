@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
 
   for (const r of rows) {
     const nom = r["Nom"] ?? r["nom"] ?? r["NAME"] ?? r["name"];
