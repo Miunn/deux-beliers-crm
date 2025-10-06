@@ -18,7 +18,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export default function ContactFilters() {
   const { data: labels } = useLabels();
-  const today = new Date();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);

@@ -1,11 +1,16 @@
 import useSWR from "swr";
-import { Event } from "../../generated/prisma";
+import { Event, Nature } from "../../generated/prisma";
 
-const fetcher = (url: string): Promise<Event[]> =>
+type EventWithNature = Event & { nature: Nature | null };
+
+const fetcher = (url: string): Promise<EventWithNature[]> =>
   fetch(url).then((r) => r.json());
 
 export const useEventsByContact = (contactId: string | null | undefined) => {
   const key = contactId ? `/api/contacts/${contactId}/events` : null;
-  const { data, error, isLoading, mutate } = useSWR<Event[]>(key, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<EventWithNature[]>(
+    key,
+    fetcher
+  );
   return { data, error, isLoading, mutate };
 };

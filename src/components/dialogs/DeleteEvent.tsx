@@ -59,10 +59,11 @@ export default function DeleteEvent({
             <span className="font-medium">Date: </span>
             {new Date(event.date).toLocaleString()}
           </div>
-          {event.nature && (
+          {/* nature is now a relation; when loaded with include it will have label */}
+          {(event as any).nature?.label && (
             <div>
               <span className="font-medium">Nature: </span>
-              {event.nature}
+              {(event as any).nature.label}
             </div>
           )}
           {event.attendus && (

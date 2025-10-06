@@ -5,126 +5,130 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+    provider = "mysql"
+    url      = env("DATABASE_URL")
 }
 
 model Event {
-  id              String    @id @default(cuid())
-  date            DateTime
-  nature          String?
-  attendus        String?
-  date_traitement DateTime?
-  resultat        String?
+    id              String    @id @default(cuid())
+    date            DateTime
+    nature          Nature?   @relation(fields: [natureId], references: [id])
+    natureId        String?
+    attendus        String?
+    date_traitement DateTime?
+    resultat        String?
 
-  contact   Contact @relation(fields: [contactId], references: [id])
-  contactId String
+    contact   Contact @relation(fields: [contactId], references: [id])
+    contactId String
 }
 
 model Label {
-  id    String @id @default(cuid())
-  label String @unique
-  color String
+    id    String @id @default(cuid())
+    label String @unique
+    color String
 
-  contacts Contact[]
+    contacts Contact[]
 }
 
 model Contact {
-  id         String    @id @default(cuid())
-  nom        String
-  activite   Activite? @relation(fields: [activiteId], references: [id])
-  activiteId String?
+    id         String    @id @default(cuid())
+    nom        String
+    activite   Activite? @relation(fields: [activiteId], references: [id])
+    activiteId String?
 
-  ville        String?
-  contact      String?
-  telephone    String?
-  mail         String?
-  observations String?
-  adresse      String?
-  horaires     String?
+    ville        String?
+    contact      String?
+    telephone    String?
+    mail         String?
+    observations String?
+    adresse      String?
+    horaires     String?
 
-  events Event[]
-  labels Label[]
+    events Event[]
+    labels Label[]
 }
 
 model Nature {
-  id    String @id @default(cuid())
-  label String @unique
+    id    String @id @default(cuid())
+    label String @unique
+
+    // Back relation
+    events Event[]
 }
 
 model Activite {
-  id       String    @id @default(cuid())
-  label    String    @unique
-  contacts Contact[]
+    id       String    @id @default(cuid())
+    label    String    @unique
+    contacts Contact[]
 }
 
 model Setting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
+    id    String @id @default(cuid())
+    key   String @unique
+    value String
 }
 
 model User {
-  id            String    @id
-  name          String    @db.Text
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+    id            String    @id
+    name          String    @db.Text
+    email         String
+    emailVerified Boolean   @default(false)
+    image         String?   @db.Text
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @default(now()) @updatedAt
+    sessions      Session[]
+    accounts      Account[]
 
-  @@unique([email])
-  @@map("user")
+    @@unique([email])
+    @@map("user")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?  @db.Text
-  userAgent String?  @db.Text
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id
+    expiresAt DateTime
+    token     String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    ipAddress String?  @db.Text
+    userAgent String?  @db.Text
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
-  @@map("session")
+    @@unique([token])
+    @@map("session")
 }
 
 model Account {
-  id                    String    @id
-  accountId             String    @db.Text
-  providerId            String    @db.Text
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?   @db.Text
-  refreshToken          String?   @db.Text
-  idToken               String?   @db.Text
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?   @db.Text
-  password              String?   @db.Text
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+    id                    String    @id
+    accountId             String    @db.Text
+    providerId            String    @db.Text
+    userId                String
+    user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accessToken           String?   @db.Text
+    refreshToken          String?   @db.Text
+    idToken               String?   @db.Text
+    accessTokenExpiresAt  DateTime?
+    refreshTokenExpiresAt DateTime?
+    scope                 String?   @db.Text
+    password              String?   @db.Text
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
 
-  @@map("account")
+    @@map("account")
 }
 
 model Verification {
-  id         String   @id
-  identifier String   @db.Text
-  value      String   @db.Text
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+    id         String   @id
+    identifier String   @db.Text
+    value      String   @db.Text
+    expiresAt  DateTime
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @default(now()) @updatedAt
 
-  @@map("verification")
+    @@map("verification")
 }

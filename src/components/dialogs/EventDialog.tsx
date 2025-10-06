@@ -26,12 +26,25 @@ import { Loader2, Pencil, Trash2 } from "lucide-react";
 import DeleteEvent from "./DeleteEvent";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { createEvent, updateEvent } from "@/actions/events";
+import {
+  createEvent,
+  updateEvent,
+  createEventWithReminder,
+  updateEventWithReminder,
+} from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
-import { Event } from "../../../generated/prisma";
+import { useNatures } from "@/hooks/use-natures";
+import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
 import { addMonths } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export default function EventDialog({
   contactId,
@@ -49,6 +62,7 @@ export default function EventDialog({
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
+  const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
 
@@ -56,7 +70,7 @@ export default function EventDialog({
     resolver: zodResolver(CREATE_EVENT_FORM_SCHEMA),
     defaultValues: {
       date: new Date(),
-      nature: "",
+      natureId: "",
       attendus: "",
       date_traitement: undefined,
       resultat: "",
@@ -78,7 +92,7 @@ export default function EventDialog({
         setEditingEventId(null);
         form.reset({
           date: new Date(),
-          nature: "",
+          natureId: "",
           attendus: "",
           date_traitement: undefined,
           resultat: "",
@@ -87,7 +101,7 @@ export default function EventDialog({
     });
   };
 
-  const renderEvent = (e: Event) => (
+  const renderEvent = (e: Event & { nature: Nature | null }) => (
     <div
       key={e.id}
       className={cn(
@@ -113,7 +127,7 @@ export default function EventDialog({
           setEditingEventId(e.id);
           form.reset({
             date: new Date(e.date),
-            nature: e.nature ?? "",
+            natureId: e.natureId ?? "",
             attendus: e.attendus ?? "",
             date_traitement: e.date_traitement
               ? new Date(e.date_traitement)
@@ -126,7 +140,7 @@ export default function EventDialog({
       </Button>
       <div className="font-medium">
         {new Date(e.date).toLocaleDateString()}{" "}
-        {e.nature ? `• ${e.nature}` : ""}
+        {e.natureId ? `• ${e.nature?.label}` : ""}
       </div>
       {e.attendus && <div>Attendus: {e.attendus}</div>}
       {e.date_traitement && (
@@ -195,15 +209,26 @@ export default function EventDialog({
                       />
                       <FormField
                         control={form.control}
-                        name="nature"
+                        name="natureId"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Nature</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="Appel, Email, RDV…"
-                                {...field}
-                              />
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Choisir une nature" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {natures?.map((n) => (
+                                    <SelectItem key={n.id} value={n.id}>
+                                      {n.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -277,6 +302,22 @@ export default function EventDialog({
                         <Button
                           type="button"
                           variant="outline"
+                          onClick={() => {
+                            setEditingEventId(null);
+                            form.reset({
+                              date: new Date(),
+                              natureId: "",
+                              attendus: "",
+                              date_traitement: undefined,
+                              resultat: "",
+                            });
+                          }}
+                        >
+                          Annuler
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
                           disabled={form.formState.isSubmitting}
                           onClick={() => setReminderOpen(true)}
                         >
@@ -331,40 +372,25 @@ export default function EventDialog({
           const basePayload = form.getValues() as z.infer<
             typeof CREATE_EVENT_FORM_SCHEMA
           >;
-          const reminderPayload: z.infer<typeof CREATE_EVENT_FORM_SCHEMA> = {
-            date: reminderDate,
-            nature: "Rappel",
-            attendus: basePayload.nature
-              ? `Rappel de: ${basePayload.nature}`
-              : undefined,
-            date_traitement: undefined,
-            resultat: "",
-          };
 
-          const baseAction = editingEventId
-            ? updateEvent(editingEventId, basePayload)
-            : createEvent(contactId, basePayload);
+          const action = editingEventId
+            ? updateEventWithReminder(editingEventId, basePayload, reminderDate)
+            : createEventWithReminder(contactId, basePayload, reminderDate);
 
-          baseAction.then((res1) => {
-            if ("error" in res1) {
-              toast.error(res1.error);
-              return;
+          action.then((res) => {
+            if ("error" in res) {
+              toast.error(res.error);
+            } else {
+              toast.success("Événement et rappel enregistrés");
             }
-            createEvent(contactId, reminderPayload).then((res2) => {
-              if ("error" in res2) {
-                toast.error(res2.error);
-              } else {
-                toast.success("Événement et rappel enregistrés");
-              }
-              mutate();
-              setEditingEventId(null);
-              form.reset({
-                date: new Date(),
-                nature: "",
-                attendus: "",
-                date_traitement: undefined,
-                resultat: "",
-              });
+            mutate();
+            setEditingEventId(null);
+            form.reset({
+              date: new Date(),
+              natureId: "",
+              attendus: "",
+              date_traitement: undefined,
+              resultat: "",
             });
           });
         }}

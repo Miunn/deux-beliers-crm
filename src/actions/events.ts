@@ -20,7 +20,13 @@ export async function createEvent(
   if (!parsed.success) return { error: parsed.error.message } as const;
 
   try {
-    await EventsService.create(contactId, parsed.data);
+    await EventsService.create(contactId, {
+      date: parsed.data.date,
+      natureId: parsed.data.natureId,
+      attendus: parsed.data.attendus,
+      date_traitement: parsed.data.date_traitement,
+      resultat: parsed.data.resultat,
+    });
     return { success: true } as const;
   } catch {
     return { error: "Erreur lors de la création de l'événement" } as const;
@@ -29,7 +35,8 @@ export async function createEvent(
 
 export async function createEventWithReminder(
   contactId: string,
-  data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
+  reminderDate: Date
 ) {
   const hdrs = await headers();
   const session = await auth.api.getSession({
@@ -43,21 +50,26 @@ export async function createEventWithReminder(
     await prisma.$transaction(async (tx) => {
       await tx.event.create({
         data: {
-          ...parsed.data,
+          date: parsed.data.date,
+          attendus: parsed.data.attendus,
+          date_traitement: parsed.data.date_traitement,
+          resultat: parsed.data.resultat,
+          nature: { connect: { id: parsed.data.natureId } },
           contact: { connect: { id: contactId } },
         },
       });
-      const baseDate = new Date(parsed.data.date);
-      const reminderDate = new Date(baseDate);
-      reminderDate.setMonth(reminderDate.getMonth() + 1);
+      // Find or create a Nature with label "Rappel"
+      const rappelNature = await tx.nature.upsert({
+        where: { label: "Rappel" },
+        update: {},
+        create: { label: "Rappel" },
+      });
       await tx.event.create({
         data: {
           date: reminderDate,
-          nature: "Rappel",
-          attendus: parsed.data.nature
-            ? `Rappel de: ${parsed.data.nature}`
-            : undefined,
+          attendus: `Rappel programmé`,
           resultat: "",
+          nature: { connect: { id: rappelNature.id } },
           contact: { connect: { id: contactId } },
         },
       });
@@ -72,7 +84,8 @@ export async function createEventWithReminder(
 
 export async function updateEventWithReminder(
   id: string,
-  data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
+  reminderDate: Date
 ) {
   const hdrs = await headers();
   const session = await auth.api.getSession({
@@ -86,19 +99,25 @@ export async function updateEventWithReminder(
     await prisma.$transaction(async (tx) => {
       const updated = await tx.event.update({
         where: { id },
-        data: parsed.data,
+        data: {
+          date: parsed.data.date,
+          attendus: parsed.data.attendus,
+          date_traitement: parsed.data.date_traitement,
+          resultat: parsed.data.resultat,
+          nature: { connect: { id: parsed.data.natureId } },
+        },
       });
-      const baseDate = new Date(parsed.data.date);
-      const reminderDate = new Date(baseDate);
-      reminderDate.setMonth(reminderDate.getMonth() + 1);
+      const rappelNature = await tx.nature.upsert({
+        where: { label: "Rappel" },
+        update: {},
+        create: { label: "Rappel" },
+      });
       await tx.event.create({
         data: {
           date: reminderDate,
-          nature: "Rappel",
-          attendus: parsed.data.nature
-            ? `Rappel de: ${parsed.data.nature}`
-            : undefined,
+          attendus: `Rappel programmé`,
           resultat: "",
+          nature: { connect: { id: rappelNature.id } },
           contact: { connect: { id: updated.contactId } },
         },
       });
@@ -136,7 +155,13 @@ export async function updateEvent(
   if (!parsed.success) return { error: parsed.error.message } as const;
 
   try {
-    await EventsService.update(id, parsed.data);
+    await EventsService.update(id, {
+      date: parsed.data.date,
+      natureId: parsed.data.natureId,
+      attendus: parsed.data.attendus,
+      date_traitement: parsed.data.date_traitement,
+      resultat: parsed.data.resultat,
+    });
     return { success: true } as const;
   } catch {
     return { error: "Erreur lors de la mise à jour de l'événement" } as const;
