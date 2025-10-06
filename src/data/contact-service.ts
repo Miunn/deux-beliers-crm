@@ -29,7 +29,7 @@ const getContacts = async (
             events: {
               some: {
                 OR: [
-                  { nature: { contains: query } },
+                  { nature: { label: { contains: query } } },
                   { attendus: { contains: query } },
                   { resultat: { contains: query } },
                 ],
