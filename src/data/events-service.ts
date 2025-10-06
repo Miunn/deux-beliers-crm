@@ -18,6 +18,16 @@ const getByContact = async (contactId: string) => {
   });
 };
 
+const getByDateRange = async (from: Date, to: Date) => {
+  return prisma.event.findMany({
+    where: {
+      date: { gte: from, lte: to },
+    },
+    orderBy: { date: "asc" },
+    include: { nature: true, contact: true },
+  });
+};
+
 const create = async (contactId: string, data: CreateEventInput) => {
   return prisma.event.create({
     data: {
@@ -50,4 +60,10 @@ const del = async (id: string) => {
   return prisma.event.delete({ where: { id } });
 };
 
-export const EventsService = { getByContact, create, delete: del, update };
+export const EventsService = {
+  getByContact,
+  getByDateRange,
+  create,
+  delete: del,
+  update,
+};

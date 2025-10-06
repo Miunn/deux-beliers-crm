@@ -80,26 +80,24 @@ export default function ContactDialog({
     },
   });
 
-  const onSubmit = (data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>) => {
-    const action =
+  const onSubmit = async (data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>) => {
+    const res =
       mode === "edit" && contact
-        ? updateContact(contact.id, data)
-        : createContact(data);
+        ? await updateContact(contact.id, data)
+        : await createContact(data);
 
-    action.then((res) => {
-      if (res && "error" in res) {
-        toast.error(res.error);
-      } else {
-        toast.success(
-          mode === "edit"
-            ? "Contact mis à jour avec succès"
-            : "Contact enregistré avec succès"
-        );
-        internalOnOpenChange(false);
-        mutate("/api/contacts");
-        if (mode === "create") form.reset();
-      }
-    });
+    if (res && "error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success(
+        mode === "edit"
+          ? "Contact mis à jour avec succès"
+          : "Contact enregistré avec succès"
+      );
+      internalOnOpenChange(false);
+      mutate("/api/contacts");
+      if (mode === "create") form.reset();
+    }
   };
 
   return (

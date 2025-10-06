@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { Metadata } from "next";
+import WeeklyEvents from "@/components/common/WeeklyEvents";
 
 export const metadata: Metadata = {
   title: "Deux Beliers CRM",
@@ -23,6 +24,10 @@ export default async function Home() {
       <div className="font-sans min-h-screen p-8 gap-16 sm:p-20">
         <main className="container mx-auto flex flex-col gap-4">
           <ContactList />
+
+          <div className="mt-8">
+            <WeeklyEvents />
+          </div>
         </main>
       </div>
     </>

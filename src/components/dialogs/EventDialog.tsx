@@ -45,6 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useSWRConfig } from "swr";
 
 export default function EventDialog({
   contactId,
@@ -61,6 +62,7 @@ export default function EventDialog({
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
+  const { mutate: globalMutate } = useSWRConfig();
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
   const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -77,28 +79,25 @@ export default function EventDialog({
     },
   });
 
-  const onSubmit = (data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>) => {
-    const action = editingEventId
-      ? updateEvent(editingEventId, data)
-      : createEvent(contactId, data);
-    action.then((res) => {
-      if ("error" in res) {
-        toast.error(res.error);
-      } else {
-        toast.success(
-          editingEventId ? "Événement mis à jour" : "Événement créé"
-        );
-        mutate();
-        setEditingEventId(null);
-        form.reset({
-          date: new Date(),
-          natureId: "",
-          attendus: "",
-          date_traitement: undefined,
-          resultat: "",
-        });
-      }
-    });
+  const onSubmit = async (data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>) => {
+    const res = editingEventId
+      ? await updateEvent(editingEventId, data)
+      : await createEvent(contactId, data);
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
+      mutate();
+      globalMutate("/api/events");
+      setEditingEventId(null);
+      form.reset({
+        date: new Date(),
+        natureId: "",
+        attendus: "",
+        date_traitement: undefined,
+        resultat: "",
+      });
+    }
   };
 
   const renderEvent = (e: Event & { nature: Nature | null }) => (
@@ -384,6 +383,7 @@ export default function EventDialog({
               toast.success("Événement et rappel enregistrés");
             }
             mutate();
+            globalMutate("/api/events");
             setEditingEventId(null);
             form.reset({
               date: new Date(),
