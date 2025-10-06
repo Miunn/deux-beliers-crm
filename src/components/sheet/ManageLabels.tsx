@@ -33,16 +33,15 @@ export default function ManageLabelsSheet({
     defaultValues: { label: "", color: "#4f46e5" },
   });
 
-  const onSubmit = (data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>) => {
-    createLabel(data).then((res) => {
-      if ("error" in res) {
-        toast.error(res.error);
-      } else {
-        toast.success("Libellé créé");
-        form.reset({ label: "", color: form.getValues("color") || "#4f46e5" });
-        mutate();
-      }
-    });
+  const onSubmit = async (data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>) => {
+    const res = await createLabel(data);
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success("Libellé créé");
+      form.reset({ label: "", color: form.getValues("color") || "#4f46e5" });
+      mutate();
+    }
   };
 
   const handleDelete = async (id: string) => {

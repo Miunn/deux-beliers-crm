@@ -33,16 +33,15 @@ export default function ManageNaturesSheet({
     defaultValues: { label: "" },
   });
 
-  const onSubmit = (data: z.infer<typeof CREATE_NATURE_FORM_SCHEMA>) => {
-    createNature(data).then((res) => {
-      if ("error" in res) {
-        toast.error(res.error);
-      } else {
-        toast.success("Nature créée");
-        form.reset({ label: "" });
-        mutate();
-      }
-    });
+  const onSubmit = async (data: z.infer<typeof CREATE_NATURE_FORM_SCHEMA>) => {
+    const res = await createNature(data);
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success("Nature créée");
+      form.reset({ label: "" });
+      mutate();
+    }
   };
 
   const handleDelete = async (id: string) => {

@@ -49,17 +49,18 @@ export default function CreateActivite({
     },
   });
 
-  const onSubmit = (data: z.infer<typeof CREATE_ACTIVITE_FORM_SCHEMA>) => {
-    createActivite(data).then((res) => {
-      if ("error" in res) {
-        toast.error(res.error);
-      } else {
-        toast.success("Activité enregistrée avec succès");
-        internalOnOpenChange(false);
-        mutate("/api/activites");
-        form.reset();
-      }
-    });
+  const onSubmit = async (
+    data: z.infer<typeof CREATE_ACTIVITE_FORM_SCHEMA>
+  ) => {
+    const res = await createActivite(data);
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success("Activité enregistrée avec succès");
+      internalOnOpenChange(false);
+      mutate("/api/activites");
+      form.reset();
+    }
   };
 
   return (
