@@ -37,6 +37,11 @@ export default function ContactList() {
             <Loader2 className="animate-spin" />
           </div>
         )}
+        {!isLoading && !error && contacts?.length === 0 && (
+          <div className="col-span-full flex justify-center items-center h-full">
+            <p className="text-muted-foreground">Aucun contact</p>
+          </div>
+        )}
         {error && <div>{error.message}</div>}
         {contacts?.map((contact) => (
           <ContactCard key={contact.id} contact={contact} />

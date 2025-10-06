@@ -52,7 +52,7 @@ export default function RangeCalendarPresets({
   return (
     <div className="rounded-md border">
       <div className="flex max-sm:flex-col gap-4">
-        <div className="relative py-4 max-sm:order-1 max-sm:border-t sm:w-32">
+        <div className="relative py-4 max-sm:order-1 max-sm:border-t">
           <div className="h-full sm:border-e">
             <div className="flex flex-col px-2">
               <Button
