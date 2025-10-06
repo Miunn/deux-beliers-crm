@@ -21,10 +21,7 @@ export default function ContactFilters() {
   const today = new Date();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(today, 6),
-    to: today,
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [labelId, setLabelId] = useState<string | undefined>(
     searchParams.get("labelId") ?? undefined
   );
