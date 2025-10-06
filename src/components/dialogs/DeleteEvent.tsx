@@ -14,7 +14,7 @@ import {
 } from "../ui/dialog";
 import { deleteEvent } from "@/actions/events";
 import { toast } from "sonner";
-import { Event } from "../../../generated/prisma";
+import { Event, Nature } from "../../../generated/prisma";
 
 export default function DeleteEvent({
   event,
@@ -23,7 +23,7 @@ export default function DeleteEvent({
   children,
   onDeleted,
 }: {
-  event: Event;
+  event: Event & { nature: Nature | null };
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
@@ -60,10 +60,10 @@ export default function DeleteEvent({
             {new Date(event.date).toLocaleString()}
           </div>
           {/* nature is now a relation; when loaded with include it will have label */}
-          {(event as any).nature?.label && (
+          {event.nature?.label && (
             <div>
               <span className="font-medium">Nature: </span>
-              {(event as any).nature.label}
+              {event.nature.label}
             </div>
           )}
           {event.attendus && (
