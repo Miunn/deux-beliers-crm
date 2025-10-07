@@ -57,7 +57,6 @@ const getContacts = async (
     ? { AND: and }
     : undefined;
 
-  console.log("where", where);
   return prisma.contact.findMany({
     where,
     include: {
