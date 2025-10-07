@@ -22,6 +22,7 @@ import { authClient } from "@/lib/auth-client";
 import z from "zod";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import Image from "next/image";
 
 const SIGN_IN_FORM_SCHEMA = z.object({
   email: z.email({ message: "Email invalide" }).min(1, {
@@ -56,9 +57,19 @@ export default function SignIn() {
   };
 
   return (
-    <Card className="w-96">
+    <Card className="w-96 bg-white z-10">
       <CardHeader>
-        <CardTitle>Connexion</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <div className="relative w-5 h-5">
+            <Image
+              src="/cropped-icon-gold.svg"
+              alt="Deux Béliers"
+              className="w-full h-full"
+              fill
+            />
+          </div>
+          Connexion
+        </CardTitle>
         <CardDescription>Connectez-vous à votre compte</CardDescription>
       </CardHeader>
       <CardContent>

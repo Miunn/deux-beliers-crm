@@ -21,14 +21,23 @@ export default async function Home() {
   if (!session) redirect("/sign-in");
 
   const contacts = await ContactService.getContacts();
-  const events = await EventsService.getByDateRange(
-    new Date(),
-    new Date(new Date().setDate(new Date().getDate() + 7))
-  );
+
+  // Compute current week range [Monday 00:00:00.000, Sunday 23:59:59.999]
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setHours(0, 0, 0, 0);
+  const day = startOfWeek.getDay();
+  const diff = (day === 0 ? -6 : 1) - day; // Monday as start of week
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const events = await EventsService.getByDateRange(startOfWeek, endOfWeek);
 
   return (
     <>
-      <Header title="Deux Beliers CRM" />
+      <Header title="Gestion clients" />
       <div className="font-sans min-h-screen p-8 gap-16 sm:p-20">
         <main className="container mx-auto flex flex-col gap-12">
           <ContactList defaultContacts={contacts} />

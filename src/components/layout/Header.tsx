@@ -11,8 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import AccountDialog from "../common/AccountDialog";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type Props = {
   title: string;
@@ -25,11 +28,20 @@ export default function Header({ title }: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
   const fileInputId = "__import_contacts_file_input";
   const { mutate } = useSWRConfig();
+  const router = useRouter();
 
   return (
-    <header className="bg-indigo-800 text-white p-4 shadow-md sticky top-0 z-10">
+    <header className="p-4 shadow-sm sticky top-0 z-10">
       <div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/cropped-icon-gold.svg"
+            alt="Deux Béliers"
+            width={30}
+            height={30}
+          />
+          <h1 className="text-xl text-primary font-medium">{title}</h1>
+        </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <nav className="whitespace-nowrap flex items-center gap-3">
             {/* <Button variant={"link"} className="cursor-pointer text-white">
@@ -38,14 +50,14 @@ export default function Header({ title }: Props) {
             <Button
               onClick={() => setLabelsOpen(true)}
               variant={"link"}
-              className="cursor-pointer text-white"
+              className="cursor-pointer"
             >
               Libellés
             </Button>
             <Button
               onClick={() => setNaturesOpen(true)}
               variant={"link"}
-              className="cursor-pointer text-white"
+              className="cursor-pointer"
             >
               Nature d&apos;événement
             </Button>
@@ -79,14 +91,14 @@ export default function Header({ title }: Props) {
             />
             <Button
               variant={"link"}
-              className="cursor-pointer text-white"
+              className="cursor-pointer"
               onClick={() => document.getElementById(fileInputId)?.click()}
             >
               {importing ? "Import…" : "Importer"}
             </Button>
             <Button
               variant={"link"}
-              className="cursor-pointer text-white"
+              className="cursor-pointer"
               onClick={async () => {
                 const res = await fetch("/api/contacts/export");
                 if (!res.ok) return;
@@ -108,7 +120,7 @@ export default function Header({ title }: Props) {
                 <Button
                   variant={"ghost"}
                   size={"icon"}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-primary"
                 >
                   <User />
                 </Button>
@@ -117,6 +129,20 @@ export default function Header({ title }: Props) {
                 <DropdownMenuItem onClick={() => setAccountOpen(true)}>
                   <User />
                   Compte
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          router.push("/sign-in");
+                        },
+                      },
+                    })
+                  }
+                >
+                  <LogOut />
+                  Se déconnecter
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

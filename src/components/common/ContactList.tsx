@@ -16,7 +16,7 @@ export default function ContactList({
   const { data: contacts, error, isLoading } = useContacts(defaultContacts);
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-medium">
           {!contacts
@@ -52,6 +52,6 @@ export default function ContactList({
           <ContactCard key={contact.id} contact={contact} />
         ))}
       </div>
-    </>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { useMemo } from "react";
 import { Event, Nature, Contact } from "../../generated/prisma";
 
 export type EventWithNature = Event & { nature: Nature | null };
@@ -24,26 +25,27 @@ const rangeFetcher = (url: string): Promise<EventWithRelations[]> =>
   fetch(url).then((r) => r.json());
 
 export const useWeeklyEvents = (defaultEvents: EventWithRelations[]) => {
-  const now = new Date();
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  // Set to Monday
-  const day = start.getDay();
-  const diff = (day === 0 ? -6 : 1) - day; // Monday as start of week
-  start.setDate(start.getDate() + diff);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
+  const { start, end } = useMemo(() => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setHours(0, 0, 0, 0);
+    // Set to Monday
+    const day = startOfWeek.getDay();
+    const diff = (day === 0 ? -6 : 1) - day; // Monday as start of week
+    startOfWeek.setDate(startOfWeek.getDate() + diff);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    return { start: startOfWeek, end: endOfWeek };
+  }, []);
 
-  const key = `/api/events`;
+  const key = `/api/events?from=${start.toISOString()}&to=${end.toISOString()}`;
   const { data, error, isLoading, mutate } = useSWR<EventWithRelations[]>(
     key,
-    (url: string) =>
-      rangeFetcher(
-        url + `?from=${start.toISOString()}&to=${end.toISOString()}`
-      ),
+    rangeFetcher,
     {
       fallbackData: defaultEvents,
+      revalidateOnMount: defaultEvents === undefined,
     }
   );
   return { data, error, isLoading, mutate, start, end };

@@ -62,6 +62,7 @@ export default function AccountDialog({
     }
   };
 
+  console.log(session);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

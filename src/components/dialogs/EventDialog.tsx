@@ -88,7 +88,9 @@ export default function EventDialog({
     } else {
       toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
       mutate();
-      globalMutate("/api/events");
+      globalMutate(
+        (key) => typeof key === "string" && key.startsWith("/api/events")
+      );
       setEditingEventId(null);
       form.reset({
         date: new Date(),
@@ -383,7 +385,9 @@ export default function EventDialog({
               toast.success("Événement et rappel enregistrés");
             }
             mutate();
-            globalMutate("/api/events");
+            globalMutate(
+              (key) => typeof key === "string" && key.startsWith("/api/events")
+            );
             setEditingEventId(null);
             form.reset({
               date: new Date(),

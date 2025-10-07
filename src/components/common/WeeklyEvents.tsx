@@ -25,7 +25,7 @@ export default function WeeklyEvents({
           Semaine: {start.toLocaleDateString()} → {end.toLocaleDateString()}
         </h3>
       </div>
-      {isLoading && events?.length === 0 && (
+      {isLoading && !defaultEvents && events?.length === 0 && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Chargement des événements…
         </div>
@@ -36,13 +36,11 @@ export default function WeeklyEvents({
         </div>
       )}
       {error && <div className="text-sm text-destructive">{error.message}</div>}
-      {!isLoading && !error && events && events.length > 0 && (
-        <div className="w-full flex gap-2 flex-wrap divide-y">
-          {events.map((e) => (
-            <EventCard key={e.id} e={e} />
-          ))}
-        </div>
-      )}
+      <div className="w-full flex gap-2 flex-wrap divide-y">
+        {events?.map((e) => (
+          <EventCard key={e.id} e={e} />
+        ))}
+      </div>
     </div>
   );
 }
