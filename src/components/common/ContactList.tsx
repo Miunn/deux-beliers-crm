@@ -6,9 +6,14 @@ import ContactCard from "./ContactCard";
 import ContactDialog from "../dialogs/ContactDialog";
 import { Button } from "../ui/button";
 import ContactFilters from "./ContactFilters";
+import { Contact, Label, Activite } from "../../../generated/prisma";
 
-export default function ContactList() {
-  const { data: contacts, error, isLoading } = useContacts();
+export default function ContactList({
+  defaultContacts,
+}: {
+  defaultContacts: (Contact & { labels: Label[]; activite: Activite | null })[];
+}) {
+  const { data: contacts, error, isLoading } = useContacts(defaultContacts);
 
   return (
     <>
@@ -32,7 +37,7 @@ export default function ContactList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {isLoading && (
+        {isLoading && contacts?.length === 0 && (
           <div className="col-span-full flex justify-center items-center h-full">
             <Loader2 className="animate-spin" />
           </div>

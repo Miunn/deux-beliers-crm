@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { Event, Nature, Contact } from "../../generated/prisma";
 
-type EventWithNature = Event & { nature: Nature | null };
+export type EventWithNature = Event & { nature: Nature | null };
 
 const fetcher = (url: string): Promise<EventWithNature[]> =>
   fetch(url).then((r) => r.json());
@@ -15,12 +15,15 @@ export const useEventsByContact = (contactId: string | null | undefined) => {
   return { data, error, isLoading, mutate };
 };
 
-type EventWithRelations = Event & { nature: Nature | null; contact: Contact };
+export type EventWithRelations = Event & {
+  nature: Nature | null;
+  contact: Contact;
+};
 
 const rangeFetcher = (url: string): Promise<EventWithRelations[]> =>
   fetch(url).then((r) => r.json());
 
-export const useWeeklyEvents = () => {
+export const useWeeklyEvents = (defaultEvents: EventWithRelations[]) => {
   const now = new Date();
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
@@ -36,7 +39,12 @@ export const useWeeklyEvents = () => {
   const { data, error, isLoading, mutate } = useSWR<EventWithRelations[]>(
     key,
     (url: string) =>
-      rangeFetcher(url + `?from=${start.toISOString()}&to=${end.toISOString()}`)
+      rangeFetcher(
+        url + `?from=${start.toISOString()}&to=${end.toISOString()}`
+      ),
+    {
+      fallbackData: defaultEvents,
+    }
   );
   return { data, error, isLoading, mutate, start, end };
 };

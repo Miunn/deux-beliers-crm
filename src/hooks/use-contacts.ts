@@ -7,7 +7,9 @@ const fetcher = (
 ): Promise<(Contact & { labels: Label[]; activite: Activite | null })[]> =>
   fetch(url).then((res) => res.json());
 
-export const useContacts = () => {
+export const useContacts = (
+  defaultContacts: (Contact & { labels: Label[]; activite: Activite | null })[]
+) => {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const labelId = searchParams.get("labelId") ?? "";
@@ -26,6 +28,8 @@ export const useContacts = () => {
 
   const { data, error, isLoading } = useSWR<
     (Contact & { labels: Label[]; activite: Activite | null })[]
-  >(key, fetcher);
+  >(key, fetcher, {
+    fallbackData: defaultContacts,
+  });
   return { data, error, isLoading };
 };
