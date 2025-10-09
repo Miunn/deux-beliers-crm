@@ -13,7 +13,7 @@ import {
 } from "../ui/dialog";
 import { deleteContact } from "@/actions/contacts";
 import { useState } from "react";
-import { useSWRConfig } from "swr";
+import { useContacts } from "@/hooks/use-contacts";
 
 export default function DeleteContact({
   contact,
@@ -26,7 +26,7 @@ export default function DeleteContact({
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
 }) {
-  const { mutate } = useSWRConfig();
+  const { removeContact } = useContacts([]);
   const [isOpen, setIsOpen] = useState(open);
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
@@ -37,7 +37,7 @@ export default function DeleteContact({
       } else {
         toast.success("Contact supprimé avec succès");
         internalOnOpenChange(false);
-        mutate("/api/contacts");
+        removeContact(id);
       }
     });
   };

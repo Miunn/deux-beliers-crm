@@ -1,7 +1,7 @@
 "use client";
 
 import { useContacts } from "@/hooks/use-contacts";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import ContactCard from "./ContactCard";
 import ContactDialog from "../dialogs/ContactDialog";
 import { Button } from "../ui/button";
@@ -13,7 +13,7 @@ export default function ContactList({
 }: {
   defaultContacts: (Contact & { labels: Label[]; activite: Activite | null })[];
 }) {
-  const { data: contacts, error, isLoading } = useContacts(defaultContacts);
+  const { contacts } = useContacts(defaultContacts);
 
   return (
     <div className="flex flex-col gap-4">
@@ -37,17 +37,11 @@ export default function ContactList({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {isLoading && contacts?.length === 0 && (
-          <div className="col-span-full flex justify-center items-center h-full">
-            <Loader2 className="animate-spin" />
-          </div>
-        )}
-        {!isLoading && !error && contacts?.length === 0 && (
+        {contacts?.length === 0 && (
           <div className="col-span-full flex justify-center items-center h-full">
             <p className="text-muted-foreground">Aucun contact</p>
           </div>
         )}
-        {error && <div>{error.message}</div>}
         {contacts?.map((contact) => (
           <ContactCard key={contact.id} contact={contact} />
         ))}

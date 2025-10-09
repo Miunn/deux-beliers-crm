@@ -27,7 +27,6 @@ export default function ContactCard({
 }: {
   contact: Contact & { labels: Label[]; activite: Activite | null };
 }) {
-  console.log(contact);
   return (
     <div className="rounded-xl border p-4 bg-white shadow-sm flex flex-col justify-between gap-2 relative">
       <div className="flex flex-col gap-2">

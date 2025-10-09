@@ -49,8 +49,16 @@ const getContacts = async (
 
   const and: Prisma.ContactWhereInput[] = [];
   if (textWhere) and.push(textWhere);
-  if (labelId && labelId !== "all")
-    and.push({ labels: { some: { id: labelId } } });
+  if (labelId && labelId !== "all") {
+    const labelIds = labelId.split(",").filter(Boolean);
+    if (labelIds.length === 1) {
+      and.push({ labels: { some: { id: labelIds[0] } } });
+    } else if (labelIds.length > 1) {
+      and.push({
+        AND: labelIds.map((id) => ({ labels: { some: { id } } })),
+      });
+    }
+  }
   if (eventsDateFilter) and.push({ events: { some: eventsDateFilter } });
 
   const where: Prisma.ContactWhereInput | undefined = and.length
@@ -71,6 +79,11 @@ const getContacts = async (
 const create = async (data: Prisma.ContactCreateInput) => {
   return prisma.contact.create({
     data,
+    include: {
+      activite: true,
+      events: true,
+      labels: true,
+    },
   });
 };
 
@@ -78,6 +91,18 @@ const update = async (id: string, data: Prisma.ContactUpdateInput) => {
   return prisma.contact.update({
     where: { id },
     data,
+    include: {
+      activite: true,
+      events: true,
+      labels: true,
+    },
+  });
+};
+
+const getById = async (id: string) => {
+  return prisma.contact.findUnique({
+    where: { id },
+    include: { activite: true, events: true, labels: true },
   });
 };
 
@@ -90,6 +115,7 @@ const del = async (id: string) => {
 export const ContactService = {
   getContactsCount,
   getContacts,
+  getById,
   create,
   update,
   delete: del,

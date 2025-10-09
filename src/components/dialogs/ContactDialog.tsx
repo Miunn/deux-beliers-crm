@@ -37,7 +37,7 @@ import {
 } from "../ui/select";
 import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
-import { useSWRConfig } from "swr";
+import { useContacts } from "@/hooks/use-contacts";
 import { Activite, Contact, Label } from "../../../generated/prisma";
 
 type ContactWithRelations = Contact & {
@@ -63,7 +63,7 @@ export default function ContactDialog({
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
   const [createActiviteOpen, setCreateActiviteOpen] = useState(false);
-  const { mutate } = useSWRConfig();
+  const { addOrUpdateContact } = useContacts([]);
 
   const form = useForm<z.infer<typeof NEW_CONTACT_FORM_SCHEMA>>({
     resolver: zodResolver(NEW_CONTACT_FORM_SCHEMA),
@@ -95,7 +95,8 @@ export default function ContactDialog({
           : "Contact enregistré avec succès"
       );
       internalOnOpenChange(false);
-      mutate("/api/contacts");
+      // ensure returned contact has relations (actions return with include)
+      addOrUpdateContact(res as ContactWithRelations);
       if (mode === "create") form.reset();
     }
   };

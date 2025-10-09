@@ -45,7 +45,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useSWRConfig } from "swr";
 
 export default function EventDialog({
   contactId,
@@ -62,7 +61,6 @@ export default function EventDialog({
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
-  const { mutate: globalMutate } = useSWRConfig();
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
   const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -88,9 +86,6 @@ export default function EventDialog({
     } else {
       toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
       mutate();
-      globalMutate(
-        (key) => typeof key === "string" && key.startsWith("/api/events")
-      );
       setEditingEventId(null);
       form.reset({
         date: new Date(),
@@ -107,8 +102,21 @@ export default function EventDialog({
       key={e.id}
       className={cn(
         "relative group rounded-md border p-3 text-sm space-y-1",
+        "cursor-default",
         editingEventId === e.id && "bg-muted outline"
       )}
+      onClick={() => {
+        setEditingEventId(e.id);
+        form.reset({
+          date: new Date(e.date),
+          natureId: e.natureId ?? "",
+          attendus: e.attendus ?? "",
+          date_traitement: e.date_traitement
+            ? new Date(e.date_traitement)
+            : undefined,
+          resultat: e.resultat ?? "",
+        });
+      }}
     >
       <DeleteEvent event={e} onDeleted={() => mutate()}>
         <Button
@@ -304,7 +312,11 @@ export default function EventDialog({
                           type="button"
                           variant="outline"
                           onClick={() => {
-                            setEditingEventId(null);
+                            if (editingEventId) {
+                              setEditingEventId(null);
+                            } else {
+                              internalOnOpenChange(false);
+                            }
                             form.reset({
                               date: new Date(),
                               natureId: "",
@@ -385,9 +397,6 @@ export default function EventDialog({
               toast.success("Événement et rappel enregistrés");
             }
             mutate();
-            globalMutate(
-              (key) => typeof key === "string" && key.startsWith("/api/events")
-            );
             setEditingEventId(null);
             form.reset({
               date: new Date(),

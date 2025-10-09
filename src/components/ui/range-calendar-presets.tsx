@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import {
+  addWeeks,
   endOfMonth,
+  endOfWeek,
   endOfYear,
   startOfMonth,
+  startOfWeek,
   startOfYear,
   subDays,
   subMonths,
@@ -46,6 +49,14 @@ export default function RangeCalendarPresets({
   const lastYear = {
     from: startOfYear(subYears(today, 1)),
     to: endOfYear(subYears(today, 1)),
+  };
+  const week = {
+    from: startOfWeek(today),
+    to: endOfWeek(today),
+  };
+  const nextWeek = {
+    from: startOfWeek(addWeeks(today, 1)),
+    to: endOfWeek(addWeeks(today, 1)),
   };
   const [month, setMonth] = useState(today);
 
@@ -120,6 +131,28 @@ export default function RangeCalendarPresets({
                 }}
               >
                 Dernière année
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  setDate(week);
+                  setMonth(week.to);
+                }}
+              >
+                Cette semaine
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  setDate(nextWeek);
+                  setMonth(nextWeek.to);
+                }}
+              >
+                Semaine suivante
               </Button>
             </div>
           </div>
