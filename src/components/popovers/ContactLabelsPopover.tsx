@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { useLabels } from "@/hooks/use-labels";
 import { Contact, Label } from "../../../generated/prisma";
 import { updateContactLabels } from "@/actions/contacts";
-import { useContacts } from "@/hooks/use-contacts";
+import { useContactsContext } from "@/context/ContactsContext";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 
@@ -21,7 +21,7 @@ export default function ContactLabelsPopover({
   children?: React.ReactNode;
 }) {
   const { data: allLabels, isLoading } = useLabels();
-  const { setContactLabels } = useContacts([]);
+  const { setContactLabels } = useContactsContext();
   const [internalOpen, setInternalOpen] = useState(open ?? false);
   const handleOpenChange = onOpenChange ?? setInternalOpen;
   const [selected, setSelected] = useState<Set<string>>(

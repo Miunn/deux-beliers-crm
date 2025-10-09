@@ -4,68 +4,54 @@ import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import RangeCalendarPresets from "../ui/range-calendar-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { DateRange } from "react-day-picker";
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+// import { DateRange } from "react-day-picker";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { MultiSelect } from "../ui/multi-select";
-import { Label } from "../ui/label";
-import { Checkbox } from "../ui/checkbox";
+import { useContactsContext } from "../../context/ContactsContext";
 
 export default function ContactFilters() {
   const { data: labels } = useLabels();
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>(
-    searchParams.get("labelId")?.split(",") ?? []
-  );
-  const [text, setText] = useState<string>(searchParams.get("q") ?? "");
+  const {
+    text,
+    setText,
+    selectedLabelIds,
+    setSelectedLabelIds,
+    dateRange,
+    setDateRange,
+    resetFilters,
+  } = useContactsContext();
 
-  const fromParam = searchParams.get("from");
-  const toParam = searchParams.get("to");
-  const initialRange = useMemo(() => {
-    try {
-      const from = fromParam ? new Date(fromParam) : undefined;
-      const to = toParam ? new Date(toParam) : undefined;
-      return from || to ? { from, to } : undefined;
-    } catch {
-      return undefined;
-    }
-  }, [fromParam, toParam]);
+  // local debounced text input state
+  const [localText, setLocalText] = useState<string>(text ?? "");
 
+  // keep local input in sync if external text changes (e.g., reset)
   useEffect(() => {
-    // Initialize date range from URL once on mount if present
-    if (initialRange && !dateRange) {
-      setDateRange(initialRange as DateRange);
+    setLocalText(text ?? "");
+  }, [text]);
+
+  // debounce pushing local text to context filter
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setText(localText);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [localText, setText]);
+
+  // one-time initial hydration from URL params (q, labelId)
+  useEffect(() => {
+    const urlQ = searchParams.get("q") ?? "";
+    const urlLabelIds = searchParams.get("labelId")?.split(",") ?? [];
+    if (urlQ && !text) {
+      setText(urlQ);
+      setLocalText(urlQ);
     }
+    if (urlLabelIds.length && selectedLabelIds.length === 0)
+      setSelectedLabelIds(urlLabelIds.filter(Boolean));
+    // dates are not encoded currently in URL in this component
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    // q
-    if (text && text.trim().length > 0) params.set("q", text.trim());
-    else params.delete("q");
-
-    // labels
-    const labelJoined = selectedLabelIds.filter(Boolean).join(",");
-    if (labelJoined) params.set("labelId", labelJoined);
-    else params.delete("labelId");
-
-    // dates
-    if (dateRange?.from) params.set("from", dateRange.from.toISOString());
-    else params.delete("from");
-    if (dateRange?.to) params.set("to", dateRange.to.toISOString());
-    else params.delete("to");
-
-    const next = params.toString()
-      ? `${pathname}?${params.toString()}`
-      : pathname;
-
-    router.replace(next);
-  }, [text, selectedLabelIds, dateRange, router, pathname, searchParams]);
 
   return (
     <div className="grid grid-cols-[auto_auto_auto_auto_auto] items-stretch gap-2">
@@ -75,9 +61,8 @@ export default function ContactFilters() {
         size="icon"
         title="Effacer les filtres"
         onClick={() => {
-          setText("");
-          setSelectedLabelIds([]);
-          setDateRange(undefined);
+          resetFilters();
+          setLocalText("");
         }}
       >
         <XIcon size={16} />
@@ -88,8 +73,8 @@ export default function ContactFilters() {
           className="peer ps-9"
           placeholder={`Rechercher`}
           type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+          value={localText}
+          onChange={(e) => setLocalText(e.target.value)}
         />
         <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
           <SearchIcon size={16} />

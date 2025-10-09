@@ -1,6 +1,6 @@
 "use client";
 
-import { useContacts } from "@/hooks/use-contacts";
+import { useContactsContext } from "@/context/ContactsContext";
 import { Plus } from "lucide-react";
 import ContactCard from "./ContactCard";
 import ContactDialog from "../dialogs/ContactDialog";
@@ -8,12 +8,10 @@ import { Button } from "../ui/button";
 import ContactFilters from "./ContactFilters";
 import { Contact, Label, Activite } from "../../../generated/prisma";
 
-export default function ContactList({
-  defaultContacts,
-}: {
+export default function ContactList({}: {
   defaultContacts: (Contact & { labels: Label[]; activite: Activite | null })[];
 }) {
-  const { contacts } = useContacts(defaultContacts);
+  const { contacts } = useContactsContext();
 
   return (
     <div className="flex flex-col gap-4">

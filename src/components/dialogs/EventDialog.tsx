@@ -34,7 +34,7 @@ import {
 } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
-import { useContacts } from "@/hooks/use-contacts";
+import { useContactsContext } from "@/context/ContactsContext";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
@@ -63,7 +63,7 @@ export default function EventDialog({
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
-  const { appendEventDate } = useContacts([]);
+  const { appendEventDate } = useContactsContext();
   const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);

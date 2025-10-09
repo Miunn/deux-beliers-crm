@@ -45,7 +45,7 @@ export const useWeeklyEvents = (defaultEvents: EventWithRelations[]) => {
     rangeFetcher,
     {
       fallbackData: defaultEvents,
-      revalidateOnMount: defaultEvents === undefined,
+      //   revalidateOnMount: defaultEvents === undefined,
     }
   );
   return { data, error, isLoading, mutate, start, end };
