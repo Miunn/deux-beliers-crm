@@ -155,84 +155,89 @@ export async function POST(req: NextRequest) {
   }
 
   // Reset and import transactionally
-  await prisma.$transaction(async (tx) => {
-    // wipe in dependency order
-    await tx.event.deleteMany({});
-    await tx.contact.deleteMany({});
-    await tx.label.deleteMany({});
-    await tx.nature.deleteMany({});
-    await tx.activite.deleteMany({});
+  await prisma.$transaction(
+    async (tx) => {
+      // wipe in dependency order
+      await tx.event.deleteMany({});
+      await tx.contact.deleteMany({});
+      await tx.label.deleteMany({});
+      await tx.nature.deleteMany({});
+      await tx.activite.deleteMany({});
 
-    // create base tables
-    if (activites.length) {
-      await tx.activite.createMany({
-        data: activites.map((a) => ({
-          id: String(a["Id"]),
-          label: String(a["Label"]),
-        })),
-      });
-    }
-    if (labels.length) {
-      await tx.label.createMany({
-        data: labels.map((l) => ({
-          id: String(l["Id"]),
-          label: String(l["Label"]),
-          color: String(l["Color"]),
-        })),
-      });
-    }
-    if (natures.length) {
-      await tx.nature.createMany({
-        data: natures.map((n) => ({
-          id: String(n["Id"]),
-          label: String(n["Label"]),
-        })),
-      });
-    }
+      // create base tables
+      if (activites.length) {
+        await tx.activite.createMany({
+          data: activites.map((a) => ({
+            id: String(a["Id"]),
+            label: String(a["Label"]),
+          })),
+        });
+      }
+      if (labels.length) {
+        await tx.label.createMany({
+          data: labels.map((l) => ({
+            id: String(l["Id"]),
+            label: String(l["Label"]),
+            color: String(l["Color"]),
+          })),
+        });
+      }
+      if (natures.length) {
+        await tx.nature.createMany({
+          data: natures.map((n) => ({
+            id: String(n["Id"]),
+            label: String(n["Label"]),
+          })),
+        });
+      }
 
-    // contacts
-    for (const c of contacts) {
-      await tx.contact.create({
-        data: {
-          id: String(c["Id"]),
-          nom: String(c["Nom"] ?? ""),
-          activiteId: String(c["ActiviteId"] ?? "") || null,
-          ville: (c["Ville"] ?? null) as string | null,
-          contact: (c["Contact"] ?? null) as string | null,
-          telephone: (c["Telephone"] ?? null) as string | null,
-          mail: (c["Mail"] ?? null) as string | null,
-          observations: (c["Observations"] ?? null) as string | null,
-          adresse: (c["Adresse"] ?? null) as string | null,
-          horaires: (c["Horaires"] ?? null) as string | null,
-        },
-      });
-    }
+      // contacts
+      for (const c of contacts) {
+        await tx.contact.create({
+          data: {
+            id: String(c["Id"]),
+            nom: String(c["Nom"] ?? ""),
+            activiteId: String(c["ActiviteId"] ?? "") || null,
+            ville: (c["Ville"] ?? null) as string | null,
+            contact: (c["Contact"] ?? null) as string | null,
+            telephone: (c["Telephone"] ?? null) as string | null,
+            mail: (c["Mail"] ?? null) as string | null,
+            observations: (c["Observations"] ?? null) as string | null,
+            adresse: (c["Adresse"] ?? null) as string | null,
+            horaires: (c["Horaires"] ?? null) as string | null,
+          },
+        });
+      }
 
-    // contact-labels
-    for (const cl of contactLabels) {
-      await tx.contact.update({
-        where: { id: String(cl["ContactId"]) },
-        data: { labels: { connect: [{ id: String(cl["LabelId"]) }] } },
-      });
-    }
+      // contact-labels
+      for (const cl of contactLabels) {
+        await tx.contact.update({
+          where: { id: String(cl["ContactId"]) },
+          data: { labels: { connect: [{ id: String(cl["LabelId"]) }] } },
+        });
+      }
 
-    // events
-    for (const e of events) {
-      await tx.event.create({
-        data: {
-          id: String(e["Id"]),
-          contactId: String(e["ContactId"]),
-          date: new Date(String(e["Date"])) as unknown as Date,
-          natureId: String(e["NatureId"] ?? "") || null,
-          attendus: (e["Attendus"] ?? null) as string | null,
-          date_traitement: String(e["DateTraitement"] ?? "")
-            ? (new Date(String(e["DateTraitement"])) as unknown as Date)
-            : null,
-          resultat: (e["Resultat"] ?? null) as string | null,
-        },
-      });
+      // events
+      for (const e of events) {
+        await tx.event.create({
+          data: {
+            id: String(e["Id"]),
+            contactId: String(e["ContactId"]),
+            date: new Date(String(e["Date"])) as unknown as Date,
+            natureId: String(e["NatureId"] ?? "") || null,
+            attendus: (e["Attendus"] ?? null) as string | null,
+            date_traitement: String(e["DateTraitement"] ?? "")
+              ? (new Date(String(e["DateTraitement"])) as unknown as Date)
+              : null,
+            resultat: (e["Resultat"] ?? null) as string | null,
+          },
+        });
+      }
+    },
+    {
+      timeout: 10000,
     }
-  });
+  );
 
   return NextResponse.json({ success: true });
 }
