@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activite, Contact, Label } from "../../generated/prisma";
 import { useSearchParams } from "next/navigation";
 
@@ -26,10 +26,19 @@ type ContactsApi = {
   addOrUpdateContact: (contact: ContactWithRelations) => void;
   removeContact: (id: string) => void;
   setContactLabels: (id: string, labels: Label[]) => void;
+  appendEventDate: (contactId: string, date: Date | string) => void;
 };
 
 // local singleton store per module instance; sufficient for the page lifecycle
 let contactsStoreRef: { current: ContactWithRelations[] } | null = null;
+const subscribers = new Set<() => void>();
+const notifySubscribers = () => {
+  subscribers.forEach((fn) => {
+    try {
+      fn();
+    } catch {}
+  });
+};
 
 export function useContacts(defaultContacts: ContactWithRelations[]): {
   contacts: ContactWithRelations[];
@@ -37,6 +46,7 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
   addOrUpdateContact: (contact: ContactWithRelations) => void;
   removeContact: (id: string) => void;
   setContactLabels: (id: string, labels: Label[]) => void;
+  appendEventDate: (contactId: string, date: Date | string) => void;
 } {
   // initialize local store once
   useState(() => {
@@ -48,23 +58,34 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
   // force rerender on updates
   const [, setVersion] = useState(0);
 
+  // subscribe to global store updates
+  useEffect(() => {
+    const cb = () => setVersion((v) => v + 1);
+    subscribers.add(cb);
+    return () => {
+      subscribers.delete(cb);
+    };
+  }, []);
+
   const setContacts = useCallback(
     (
       updater:
         | ContactWithRelations[]
         | ((prev: ContactWithRelations[]) => ContactWithRelations[])
     ) => {
-      if (!contactsStoreRef) return;
+      const prevCurrent = contactsStoreRef?.current ?? [];
       const next =
         typeof updater === "function"
           ? (
               updater as (
                 prev: ContactWithRelations[]
               ) => ContactWithRelations[]
-            )(contactsStoreRef.current)
+            )(prevCurrent)
           : updater;
-      contactsStoreRef.current = next;
+      if (!contactsStoreRef) contactsStoreRef = { current: next };
+      else contactsStoreRef.current = next;
       setVersion((v) => v + 1);
+      notifySubscribers();
     },
     []
   );
@@ -93,6 +114,30 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
     (id, labels) => {
       setContacts((prev) =>
         prev.map((c) => (c.id === id ? { ...c, labels } : c))
+      );
+    },
+    [setContacts]
+  );
+
+  const appendEventDate = useCallback<ContactsApi["appendEventDate"]>(
+    (contactId, date) => {
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === contactId
+            ? {
+                ...c,
+                events: [
+                  {
+                    id: `temp-${Date.now()}`,
+                    date,
+                    attendus: null,
+                    resultat: null,
+                  },
+                  ...(c.events ?? []),
+                ],
+              }
+            : c
+        )
       );
     },
     [setContacts]
@@ -174,5 +219,6 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
     addOrUpdateContact,
     removeContact,
     setContactLabels,
+    appendEventDate,
   };
 }

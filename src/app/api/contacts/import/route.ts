@@ -3,6 +3,19 @@ import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+type Row = Record<string, unknown>;
+
+function readSheet<T extends Row>(wb: XLSX.WorkBook, name: string): T[] | null {
+  const sheet = wb.Sheets[name];
+  if (!sheet) return null;
+  return XLSX.utils.sheet_to_json<T>(sheet);
+}
+
+function isIsoDate(s: string): boolean {
+  const d = new Date(s);
+  return !Number.isNaN(d.getTime());
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session)
@@ -15,43 +28,207 @@ export async function POST(req: NextRequest) {
 
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
 
-  for (const r of rows) {
-    const nom = r["Nom"] ?? r["nom"] ?? r["NAME"] ?? r["name"];
-    if (!nom) continue;
+  const requiredSheets = [
+    "Contacts",
+    "Events",
+    "Labels",
+    "Activite",
+    "Nature",
+    "ContactLabels",
+  ];
+  const errors: string[] = [];
 
-    const activiteLabel = r["Activite"] ?? r["Activité"] ?? r["activite"];
-    let activiteId: string | undefined = undefined;
-    if (
-      activiteLabel &&
-      typeof activiteLabel === "string" &&
-      activiteLabel.trim()
-    ) {
-      const a = await prisma.activite.upsert({
-        where: { label: activiteLabel },
-        update: {},
-        create: { label: activiteLabel },
+  for (const s of requiredSheets) {
+    if (!workbook.SheetNames.includes(s)) {
+      errors.push(`Feuille manquante: ${s}`);
+    }
+  }
+  if (errors.length) {
+    return NextResponse.json(
+      { error: "Format invalide", details: errors },
+      { status: 400 }
+    );
+  }
+
+  const contacts = readSheet<Row>(workbook, "Contacts") ?? [];
+  const events = readSheet<Row>(workbook, "Events") ?? [];
+  const labels = readSheet<Row>(workbook, "Labels") ?? [];
+  const activites = readSheet<Row>(workbook, "Activite") ?? [];
+  const natures = readSheet<Row>(workbook, "Nature") ?? [];
+  const contactLabels = readSheet<Row>(workbook, "ContactLabels") ?? [];
+
+  // Validate headers presence
+  const requireHeaders = (rows: Row[], headers: string[], sheet: string) => {
+    if (rows.length === 0) return;
+    const row = rows[0];
+    for (const h of headers) {
+      if (!(h in row)) errors.push(`Colonne manquante dans ${sheet}: ${h}`);
+    }
+  };
+
+  requireHeaders(
+    contacts,
+    [
+      "Id",
+      "Nom",
+      "ActiviteId",
+      "Ville",
+      "Contact",
+      "Telephone",
+      "Mail",
+      "Observations",
+      "Adresse",
+      "Horaires",
+      "Labels",
+    ],
+    "Contacts"
+  );
+
+  requireHeaders(
+    events,
+    [
+      "Id",
+      "Date",
+      "NatureId",
+      "Attendus",
+      "DateTraitement",
+      "Resultat",
+      "ContactId",
+      "ContactName",
+    ],
+    "Events"
+  );
+
+  requireHeaders(labels, ["Id", "Label", "Color"], "Labels");
+  requireHeaders(activites, ["Id", "Label"], "Activite");
+  requireHeaders(natures, ["Id", "Label"], "Nature");
+  requireHeaders(contactLabels, ["ContactId", "LabelId"], "ContactLabels");
+
+  // Referential checks
+  const activiteIds = new Set(activites.map((r) => String(r["Id"])));
+  const labelIds = new Set(labels.map((r) => String(r["Id"])));
+  const natureIds = new Set(natures.map((r) => String(r["Id"])));
+  const contactIds = new Set(contacts.map((r) => String(r["Id"])));
+
+  for (const c of contacts) {
+    const aid = String(c["ActiviteId"] ?? "").trim();
+    if (aid && !activiteIds.has(aid)) {
+      errors.push(`Contacts.ActiviteId inconnu: ${aid}`);
+    }
+  }
+
+  for (const e of events) {
+    const cid = String(e["ContactId"] ?? "").trim();
+    if (!cid || !contactIds.has(cid)) {
+      errors.push(`Events.ContactId invalide: ${cid || "(vide)"}`);
+    }
+    const nid = String(e["NatureId"] ?? "").trim();
+    if (nid && !natureIds.has(nid)) {
+      errors.push(`Events.NatureId inconnu: ${nid}`);
+    }
+    const date = String(e["Date"] ?? "");
+    if (date && !isIsoDate(date)) errors.push(`Events.Date invalide: ${date}`);
+    const dtrait = String(e["DateTraitement"] ?? "");
+    if (dtrait && !isIsoDate(dtrait))
+      errors.push(`Events.DateTraitement invalide: ${dtrait}`);
+  }
+
+  for (const cl of contactLabels) {
+    const cid = String(cl["ContactId"] ?? "").trim();
+    const lid = String(cl["LabelId"] ?? "").trim();
+    if (!contactIds.has(cid))
+      errors.push(`ContactLabels.ContactId inconnu: ${cid}`);
+    if (!labelIds.has(lid))
+      errors.push(`ContactLabels.LabelId inconnu: ${lid}`);
+  }
+
+  if (errors.length) {
+    return NextResponse.json(
+      { error: "Format invalide", details: errors },
+      { status: 400 }
+    );
+  }
+
+  // Reset and import transactionally
+  await prisma.$transaction(async (tx) => {
+    // wipe in dependency order
+    await tx.event.deleteMany({});
+    await tx.contact.deleteMany({});
+    await tx.label.deleteMany({});
+    await tx.nature.deleteMany({});
+    await tx.activite.deleteMany({});
+
+    // create base tables
+    if (activites.length) {
+      await tx.activite.createMany({
+        data: activites.map((a) => ({
+          id: String(a["Id"]),
+          label: String(a["Label"]),
+        })),
       });
-      activiteId = a.id;
+    }
+    if (labels.length) {
+      await tx.label.createMany({
+        data: labels.map((l) => ({
+          id: String(l["Id"]),
+          label: String(l["Label"]),
+          color: String(l["Color"]),
+        })),
+      });
+    }
+    if (natures.length) {
+      await tx.nature.createMany({
+        data: natures.map((n) => ({
+          id: String(n["Id"]),
+          label: String(n["Label"]),
+        })),
+      });
     }
 
-    await prisma.contact.create({
-      data: {
-        nom: String(nom),
-        activite: activiteId ? { connect: { id: activiteId } } : undefined,
-        ville: r["Ville"] ?? r["ville"] ?? null,
-        contact: r["Contact"] ?? r["contact"] ?? null,
-        telephone: r["Telephone"] ?? r["Téléphone"] ?? r["telephone"] ?? null,
-        mail: r["Mail"] ?? r["Email"] ?? r["email"] ?? null,
-        observations: r["Observations"] ?? r["observations"] ?? null,
-        adresse: r["Adresse"] ?? r["adresse"] ?? null,
-        horaires: r["Horaires"] ?? r["horaires"] ?? null,
-      },
-    });
-  }
+    // contacts
+    for (const c of contacts) {
+      await tx.contact.create({
+        data: {
+          id: String(c["Id"]),
+          nom: String(c["Nom"] ?? ""),
+          activiteId: String(c["ActiviteId"] ?? "") || null,
+          ville: (c["Ville"] ?? null) as string | null,
+          contact: (c["Contact"] ?? null) as string | null,
+          telephone: (c["Telephone"] ?? null) as string | null,
+          mail: (c["Mail"] ?? null) as string | null,
+          observations: (c["Observations"] ?? null) as string | null,
+          adresse: (c["Adresse"] ?? null) as string | null,
+          horaires: (c["Horaires"] ?? null) as string | null,
+        },
+      });
+    }
+
+    // contact-labels
+    for (const cl of contactLabels) {
+      await tx.contact.update({
+        where: { id: String(cl["ContactId"]) },
+        data: { labels: { connect: [{ id: String(cl["LabelId"]) }] } },
+      });
+    }
+
+    // events
+    for (const e of events) {
+      await tx.event.create({
+        data: {
+          id: String(e["Id"]),
+          contactId: String(e["ContactId"]),
+          date: new Date(String(e["Date"])) as unknown as Date,
+          natureId: String(e["NatureId"] ?? "") || null,
+          attendus: (e["Attendus"] ?? null) as string | null,
+          date_traitement: String(e["DateTraitement"] ?? "")
+            ? (new Date(String(e["DateTraitement"])) as unknown as Date)
+            : null,
+          resultat: (e["Resultat"] ?? null) as string | null,
+        },
+      });
+    }
+  });
 
   return NextResponse.json({ success: true });
 }

@@ -16,6 +16,7 @@ import AccountDialog from "../common/AccountDialog";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 type Props = {
   title: string;
@@ -29,6 +30,8 @@ export default function Header({ title }: Props) {
   const fileInputId = "__import_contacts_file_input";
   const { mutate } = useSWRConfig();
   const router = useRouter();
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importDetails, setImportDetails] = useState<string[]>([]);
 
   return (
     <header className="p-4 shadow-sm sticky top-0 z-10">
@@ -71,6 +74,8 @@ export default function Header({ title }: Props) {
                 const file = input.files?.[0];
                 if (!file) return;
                 setImporting(true);
+                setImportError(null);
+                setImportDetails([]);
                 try {
                   const fd = new FormData();
                   fd.append("file", file);
@@ -78,14 +83,28 @@ export default function Header({ title }: Props) {
                     method: "POST",
                     body: fd,
                   });
-                  if (!res.ok) throw new Error("Import échoué");
-                } catch (e) {
-                  console.error(e);
+                  if (!res.ok) {
+                    let message = "Import échoué";
+                    let details: string[] = [];
+                    try {
+                      const json = await res.json();
+                      message = json?.error || message;
+                      details = Array.isArray(json?.details)
+                        ? json.details
+                        : [];
+                    } catch {}
+                    setImportError(message);
+                    setImportDetails(details);
+                  } else {
+                    // Hard reload to revalidate and refresh all data/UI
+                    window.location.reload();
+                  }
+                } catch {
+                  setImportError("Import échoué");
                 } finally {
                   setImporting(false);
                   // reset input to allow reselecting same file
                   input.value = "";
-                  mutate("/api/contacts");
                 }
               }}
             />
@@ -152,6 +171,28 @@ export default function Header({ title }: Props) {
       <ManageLabelsSheet open={labelsOpen} onOpenChange={setLabelsOpen} />
       <ManageNaturesSheet open={naturesOpen} onOpenChange={setNaturesOpen} />
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <Dialog
+        open={!!importError}
+        onOpenChange={(open) => !open && setImportError(null)}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Erreur d’import</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-destructive">{importError}</p>
+            {importDetails.length > 0 ? (
+              <div className="max-h-64 overflow-auto rounded border p-2">
+                <ul className="list-disc pl-5 text-sm">
+                  {importDetails.map((d, i) => (
+                    <li key={i}>{d}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

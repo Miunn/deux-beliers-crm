@@ -34,6 +34,7 @@ import {
 } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
+import { useContacts } from "@/hooks/use-contacts";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export default function EventDialog({
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
+  const { appendEventDate } = useContacts([]);
   const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
@@ -85,6 +87,8 @@ export default function EventDialog({
       toast.error(res.error);
     } else {
       toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
+      // Optimistic: ensure date-filter sees this immediately
+      appendEventDate(contactId, data.date);
       mutate();
       setEditingEventId(null);
       form.reset({
