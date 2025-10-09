@@ -73,10 +73,10 @@ export default function ManageLabelsSheet({
               aria-invalid={!!form.formState.errors.label}
               {...form.register("label")}
             />
-            <input
+            <Input
               type="color"
               aria-label="Couleur"
-              className="h-9 w-12 rounded-md border"
+              className="h-9 w-12 rounded-md border-none p-0"
               {...form.register("color")}
             />
             <Button type="submit" disabled={form.formState.isSubmitting}>

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import ManageLabelsSheet from "../sheet/ManageLabels";
 import ManageNaturesSheet from "../sheet/ManageNatures";
-import { useSWRConfig } from "swr";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,13 +27,12 @@ export default function Header({ title }: Props) {
   const [importing, setImporting] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const fileInputId = "__import_contacts_file_input";
-  const { mutate } = useSWRConfig();
   const router = useRouter();
   const [importError, setImportError] = useState<string | null>(null);
   const [importDetails, setImportDetails] = useState<string[]>([]);
 
   return (
-    <header className="p-4 shadow-sm sticky top-0 z-10">
+    <header className="bg-background p-4 shadow-sm sticky top-0 z-10">
       <div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
           <Image

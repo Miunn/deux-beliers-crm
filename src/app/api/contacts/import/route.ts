@@ -59,51 +59,55 @@ export async function POST(req: NextRequest) {
   const contactLabels = readSheet<Row>(workbook, "ContactLabels") ?? [];
 
   // Validate headers presence
-  const requireHeaders = (rows: Row[], headers: string[], sheet: string) => {
-    if (rows.length === 0) return;
-    const row = rows[0];
-    for (const h of headers) {
-      if (!(h in row)) errors.push(`Colonne manquante dans ${sheet}: ${h}`);
-    }
-  };
+  //   const requireHeaders = (rows: Row[], headers: string[], sheet: string) => {
+  //     if (rows.length === 0) return;
+  //     const row = rows[0];
+  //     console.log(row);
 
-  requireHeaders(
-    contacts,
-    [
-      "Id",
-      "Nom",
-      "ActiviteId",
-      "Ville",
-      "Contact",
-      "Telephone",
-      "Mail",
-      "Observations",
-      "Adresse",
-      "Horaires",
-      "Labels",
-    ],
-    "Contacts"
-  );
+  //     for (const h of headers) {
+  //       if (!(h in row)) errors.push(`Colonne manquante dans ${sheet}: ${h}`);
+  //     }
+  //   };
 
-  requireHeaders(
-    events,
-    [
-      "Id",
-      "Date",
-      "NatureId",
-      "Attendus",
-      "DateTraitement",
-      "Resultat",
-      "ContactId",
-      "ContactName",
-    ],
-    "Events"
-  );
+  //   console.log(contacts);
 
-  requireHeaders(labels, ["Id", "Label", "Color"], "Labels");
-  requireHeaders(activites, ["Id", "Label"], "Activite");
-  requireHeaders(natures, ["Id", "Label"], "Nature");
-  requireHeaders(contactLabels, ["ContactId", "LabelId"], "ContactLabels");
+  //   requireHeaders(
+  //     contacts,
+  //     [
+  //       "Id",
+  //       "Nom",
+  //       "ActiviteId",
+  //       "Ville",
+  //       "Contact",
+  //       "Telephone",
+  //       "Mail",
+  //       "Observations",
+  //       "Adresse",
+  //       "Horaires",
+  //       "Labels",
+  //     ],
+  //     "Contacts"
+  //   );
+
+  //   requireHeaders(
+  //     events,
+  //     [
+  //       "Id",
+  //       "Date",
+  //       "NatureId",
+  //       "Attendus",
+  //       "DateTraitement",
+  //       "Resultat",
+  //       "ContactId",
+  //       "ContactName",
+  //     ],
+  //     "Events"
+  //   );
+
+  //   requireHeaders(labels, ["Id", "Label", "Color"], "Labels");
+  //   requireHeaders(activites, ["Id", "Label"], "Activite");
+  //   requireHeaders(natures, ["Id", "Label"], "Nature");
+  //   requireHeaders(contactLabels, ["ContactId", "LabelId"], "ContactLabels");
 
   // Referential checks
   const activiteIds = new Set(activites.map((r) => String(r["Id"])));

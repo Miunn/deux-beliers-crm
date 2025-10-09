@@ -19,9 +19,9 @@ model Event {
     date            DateTime
     nature          Nature?   @relation(fields: [natureId], references: [id])
     natureId        String?
-    attendus        String?
+    attendus        String?   @db.Text
     date_traitement DateTime?
-    resultat        String?
+    resultat        String?   @db.Text
 
     contact   Contact @relation(fields: [contactId], references: [id])
     contactId String
@@ -45,9 +45,9 @@ model Contact {
     contact      String?
     telephone    String?
     mail         String?
-    observations String?
-    adresse      String?
-    horaires     String?
+    observations String? @db.Text
+    adresse      String? @db.Text
+    horaires     String? @db.Text
 
     events Event[]
     labels Label[]

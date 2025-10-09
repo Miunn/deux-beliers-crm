@@ -7,13 +7,10 @@ export const NEW_CONTACT_FORM_SCHEMA = z
     ville: z.string().optional(),
     contact: z.string().optional(),
     telephone: z.string().optional(),
-    mail: z.preprocess((arg) => {
-      if (typeof arg === "string" && arg === "") {
-        return undefined;
-      } else {
-        return arg;
-      }
-    }, z.email({ message: "Adresse mail invalide" }).optional()),
+    mail: z.union([
+      z.email({ message: "Adresse mail invalide" }),
+      z.literal(""),
+    ]),
     observations: z.string().optional(),
     adresse: z.string().optional(),
     horaires: z.string().optional(),

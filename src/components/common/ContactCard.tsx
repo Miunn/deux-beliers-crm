@@ -91,8 +91,8 @@ export default function ContactCard({
         </div>
       </div>
 
-      <div className="w-full flex justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
+      <div className="w-full flex justify-between items-end gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {contact.labels.map((lb) => (
             <Badge
               key={`${lb.id}-${lb.label}`}
@@ -108,7 +108,8 @@ export default function ContactCard({
             <Button
               type="button"
               variant={"ghost"}
-              size={"icon"}
+              size={"sm"}
+              className="size-6"
               title="Ajouter un libellé"
             >
               <Plus />
@@ -116,7 +117,7 @@ export default function ContactCard({
           </ContactLabelsPopover>
         </div>
 
-        <div>
+        <div className="flex flex-no-wrap">
           <ContactDialog mode="edit" contact={contact}>
             <Button
               type="button"
