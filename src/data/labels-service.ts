@@ -19,8 +19,16 @@ const del = async (id: string) => {
   });
 };
 
+const update = async (id: string, data: Prisma.LabelUpdateInput) => {
+  return prisma.label.update({
+    where: { id },
+    data,
+  });
+};
+
 export const LabelsService = {
   getLabels,
   create,
   delete: del,
+  update,
 };
