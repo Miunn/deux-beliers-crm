@@ -154,6 +154,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Group labels by contact for batched relation updates
+  const labelsByContact = new Map<string, string[]>();
+  for (const cl of contactLabels) {
+    const cid = String(cl["ContactId"]);
+    const lid = String(cl["LabelId"]);
+    if (!labelsByContact.has(cid)) labelsByContact.set(cid, []);
+    labelsByContact.get(cid)!.push(lid);
+  }
+
   // Reset and import transactionally
   await prisma.$transaction(
     async (tx) => {
@@ -164,6 +173,8 @@ export async function POST(req: NextRequest) {
       await tx.nature.deleteMany({});
       await tx.activite.deleteMany({});
 
+      console.log("Deleted db");
+
       // create base tables
       if (activites.length) {
         await tx.activite.createMany({
@@ -173,6 +184,7 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
+      console.log("Created activites");
       if (labels.length) {
         await tx.label.createMany({
           data: labels.map((l) => ({
@@ -182,6 +194,7 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
+      console.log("Created labels");
       if (natures.length) {
         await tx.nature.createMany({
           data: natures.map((n) => ({
@@ -190,11 +203,12 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
+      console.log("Created natures");
 
       // contacts
-      for (const c of contacts) {
-        await tx.contact.create({
-          data: {
+      if (contacts.length) {
+        await tx.contact.createMany({
+          data: contacts.map((c) => ({
             id: String(c["Id"]),
             nom: String(c["Nom"] ?? ""),
             activiteId: String(c["ActiviteId"] ?? "") || null,
@@ -205,22 +219,35 @@ export async function POST(req: NextRequest) {
             observations: (c["Observations"] ?? null) as string | null,
             adresse: (c["Adresse"] ?? null) as string | null,
             horaires: (c["Horaires"] ?? null) as string | null,
-          },
+          })),
         });
       }
+
+      console.log("Created contacts");
 
       // contact-labels
-      for (const cl of contactLabels) {
+      console.log("Creating contact-labels, length: ", contactLabels.length);
+      let counter = 0;
+      for (const [contactId, labelIds] of labelsByContact.entries()) {
+        if (!labelIds.length) continue;
         await tx.contact.update({
-          where: { id: String(cl["ContactId"]) },
-          data: { labels: { connect: [{ id: String(cl["LabelId"]) }] } },
+          where: { id: contactId },
+          data: {
+            labels: { connect: labelIds.map((id) => ({ id })) },
+          },
         });
+        counter += labelIds.length;
+        if (counter % 50 === 0) {
+          console.log("Created contact-labels: ", counter);
+        }
       }
 
+      console.log("Created contact-labels");
+
       // events
-      for (const e of events) {
-        await tx.event.create({
-          data: {
+      if (events.length) {
+        await tx.event.createMany({
+          data: events.map((e) => ({
             id: String(e["Id"]),
             contactId: String(e["ContactId"]),
             date: new Date(String(e["Date"])) as unknown as Date,
@@ -230,12 +257,14 @@ export async function POST(req: NextRequest) {
               ? (new Date(String(e["DateTraitement"])) as unknown as Date)
               : null,
             resultat: (e["Resultat"] ?? null) as string | null,
-          },
+          })),
         });
       }
+
+      console.log("Created events");
     },
     {
-      timeout: 10000,
+      timeout: 60000,
     }
   );
 
