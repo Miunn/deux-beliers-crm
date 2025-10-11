@@ -8,7 +8,10 @@ async function main() {
       password: "12345678",
     },
   });
-  console.log(r);
+  console.log("create user", r);
 }
 
-main();
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
