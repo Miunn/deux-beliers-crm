@@ -121,16 +121,52 @@ function parseTimestamp(input: string): string | null {
 }
 
 function extractTypeAndText(input: string): { type: string; text: string } {
-  // After timestamp, usually "Label : text" or "Label text"
-  // Example: "[2025-08-01 11:52] Livraison IJA : livré le 24/06"
+  // After timestamp, usually "Label : text" or sometimes just free text.
+  // Normalize the type (nature) to avoid including markers like "IJA" or date-like tokens.
   const after = input.replace(/^\[[^]]+\]\s*/, "");
-  const parts = after.split(":");
-  if (parts.length >= 2) {
-    const type = parts[0].trim();
-    const text = parts.slice(1).join(":").trim();
-    return { type, text };
+
+  const splitIdx = after.indexOf(":");
+  let rawType = "";
+  let text = "";
+  if (splitIdx >= 0) {
+    rawType = after.slice(0, splitIdx).trim();
+    text = after.slice(splitIdx + 1).trim();
+  } else {
+    const known = [
+      "Livraison",
+      "Abouti",
+      "Non abouti",
+      "E-mail",
+      "Email",
+      "Mail",
+      "Rendez-vous",
+      "Dégustation",
+      "Degustation",
+      "Appel",
+      "Commande",
+      "Relance",
+      "Kdo",
+      "Visite",
+      "Note",
+    ];
+    const trimmed = after.trim();
+    const found = known.find((k) => new RegExp(`^${k}\\b`, "i").test(trimmed));
+    rawType = found || "Note";
+    text = trimmed;
   }
-  return { type: "Note", text: after.trim() };
+
+  let type = rawType
+    .replace(/\bIJA\b.*$/i, "")
+    .replace(/\bIJA\b/i, "")
+    .replace(
+      /\b(\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{4}-\d{2}-\d{2})\b/g,
+      ""
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!type) type = "Note";
+  return { type, text };
 }
 
 function makeId(prefix: string, counter: number): string {
@@ -258,37 +294,29 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
       Labels: labelIds.join(",") || undefined,
     });
 
-    // Parse trailing comment columns into events
-    const commentCols = header
-      .map((h, idx) => ({ h, idx }))
-      .filter((x) => x.h.startsWith("Comment "));
-    for (const { idx } of commentCols) {
-      const raw = r[idx];
-      if (!raw) continue;
-      const chunks = raw
-        .split(/;(?=\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}])/)
+    // Parse any cells that contain timestamped comments into events (covers "Comment N" and others like "Commentaire")
+    for (let j = 0; j < r.length; j++) {
+      const cell = r[j];
+      if (!cell) continue;
+      if (!/\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}\]/.test(cell)) continue;
+      const chunks = cell
+        .split(/;(?=\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}\])/)
         .map((s) => s.trim())
         .filter(Boolean);
       for (const c of chunks) {
         const ts = parseTimestamp(c);
+        if (!ts) continue;
         const { type, text } = extractTypeAndText(c);
-        const nid = slugId(
-          type
-            .replace(/\s+IJA.*$/, "")
-            .replace(/IJA.*$/, "")
-            .trim()
-        );
+        const nid = slugId(type);
         if (!natures.has(nid)) natures.set(nid, { Id: nid, Label: type });
-        if (ts) {
-          events.push({
-            Id: makeId("evt", eventCounter++),
-            Date: ts,
-            NatureId: nid,
-            Resultat: text,
-            ContactId: String(id),
-            ContactName: nom,
-          });
-        }
+        events.push({
+          Id: makeId("evt", eventCounter++),
+          Date: ts,
+          NatureId: nid,
+          Resultat: text,
+          ContactId: String(id),
+          ContactName: nom,
+        });
       }
     }
   }
