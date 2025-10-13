@@ -97,7 +97,8 @@ export default function Header({ title }: Props) {
                     // Hard reload to revalidate and refresh all data/UI
                     window.location.reload();
                   }
-                } catch {
+                } catch (e) {
+                  console.log("Import error:", e);
                   setImportError("Import échoué");
                 } finally {
                   setImporting(false);
