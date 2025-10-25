@@ -44,11 +44,7 @@ export default function ContactCard({
           </div>
 
           <div>
-            {contact.rappel ? (
-              <div></div>
-            ) : (
-              <ReminderPopover contact={contact} />
-            )}
+            <ReminderPopover contact={contact} />
           </div>
         </div>
 
