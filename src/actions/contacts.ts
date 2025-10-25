@@ -7,7 +7,7 @@ import z from "zod";
 import { headers } from "next/headers";
 
 export async function createContact(
-  data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>
+  data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>,
 ) {
   const hdrs = await headers();
   const session = await auth.api.getSession({
@@ -34,7 +34,7 @@ export async function createContact(
 
 export async function updateContact(
   id: string,
-  data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>
+  data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>,
 ) {
   const hdrs = await headers();
   const session = await auth.api.getSession({
@@ -107,5 +107,24 @@ export async function updateContactLabels(id: string, labelIds: string[]) {
     return { success: true } as const;
   } catch {
     return { error: "Erreur lors de la mise à jour des libellés" } as const;
+  }
+}
+
+export async function setReminder(id: string, reminder: Date) {
+  const hdrs = await headers();
+  const session = await auth.api.getSession({
+    headers: hdrs,
+  });
+  if (!session) {
+    return { error: "Unauthorized" } as const;
+  }
+
+  try {
+    await ContactService.update(id, {
+      rappel: reminder,
+    });
+    return { success: true } as const;
+  } catch {
+    return { error: "Erreur lors de la mise à jour du rappel" } as const;
   }
 }

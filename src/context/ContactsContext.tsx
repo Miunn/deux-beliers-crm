@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Activite, Contact, Label } from "../../generated/prisma";
 import { DateRange } from "react-day-picker";
+import { CFB } from "xlsx";
 
 export type ContactEventLite = {
   id: string;
@@ -31,9 +32,11 @@ type ContactsContextValue = {
   // filters
   text: string;
   selectedLabelIds: string[];
+  hasReminder: boolean;
   dateRange: DateRange | undefined;
   setText: (text: string) => void;
   setSelectedLabelIds: (ids: string[]) => void;
+  setHasReminder: (has: boolean) => void;
   setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
   resetFilters: () => void;
   // mutations
@@ -44,7 +47,7 @@ type ContactsContextValue = {
 };
 
 const ContactsContext = createContext<ContactsContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 export function ContactsProvider({
@@ -55,10 +58,11 @@ export function ContactsProvider({
   defaultContacts: ContactWithRelations[];
 }) {
   const [allContacts, setAllContacts] = useState<ContactWithRelations[]>(
-    defaultContacts ?? []
+    defaultContacts ?? [],
   );
 
   const [text, setText] = useState<string>("");
+  const [hasReminder, setHasReminder] = useState<boolean>(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -84,7 +88,7 @@ export function ContactsProvider({
 
   const setContactLabels = useCallback((id: string, labels: Label[]) => {
     setAllContacts((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, labels } : c))
+      prev.map((c) => (c.id === id ? { ...c, labels } : c)),
     );
   }, []);
 
@@ -105,11 +109,11 @@ export function ContactsProvider({
                   ...(c.events ?? []),
                 ],
               }
-            : c
-        )
+            : c,
+        ),
       );
     },
-    []
+    [],
   );
 
   const contacts = useMemo(() => {
@@ -145,6 +149,16 @@ export function ContactsProvider({
       return all.includes(q);
     };
 
+    const matchesReminder = (c: ContactWithRelations): boolean => {
+      if (!hasReminder) return true;
+      if (!c.rappel) return false;
+      const now = new Date();
+      const in7Days = new Date();
+      in7Days.setDate(now.getDate() + 7);
+      const rappelDate = new Date(c.rappel);
+      return rappelDate >= now && rappelDate <= in7Days;
+    };
+
     const matchesLabels = (c: ContactWithRelations): boolean => {
       if (!selectedLabelIds.length) return true;
       const set = new Set(c.labels.map((l) => l.id));
@@ -164,9 +178,13 @@ export function ContactsProvider({
     };
 
     return items.filter(
-      (c) => matchesText(c) && matchesLabels(c) && matchesDates(c)
+      (c) =>
+        matchesReminder(c) &&
+        matchesLabels(c) &&
+        matchesDates(c) &&
+        matchesText(c),
     );
-  }, [allContacts, text, selectedLabelIds, dateRange]);
+  }, [allContacts, text, hasReminder, selectedLabelIds, dateRange]);
 
   const value: ContactsContextValue = useMemo(
     () => ({
@@ -174,8 +192,10 @@ export function ContactsProvider({
       contacts,
       text,
       selectedLabelIds,
+      hasReminder,
       dateRange,
       setText,
+      setHasReminder,
       setSelectedLabelIds,
       setDateRange,
       resetFilters,
@@ -189,8 +209,10 @@ export function ContactsProvider({
       contacts,
       text,
       selectedLabelIds,
+      hasReminder,
       dateRange,
       setText,
+      setHasReminder,
       setSelectedLabelIds,
       setDateRange,
       resetFilters,
@@ -198,7 +220,7 @@ export function ContactsProvider({
       removeContact,
       setContactLabels,
       appendEventDate,
-    ]
+    ],
   );
 
   return (
