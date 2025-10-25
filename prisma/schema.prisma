@@ -49,6 +49,8 @@ model Contact {
     adresse      String? @db.Text
     horaires     String? @db.Text
 
+    rappel DateTime?
+
     events Event[]
     labels Label[]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Pen, Plus, Trash } from "lucide-react";
+import { Bell, Calendar, Pen, Plus, Trash } from "lucide-react";
 import { Button } from "../ui/button";
 import { Activite, Contact, Label } from "../../../generated/prisma";
 import DeleteContact from "../dialogs/DeleteContact";
@@ -8,6 +8,9 @@ import ContactDialog from "../dialogs/ContactDialog";
 import EventDialog from "../dialogs/EventDialog";
 import ContactLabelsPopover from "../popovers/ContactLabelsPopover";
 import { Badge } from "../ui/badge";
+import ReminderPopover from "../popovers/ReminderPopover";
+import { addDays, addWeeks } from "date-fns";
+import { cn } from "@/lib/utils";
 
 function textColorForBg(bg: string): string {
   try {
@@ -39,7 +42,29 @@ export default function ContactCard({
                 .join(" • ")}
             </div>
           </div>
+
+          <div>
+            {contact.rappel ? (
+              <div></div>
+            ) : (
+              <ReminderPopover contact={contact} />
+            )}
+          </div>
         </div>
+
+        {contact.rappel && (
+          <div
+            className={cn(
+              "text-sm inline-block",
+              contact.rappel <= addWeeks(new Date(), 1)
+                ? "font-semibold text-destructive"
+                : "",
+            )}
+          >
+            Rappel le:{" "}
+            <span>{new Date(contact.rappel).toLocaleDateString()}</span>
+          </div>
+        )}
 
         <div className="text-sm text-gray-700 space-y-1">
           {contact.mail && (
@@ -70,7 +95,7 @@ export default function ContactCard({
               dangerouslySetInnerHTML={{
                 __html: `Adresse: ${String(contact.adresse).replace(
                   /\n/g,
-                  "<br/>"
+                  "<br/>",
                 )}`,
               }}
             />
@@ -80,7 +105,7 @@ export default function ContactCard({
               dangerouslySetInnerHTML={{
                 __html: `Horaires: ${String(contact.horaires).replace(
                   /\n/g,
-                  "<br/>"
+                  "<br/>",
                 )}`,
               }}
             />

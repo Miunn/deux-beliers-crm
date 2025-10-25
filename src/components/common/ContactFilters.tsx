@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MultiSelect } from "../ui/multi-select";
 import { useContactsContext } from "../../context/ContactsContext";
+import { Checkbox } from "../ui/checkbox";
 
 export default function ContactFilters() {
   const { data: labels } = useLabels();
@@ -16,6 +17,8 @@ export default function ContactFilters() {
   const {
     text,
     setText,
+    hasReminder,
+    setHasReminder,
     selectedLabelIds,
     setSelectedLabelIds,
     dateRange,
@@ -80,6 +83,13 @@ export default function ContactFilters() {
           <SearchIcon size={16} />
         </div>
       </div>
+      <Button variant={"outline"} onClick={() => setHasReminder(!hasReminder)}>
+        <Checkbox
+          checked={hasReminder}
+          onCheckedChange={(checked) => setHasReminder(checked as boolean)}
+        />
+        Rappel dans les 7 jours
+      </Button>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -91,7 +101,7 @@ export default function ContactFilters() {
               ? dateRange.from.toLocaleDateString() +
                 "-" +
                 dateRange.to?.toLocaleDateString()
-              : "Sélectionner une date"}
+              : "Date d'évènement"}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
@@ -113,6 +123,7 @@ export default function ContactFilters() {
             ),
           })) ?? []
         }
+        placeholder="Libellés"
         onValueChange={setSelectedLabelIds}
         defaultValue={selectedLabelIds}
       />
