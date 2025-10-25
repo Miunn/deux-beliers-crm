@@ -28,8 +28,8 @@ export default function ReminderPopover({
     }
 
     setSaving(true);
-    addOrUpdateContact({ ...contact, rappel: date });
     const r = await setReminder(contact.id, date);
+    addOrUpdateContact({ ...contact, rappel: date });
     setSaving(false);
 
     if (r.success) {
