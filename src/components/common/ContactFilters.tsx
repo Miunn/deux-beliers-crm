@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { MultiSelect } from "../ui/multi-select";
 import { useContactsContext } from "../../context/ContactsContext";
 import { Checkbox } from "../ui/checkbox";
+import SortByDropdown from "./SortByDropdown";
 
 export default function ContactFilters() {
   const { data: labels } = useLabels();
@@ -24,6 +25,8 @@ export default function ContactFilters() {
     dateRange,
     setDateRange,
     resetFilters,
+    sortState,
+    setSortState,
   } = useContactsContext();
 
   // local debounced text input state
@@ -57,7 +60,7 @@ export default function ContactFilters() {
   }, []);
 
   return (
-    <div className="grid grid-cols-[auto_auto_auto_auto_auto] items-stretch gap-2">
+    <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] items-stretch gap-2">
       <Button
         type="button"
         variant="ghost"
@@ -127,6 +130,7 @@ export default function ContactFilters() {
         onValueChange={setSelectedLabelIds}
         defaultValue={selectedLabelIds}
       />
+      <SortByDropdown sortState={sortState} setSortState={setSortState} />
     </div>
   );
 }

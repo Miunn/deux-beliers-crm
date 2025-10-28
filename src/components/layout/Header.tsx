@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import ManageLabelsSheet from "../sheet/ManageLabels";
@@ -61,6 +62,9 @@ export default function Header({ title }: Props) {
               className="cursor-pointer"
             >
               Nature d&apos;événement
+            </Button>
+            <Button variant={"link"} className="cursor-pointer" asChild>
+              <Link href="/archive">Archivés</Link>
             </Button>
             <input
               id={fileInputId}

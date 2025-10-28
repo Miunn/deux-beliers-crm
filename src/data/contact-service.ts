@@ -9,7 +9,8 @@ const getContacts = async (
   q?: string,
   labelId?: string,
   from?: string,
-  to?: string
+  to?: string,
+  active: boolean = true,
 ) => {
   const query = q?.trim();
   const textWhere: Prisma.ContactWhereInput | undefined = query
@@ -62,8 +63,8 @@ const getContacts = async (
   if (eventsDateFilter) and.push({ events: { some: eventsDateFilter } });
 
   const where: Prisma.ContactWhereInput | undefined = and.length
-    ? { AND: and }
-    : undefined;
+    ? { AND: and, active: active }
+    : { active: active };
 
   return prisma.contact.findMany({
     where,

@@ -74,6 +74,7 @@ type ContactOut = {
   Observations?: string;
   Adresse?: string;
   Horaires?: string;
+  Rappel?: string; // ISO datetime
   Labels?: string; // comma-separated label ids
 };
 
@@ -92,6 +93,22 @@ type LabelOut = { Id: string; Label: string; Color: string };
 type ActiviteOut = { Id: string; Label: string };
 type NatureOut = { Id: string; Label: string };
 type ContactLabelOut = { ContactId: string; LabelId: string };
+
+// Fixed canonical nature labels used for classification
+const CANONICAL_NATURE_LABELS: string[] = [
+  "Livraison",
+  "Commande",
+  "Paiement",
+  "Degustation",
+  "RendezVous",
+  "Email",
+  "Appel",
+  "Relance",
+  "Visite",
+  "Abouti",
+  "NonAbouti",
+  "Note",
+];
 
 function sanitize(value: string): string {
   return value
@@ -121,52 +138,71 @@ function parseTimestamp(input: string): string | null {
 }
 
 function extractTypeAndText(input: string): { type: string; text: string } {
-  // After timestamp, usually "Label : text" or sometimes just free text.
-  // Normalize the type (nature) to avoid including markers like "IJA" or date-like tokens.
-  const after = input.replace(/^\[[^]]+\]\s*/, "");
+  // Ensure the leading timestamp is fully removed from the content.
+  const after = input.replace(
+    /^\[(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2})]\s*[-–—]?\s*/,
+    ""
+  );
 
-  const splitIdx = after.indexOf(":");
-  let rawType = "";
-  let text = "";
-  if (splitIdx >= 0) {
-    rawType = after.slice(0, splitIdx).trim();
-    text = after.slice(splitIdx + 1).trim();
-  } else {
-    const known = [
-      "Livraison",
-      "Abouti",
-      "Non abouti",
-      "E-mail",
-      "Email",
-      "Mail",
-      "Rendez-vous",
-      "Dégustation",
-      "Degustation",
-      "Appel",
-      "Commande",
-      "Relance",
-      "Kdo",
-      "Visite",
-      "Note",
-    ];
-    const trimmed = after.trim();
-    const found = known.find((k) => new RegExp(`^${k}\\b`, "i").test(trimmed));
-    rawType = found || "Note";
-    text = trimmed;
+  // Strip any leading legacy label token like "Livraison:", "Abouti:", etc., keep only content
+  const stripTokens = [
+    "Livraison",
+    "Abouti",
+    "Non abouti",
+    "E-mail",
+    "Email",
+    "Mail",
+    "Rendez-vous",
+    "Dégustation",
+    "Degustation",
+    "Appel",
+    "Commande",
+    "Relance",
+    "Kdo",
+    "Visite",
+    "Note",
+  ];
+  let content = after.trim();
+  for (const tok of stripTokens) {
+    const re = new RegExp(`^${tok}\\b\\s*:?\\s*`, "i");
+    if (re.test(content)) {
+      content = content.replace(re, "").trim();
+      break;
+    }
   }
 
-  let type = rawType
-    .replace(/\bIJA\b.*$/i, "")
-    .replace(/\bIJA\b/i, "")
-    .replace(
-      /\b(\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{4}-\d{2}-\d{2})\b/g,
-      ""
-    )
-    .replace(/\s+/g, " ")
-    .trim();
+  const type = canonicalizeNatureLabel(classifyNature(content));
+  return { type, text: content };
+}
 
-  if (!type) type = "Note";
-  return { type, text };
+function removeDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function classifyNature(text: string): string {
+  const t = removeDiacritics(text).toLowerCase();
+  // Order matters: first match wins
+  if (/(\b|\s)(livraison|livre|livree|livres|livrer)(\b|\s)/.test(t))
+    return "Livraison";
+  if (/(\b|\s)(commande|\bcde\b|order)(\b|\s)/.test(t)) return "Commande";
+  if (/(facture|paiement|reglement|avoir)/.test(t)) return "Paiement";
+  if (/(degustation|deguster)/.test(t)) return "Degustation";
+  if (/(rendez[-\s]?vous|\brdv\b)/.test(t)) return "RendezVous";
+  if (/(\be-?mail\b|\bmail\b)/.test(t)) return "Email";
+  if (/(\bappel\b|telephone|\btel\b)/.test(t)) return "Appel";
+  if (/(relance|rappeler|rappel|recontacter)/.test(t)) return "Relance";
+  if (/(\bvisite\b|\bpasser\b|\bpass[eé]\b)/.test(t)) return "Visite";
+  if (
+    /(non abouti|pas de besoin|pas d'? besoin|absent|occupe|occup[eé])/.test(t)
+  )
+    return "NonAbouti";
+  if (/(\babouti\b|\bok\b)/.test(t)) return "Abouti";
+  return "Note";
+}
+
+function canonicalizeNatureLabel(type: string): string {
+  if (CANONICAL_NATURE_LABELS.includes(type)) return type;
+  return "Note";
 }
 
 function makeId(prefix: string, counter: number): string {
@@ -223,14 +259,9 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
     H[key] != null ? sanitize(r[H[key]] || "") : "";
 
   // Pre-create a few common natures
-  [
-    "Livraison",
-    "Abouti",
-    "Non abouti",
-    "E-mail",
-    "Rendez-vous",
-    "Note",
-  ].forEach((n) => natures.set(slugId(n), { Id: slugId(n), Label: n }));
+  CANONICAL_NATURE_LABELS.forEach((n) =>
+    natures.set(slugId(n), { Id: slugId(n), Label: n })
+  );
 
   let eventCounter = 1;
   for (let i = 1; i < rows.length; i++) {
@@ -249,6 +280,7 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
     const categorie = get(r, "Catégorie") || get(r, "Categorie");
     const description = get(r, "Description");
     const tags = get(r, "tags");
+    const remindDate = get(r, "Remind_date");
 
     // Activite from Catégorie if present
     if (categorie) {
@@ -291,6 +323,10 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
       Observations: observations || undefined,
       Adresse: adresse || undefined,
       Horaires: horaires || undefined,
+      Rappel:
+        remindDate && !Number.isNaN(new Date(remindDate).getTime())
+          ? new Date(remindDate).toISOString()
+          : undefined,
       Labels: labelIds.join(",") || undefined,
     });
 
