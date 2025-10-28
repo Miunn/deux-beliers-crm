@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { Activite, Contact, Label } from "../../generated/prisma";
 import { DateRange } from "react-day-picker";
-import { CFB } from "xlsx";
+import { ContactSortMethod } from "@/components/common/SortByDropdown";
 
 export type ContactEventLite = {
   id: string;
@@ -44,6 +44,8 @@ type ContactsContextValue = {
   removeContact: (id: string) => void;
   setContactLabels: (id: string, labels: Label[]) => void;
   appendEventDate: (contactId: string, date: Date | string) => void;
+  sortState: ContactSortMethod;
+  setSortState: React.Dispatch<React.SetStateAction<ContactSortMethod>>;
 };
 
 const ContactsContext = createContext<ContactsContextValue | undefined>(
@@ -65,6 +67,9 @@ export function ContactsProvider({
   const [hasReminder, setHasReminder] = useState<boolean>(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [sortState, setSortState] = useState<ContactSortMethod>(
+    ContactSortMethod.RappelAsc,
+  );
 
   const resetFilters = useCallback(() => {
     setText("");
@@ -177,14 +182,35 @@ export function ContactsProvider({
       });
     };
 
-    return items.filter(
-      (c) =>
-        matchesReminder(c) &&
-        matchesLabels(c) &&
-        matchesDates(c) &&
-        matchesText(c),
-    );
-  }, [allContacts, text, hasReminder, selectedLabelIds, dateRange]);
+    return items
+      .filter(
+        (c) =>
+          matchesReminder(c) &&
+          matchesLabels(c) &&
+          matchesDates(c) &&
+          matchesText(c),
+      )
+      .sort((a, b) => {
+        switch (sortState) {
+          case ContactSortMethod.RappelAsc: {
+            const dateA = a.rappel ? new Date(a.rappel).getTime() : Infinity;
+            const dateB = b.rappel ? new Date(b.rappel).getTime() : Infinity;
+            return dateA - dateB;
+          }
+          case ContactSortMethod.RappelDesc: {
+            const dateA = a.rappel ? new Date(a.rappel).getTime() : -Infinity;
+            const dateB = b.rappel ? new Date(b.rappel).getTime() : -Infinity;
+            return dateB - dateA;
+          }
+          case ContactSortMethod.NameAsc:
+            return (a.nom ?? "").localeCompare(b.nom ?? "");
+          case ContactSortMethod.NameDesc:
+            return (b.nom ?? "").localeCompare(a.nom ?? "");
+          default:
+            return 0;
+        }
+      });
+  }, [allContacts, text, hasReminder, selectedLabelIds, dateRange, sortState]);
 
   const value: ContactsContextValue = useMemo(
     () => ({
@@ -203,6 +229,8 @@ export function ContactsProvider({
       removeContact,
       setContactLabels,
       appendEventDate,
+      sortState,
+      setSortState,
     }),
     [
       allContacts,
@@ -220,6 +248,8 @@ export function ContactsProvider({
       removeContact,
       setContactLabels,
       appendEventDate,
+      sortState,
+      setSortState,
     ],
   );
 

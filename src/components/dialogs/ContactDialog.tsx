@@ -39,6 +39,7 @@ import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
 import { useContactsContext } from "@/context/ContactsContext";
 import { Activite, Contact, Label } from "../../../generated/prisma";
+import ArchiveDialog from "./ArchiveDialog";
 
 type ContactWithRelations = Contact & {
   labels: Label[];
@@ -77,6 +78,7 @@ export default function ContactDialog({
       observations: contact?.observations ?? "",
       adresse: contact?.adresse ?? "",
       horaires: contact?.horaires ?? "",
+      active: true,
     },
   });
 
@@ -92,7 +94,7 @@ export default function ContactDialog({
       toast.success(
         mode === "edit"
           ? "Contact mis à jour avec succès"
-          : "Contact enregistré avec succès"
+          : "Contact enregistré avec succès",
       );
       internalOnOpenChange(false);
       // ensure returned contact has relations (actions return with include)
@@ -282,6 +284,11 @@ export default function ContactDialog({
                 Annuler
               </Button>
             </DialogClose>
+            {contact ? (
+              <ArchiveDialog contact={contact}>
+                <Button variant={"outline"}>Archiver</Button>
+              </ArchiveDialog>
+            ) : null}
             <DialogClose asChild>
               <Button
                 type="submit"

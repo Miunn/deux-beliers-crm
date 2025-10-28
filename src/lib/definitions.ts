@@ -14,6 +14,7 @@ export const NEW_CONTACT_FORM_SCHEMA = z
     observations: z.string().optional(),
     adresse: z.string().optional(),
     horaires: z.string().optional(),
+    active: z.boolean().default(true).optional(),
   })
   .strict();
 
@@ -64,5 +65,5 @@ export const ACCOUNT_FORM_SCHEMA = z
     {
       message: "Les mots de passe ne correspondent pas",
       path: ["passwordConfirmation"],
-    }
+    },
   );

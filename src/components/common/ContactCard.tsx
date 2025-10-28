@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Calendar, Pen, Plus, Trash } from "lucide-react";
+import { Calendar, Pen, Plus, Trash } from "lucide-react";
 import { Button } from "../ui/button";
 import { Activite, Contact, Label } from "../../../generated/prisma";
 import DeleteContact from "../dialogs/DeleteContact";
@@ -9,7 +9,7 @@ import EventDialog from "../dialogs/EventDialog";
 import ContactLabelsPopover from "../popovers/ContactLabelsPopover";
 import { Badge } from "../ui/badge";
 import ReminderPopover from "../popovers/ReminderPopover";
-import { addDays, addWeeks } from "date-fns";
+import { addWeeks } from "date-fns";
 import { cn } from "@/lib/utils";
 
 function textColorForBg(bg: string): string {
@@ -63,18 +63,32 @@ export default function ContactCard({
         )}
 
         <div className="text-sm text-gray-700 space-y-1">
-          {contact.mail && (
+          {contact.horaires ? (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: `Horaires: ${String(contact.horaires).replace(
+                  /\n/g,
+                  "<br/>",
+                )}`,
+              }}
+            />
+          ) : (
             <div>
-              Email:{" "}
-              <a
-                className="text-indigo-700 underline"
-                href={`mailto:${contact.mail}`}
-              >
-                {contact.mail}
-              </a>
+              <p>
+                Horaires: <i>Aucun horaire renseigné</i>
+              </p>
             </div>
           )}
-          {contact.telephone && (
+          {contact.contact ? (
+            <div>Contact: {contact.contact}</div>
+          ) : (
+            <div>
+              <p>
+                Contact: <i>Aucun contact renseigné</i>
+              </p>
+            </div>
+          )}
+          {contact.telephone ? (
             <div>
               Tél.:{" "}
               <a
@@ -84,9 +98,31 @@ export default function ContactCard({
                 {contact.telephone}
               </a>
             </div>
+          ) : (
+            <div>
+              <p>
+                Tél.: <i>Aucun téléphone renseigné</i>
+              </p>
+            </div>
           )}
-          {contact.contact && <div>Contact: {contact.contact}</div>}
-          {contact.adresse && (
+          {contact.mail ? (
+            <div>
+              Email:{" "}
+              <a
+                className="text-indigo-700 underline"
+                href={`mailto:${contact.mail}`}
+              >
+                {contact.mail}
+              </a>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Email: <i>Aucun email renseigné</i>
+              </p>
+            </div>
+          )}
+          {contact.adresse ? (
             <div
               dangerouslySetInnerHTML={{
                 __html: `Adresse: ${String(contact.adresse).replace(
@@ -95,19 +131,18 @@ export default function ContactCard({
                 )}`,
               }}
             />
-          )}
-          {contact.horaires && (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: `Horaires: ${String(contact.horaires).replace(
-                  /\n/g,
-                  "<br/>",
-                )}`,
-              }}
-            />
+          ) : (
+            <div>
+              <p>
+                Adresse: <i>Aucune adresse renseignée</i>
+              </p>
+            </div>
           )}
           {contact.observations && (
-            <div className="text-gray-600">Obs.: {contact.observations}</div>
+            <div
+              className="text-gray-600 line-clamp-3"
+              dangerouslySetInnerHTML={{ __html: contact.observations }}
+            />
           )}
         </div>
       </div>

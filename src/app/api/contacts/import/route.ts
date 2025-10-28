@@ -173,8 +173,6 @@ export async function POST(req: NextRequest) {
       await tx.nature.deleteMany({});
       await tx.activite.deleteMany({});
 
-      console.log("Deleted db");
-
       // create base tables
       if (activites.length) {
         await tx.activite.createMany({
@@ -184,7 +182,6 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
-      console.log("Created activites");
       if (labels.length) {
         await tx.label.createMany({
           data: labels.map((l) => ({
@@ -194,7 +191,6 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
-      console.log("Created labels");
       if (natures.length) {
         await tx.nature.createMany({
           data: natures.map((n) => ({
@@ -203,7 +199,6 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
-      console.log("Created natures");
 
       // contacts
       if (contacts.length) {
@@ -212,6 +207,9 @@ export async function POST(req: NextRequest) {
             id: String(c["Id"]),
             nom: String(c["Nom"] ?? ""),
             activiteId: String(c["ActiviteId"] ?? "") || null,
+            rappel: String(c["Rappel"] ?? "")
+              ? new Date(String(c["Rappel"]))
+              : null,
             ville: (c["Ville"] ?? null) as string | null,
             contact: (c["Contact"] ?? null) as string | null,
             telephone: (c["Telephone"] ?? null) as string | null,
