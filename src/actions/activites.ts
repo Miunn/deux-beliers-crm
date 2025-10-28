@@ -7,7 +7,7 @@ import z from "zod";
 import { headers } from "next/headers";
 
 export async function createActivite(
-  data: z.infer<typeof CREATE_ACTIVITE_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_ACTIVITE_FORM_SCHEMA>,
 ) {
   const hdrs = await headers();
   const session = await auth.api.getSession({
@@ -19,7 +19,6 @@ export async function createActivite(
   const validatedData = CREATE_ACTIVITE_FORM_SCHEMA.safeParse(data);
 
   if (!validatedData.success) {
-    console.log(validatedData.error);
     return { error: validatedData.error.message };
   }
 
@@ -31,7 +30,6 @@ export async function createActivite(
       "code" in e &&
       e.constructor.name === "PrismaClientKnownRequestError"
     ) {
-      console.log(e);
       if (e.code === "P2002") {
         return { error: "Cette activité existe déjà" };
       }

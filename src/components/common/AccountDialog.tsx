@@ -43,7 +43,6 @@ export default function AccountDialog({
   });
 
   const onSubmit = async (data: z.infer<typeof ACCOUNT_FORM_SCHEMA>) => {
-    console.log("submit");
     // Update is password not empty
     if (data.password && data.currentPassword) {
       await authClient.changePassword({
@@ -62,7 +61,6 @@ export default function AccountDialog({
     }
   };
 
-  console.log(session);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

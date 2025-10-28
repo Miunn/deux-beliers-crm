@@ -42,7 +42,9 @@ export default function Header({ title }: Props) {
             width={30}
             height={30}
           />
-          <h1 className="text-xl text-primary font-medium">{title}</h1>
+          <h1 className="text-xl text-primary text-nowrap font-medium">
+            {title}
+          </h1>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <nav className="whitespace-nowrap flex items-center gap-3">

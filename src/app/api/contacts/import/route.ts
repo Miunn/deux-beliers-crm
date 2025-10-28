@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   if (errors.length) {
     return NextResponse.json(
       { error: "Format invalide", details: errors },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
   if (errors.length) {
     return NextResponse.json(
       { error: "Format invalide", details: errors },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -221,11 +221,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      console.log("Created contacts");
-
       // contact-labels
-      console.log("Creating contact-labels, length: ", contactLabels.length);
-      let counter = 0;
       for (const [contactId, labelIds] of labelsByContact.entries()) {
         if (!labelIds.length) continue;
         await tx.contact.update({
@@ -234,13 +230,7 @@ export async function POST(req: NextRequest) {
             labels: { connect: labelIds.map((id) => ({ id })) },
           },
         });
-        counter += labelIds.length;
-        if (counter % 50 === 0) {
-          console.log("Created contact-labels: ", counter);
-        }
       }
-
-      console.log("Created contact-labels");
 
       // events
       if (events.length) {
@@ -258,12 +248,10 @@ export async function POST(req: NextRequest) {
           })),
         });
       }
-
-      console.log("Created events");
     },
     {
       timeout: 60000,
-    }
+    },
   );
 
   return NextResponse.json({ success: true });
