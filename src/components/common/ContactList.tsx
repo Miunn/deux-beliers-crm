@@ -15,15 +15,15 @@ export default function ContactList({}: {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-medium">
+      <div className="flex justify-between items-start gap-4">
+        <h2 className="text-xl text-nowrap font-medium">
           {!contacts
             ? "Aucun contact"
             : contacts?.length === 0
-            ? "Aucun contact"
-            : `${contacts?.length} contacts`}
+              ? "Aucun contact"
+              : `${contacts?.length} contacts`}
         </h2>
-        <div className="flex items-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <ContactFilters />
           <ContactDialog mode="create">
             <Button variant="outline">

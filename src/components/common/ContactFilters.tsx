@@ -60,7 +60,7 @@ export default function ContactFilters() {
   }, []);
 
   return (
-    <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] items-stretch gap-2">
+    <>
       <Button
         type="button"
         variant="ghost"
@@ -73,7 +73,7 @@ export default function ContactFilters() {
       >
         <XIcon size={16} />
       </Button>
-      <div className="relative flex-1">
+      <div className="relative">
         <Input
           id={`search-input`}
           className="peer ps-9"
@@ -98,7 +98,7 @@ export default function ContactFilters() {
           <Button
             variant="outline"
             id="date"
-            className="justify-between font-normal min-w-60"
+            className="justify-between font-normal min-w-56"
           >
             {dateRange?.from
               ? dateRange.from.toLocaleDateString() +
@@ -113,6 +113,8 @@ export default function ContactFilters() {
         </PopoverContent>
       </Popover>
       <MultiSelect
+        maxCount={2}
+        autoSize
         options={
           labels?.map((label) => ({
             label: label.label,
@@ -131,6 +133,6 @@ export default function ContactFilters() {
         defaultValue={selectedLabelIds}
       />
       <SortByDropdown sortState={sortState} setSortState={setSortState} />
-    </div>
+    </>
   );
 }
