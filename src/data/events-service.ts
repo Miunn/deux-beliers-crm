@@ -3,9 +3,7 @@ import { prisma } from "@/lib/prisma";
 type CreateEventInput = {
   date: Date;
   natureId: string;
-  attendus?: string;
-  date_traitement?: Date;
-  resultat?: string;
+  commentaires?: string;
 };
 
 type UpdateEventInput = Partial<CreateEventInput>;
@@ -32,9 +30,7 @@ const create = async (contactId: string, data: CreateEventInput) => {
   return prisma.event.create({
     data: {
       date: data.date,
-      attendus: data.attendus,
-      date_traitement: data.date_traitement,
-      resultat: data.resultat,
+      commentaires: data.commentaires,
       nature: { connect: { id: data.natureId } },
       contact: { connect: { id: contactId } },
     },
@@ -47,9 +43,7 @@ const update = async (id: string, data: UpdateEventInput) => {
     where: { id },
     data: {
       date: data.date,
-      attendus: data.attendus,
-      date_traitement: data.date_traitement,
-      resultat: data.resultat,
+      commentaires: data.commentaires,
       nature: data.natureId ? { connect: { id: data.natureId } } : undefined,
     },
     include: { nature: true },

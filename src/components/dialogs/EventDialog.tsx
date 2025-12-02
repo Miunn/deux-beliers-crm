@@ -73,9 +73,7 @@ export default function EventDialog({
     defaultValues: {
       date: new Date(),
       natureId: "",
-      attendus: "",
-      date_traitement: undefined,
-      resultat: "",
+      commentaires: "",
     },
   });
 
@@ -94,9 +92,7 @@ export default function EventDialog({
       form.reset({
         date: new Date(),
         natureId: "",
-        attendus: "",
-        date_traitement: undefined,
-        resultat: "",
+        commentaires: "",
       });
     }
   };
@@ -105,20 +101,16 @@ export default function EventDialog({
     <div
       key={e.id}
       className={cn(
-        "relative group rounded-md border p-3 text-sm space-y-1",
+        "relative group max-w-full rounded-md border p-3 text-sm space-y-1",
         "cursor-default",
-        editingEventId === e.id && "bg-muted outline"
+        editingEventId === e.id && "bg-muted outline",
       )}
       onClick={() => {
         setEditingEventId(e.id);
         form.reset({
           date: new Date(e.date),
           natureId: e.natureId ?? "",
-          attendus: e.attendus ?? "",
-          date_traitement: e.date_traitement
-            ? new Date(e.date_traitement)
-            : undefined,
-          resultat: e.resultat ?? "",
+          commentaires: e.commentaires ?? "",
         });
       }}
     >
@@ -141,11 +133,7 @@ export default function EventDialog({
           form.reset({
             date: new Date(e.date),
             natureId: e.natureId ?? "",
-            attendus: e.attendus ?? "",
-            date_traitement: e.date_traitement
-              ? new Date(e.date_traitement)
-              : undefined,
-            resultat: e.resultat ?? "",
+            commentaires: e.commentaires ?? "",
           });
         }}
       >
@@ -155,13 +143,7 @@ export default function EventDialog({
         {new Date(e.date).toLocaleDateString()}{" "}
         {e.natureId ? `• ${e.nature?.label}` : ""}
       </div>
-      {e.attendus && <div>Attendus: {e.attendus}</div>}
-      {e.date_traitement && (
-        <div>
-          Traitement: {new Date(e.date_traitement).toLocaleDateString()}
-        </div>
-      )}
-      {e.resultat && <div>Résultat: {e.resultat}</div>}
+      {e.commentaires && <p>{e.commentaires}</p>}
     </div>
   );
 
@@ -169,27 +151,25 @@ export default function EventDialog({
     <>
       <Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
         {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
-        <DialogContent className="flex flex-col gap-0 p-0 min-w-[55%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-2xl [&>button:last-child]:top-3.5">
+        <DialogContent className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5">
           <DialogHeader className="contents space-y-0 text-left">
             <DialogTitle className="border-b px-6 py-4 text-base">
               Suivi des événements
             </DialogTitle>
-            <div className="overflow-y-auto">
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+            <div className="relative overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">Historique</div>
+                {isLoading && <div className="text-sm">Chargement…</div>}
+                {events?.length === 0 && (
                   <div className="text-sm text-muted-foreground">
-                    Historique
+                    Aucun événement.
                   </div>
-                  {isLoading && <div className="text-sm">Chargement…</div>}
-                  {events?.length === 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      Aucun événement.
-                    </div>
-                  )}
-                  {events?.map((e) => renderEvent(e))}
-                </div>
+                )}
+                {events?.map((e) => renderEvent(e))}
+              </div>
 
-                <div className="h-full space-y-4">
+              <div className="w-full h-full row-start-1 md:row-start-auto md:col-start-2">
+                <div className="sticky top-0 right-0 space-y-4">
                   <Form {...form}>
                     <form
                       className="space-y-4"
@@ -249,56 +229,10 @@ export default function EventDialog({
                       />
                       <FormField
                         control={form.control}
-                        name="attendus"
+                        name="commentaires"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Attendus</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                className="min-h-[100px] resize-y field-sizing-fixed"
-                                rows={4}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="date_traitement"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date de traitement</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                value={
-                                  field.value
-                                    ? new Date(field.value)
-                                        .toISOString()
-                                        .slice(0, 10)
-                                    : ""
-                                }
-                                onChange={(e) =>
-                                  field.onChange(
-                                    e.target.value
-                                      ? new Date(e.target.value)
-                                      : undefined
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="resultat"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Résultat</FormLabel>
+                            <FormLabel>Commentaires</FormLabel>
                             <FormControl>
                               <Textarea
                                 className="min-h-[100px] resize-y field-sizing-fixed"
@@ -311,7 +245,7 @@ export default function EventDialog({
                         )}
                       />
 
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end flex-wrap-reverse gap-2">
                         <Button
                           type="button"
                           variant="outline"
@@ -324,9 +258,7 @@ export default function EventDialog({
                             form.reset({
                               date: new Date(),
                               natureId: "",
-                              attendus: "",
-                              date_traitement: undefined,
-                              resultat: "",
+                              commentaires: "",
                             });
                           }}
                         >
@@ -405,9 +337,7 @@ export default function EventDialog({
             form.reset({
               date: new Date(),
               natureId: "",
-              attendus: "",
-              date_traitement: undefined,
-              resultat: "",
+              commentaires: "",
             });
           });
         }}

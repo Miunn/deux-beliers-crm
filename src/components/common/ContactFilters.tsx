@@ -86,12 +86,19 @@ export default function ContactFilters() {
           <SearchIcon size={16} />
         </div>
       </div>
-      <Button variant={"outline"} onClick={() => setHasReminder(!hasReminder)}>
-        <Checkbox
-          checked={hasReminder}
-          onCheckedChange={(checked) => setHasReminder(checked as boolean)}
-        />
-        Rappel dans les 7 jours
+      <Button
+        variant={"outline"}
+        onClick={() => setHasReminder(!hasReminder)}
+        className="cursor-default"
+        asChild
+      >
+        <div>
+          <Checkbox
+            checked={hasReminder}
+            onCheckedChange={(checked) => setHasReminder(checked as boolean)}
+          />
+          Rappel dans les 7 jours
+        </div>
       </Button>
       <Popover>
         <PopoverTrigger asChild>

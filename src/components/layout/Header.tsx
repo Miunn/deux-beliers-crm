@@ -47,7 +47,7 @@ export default function Header({ title }: Props) {
           </h1>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <nav className="whitespace-nowrap flex items-center gap-3">
+          <nav className="whitespace-nowrap flex items-center flex-wrap gap-3">
             {/* <Button variant={"link"} className="cursor-pointer text-white">
               Paramètres
             </Button> */}

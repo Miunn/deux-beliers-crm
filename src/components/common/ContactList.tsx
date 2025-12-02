@@ -15,7 +15,7 @@ export default function ContactList({}: {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-start gap-4">
+      <div className="flex justify-between items-start flex-wrap gap-4">
         <h2 className="text-xl text-nowrap font-medium">
           {!contacts
             ? "Aucun contact"
