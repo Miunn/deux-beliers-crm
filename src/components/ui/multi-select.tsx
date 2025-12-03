@@ -80,7 +80,7 @@ interface MultiSelectGroup {
  */
 interface MultiSelectProps
   extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "defaultValue">,
     VariantProps<typeof multiSelectVariants> {
   /**
    * An array of option objects or groups to be displayed in the multi-select component.
