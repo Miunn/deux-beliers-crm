@@ -66,16 +66,10 @@ export default function DeleteEvent({
               {event.nature.label}
             </div>
           )}
-          {event.attendus && (
+          {event.commentaires && (
             <div>
-              <span className="font-medium">Attendus: </span>
-              {event.attendus}
-            </div>
-          )}
-          {event.resultat && (
-            <div>
-              <span className="font-medium">Résultat: </span>
-              {event.resultat}
+              <span className="font-medium">Commentaires: </span>
+              {event.commentaires}
             </div>
           )}
         </div>
