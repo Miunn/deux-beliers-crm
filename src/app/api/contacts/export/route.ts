@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 function autoFitColumns<T extends Record<string, unknown>>(
   ws: XLSX.WorkSheet,
   rows: T[],
-  headers: string[]
+  headers: string[],
 ) {
   const widths = headers.map((h) => ({ wch: Math.max(8, String(h).length) }));
   for (const row of rows) {
@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     "Observations",
     "Adresse",
     "Horaires",
+    "Rappel",
     "Labels",
   ];
   const contactRows = contacts.map((c) => ({
@@ -64,6 +65,11 @@ export async function GET(req: NextRequest) {
     Observations: c.observations ?? "",
     Adresse: c.adresse ?? "",
     Horaires: c.horaires ?? "",
+    Rappel: c.rappel
+      ? c.rappel instanceof Date
+        ? c.rappel.toISOString()
+        : new Date(c.rappel).toISOString()
+      : "",
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
   }));
 
@@ -111,7 +117,7 @@ export async function GET(req: NextRequest) {
 
   const contactLabelHeaders = ["ContactId", "LabelId"];
   const contactLabelRows = contacts.flatMap((c) =>
-    c.labels.map((l) => ({ ContactId: c.id, LabelId: l.id }))
+    c.labels.map((l) => ({ ContactId: c.id, LabelId: l.id })),
   );
 
   const wb = XLSX.utils.book_new();
