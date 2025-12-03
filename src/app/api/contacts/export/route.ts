@@ -67,15 +67,11 @@ export async function GET(req: NextRequest) {
     Observations: c.observations ?? "",
     Adresse: c.adresse ?? "",
     Horaires: c.horaires ?? "",
-<<<<<<< HEAD
-    Rappel: c.rappel ? new Date(c.rappel).toISOString() : "",
-=======
     Rappel: c.rappel
       ? c.rappel instanceof Date
         ? c.rappel.toISOString()
         : new Date(c.rappel).toISOString()
       : "",
->>>>>>> feat/export-import-rappel
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
   }));
 
