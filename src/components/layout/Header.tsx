@@ -14,15 +14,17 @@ import {
 import { LogOut, User } from "lucide-react";
 import AccountDialog from "../common/AccountDialog";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { cn } from "@/lib/utils";
 
 type Props = {
   title: string;
 };
 
 export default function Header({ title }: Props) {
+  const pathname = usePathname();
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [naturesOpen, setNaturesOpen] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -33,9 +35,9 @@ export default function Header({ title }: Props) {
   const [importDetails, setImportDetails] = useState<string[]>([]);
 
   return (
-    <header className="bg-background p-4 shadow-sm sticky top-0 z-10">
+    <header className="bg-background p-4 z-10 border-b">
       <div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2">
+        <Link href={"/"} className="flex items-center gap-2">
           <Image
             src="/cropped-icon-gold.svg"
             alt="Deux Béliers"
@@ -45,9 +47,9 @@ export default function Header({ title }: Props) {
           <h1 className="text-xl text-primary text-nowrap font-medium">
             {title}
           </h1>
-        </div>
+        </Link>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <nav className="whitespace-nowrap flex items-center gap-3">
+          <nav className="whitespace-nowrap flex items-center flex-wrap gap-3">
             {/* <Button variant={"link"} className="cursor-pointer text-white">
               Paramètres
             </Button> */}
@@ -65,7 +67,14 @@ export default function Header({ title }: Props) {
             >
               Nature d&apos;événement
             </Button>
-            <Button variant={"link"} className="cursor-pointer" asChild>
+            <Button
+              variant={"link"}
+              className={cn(
+                "cursor-pointer",
+                pathname === "/archive" ? "underline" : "",
+              )}
+              asChild
+            >
               <Link href="/archive">Archivés</Link>
             </Button>
             <input

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activite, Contact, Label } from "../../generated/prisma";
 import { useSearchParams } from "next/navigation";
+import { SelectedState } from "@/components/ui/multi-select";
 
 export type ContactWithRelations = Contact & {
   labels: Label[];
@@ -11,8 +12,7 @@ export type ContactWithRelations = Contact & {
     id: string;
     date: Date | string;
     nature?: { id: string; label: string } | null;
-    attendus?: string | null;
-    resultat?: string | null;
+    commentaires?: string | null;
   }>;
 };
 
@@ -21,7 +21,7 @@ type ContactsApi = {
   setContacts: (
     updater:
       | ContactWithRelations[]
-      | ((prev: ContactWithRelations[]) => ContactWithRelations[])
+      | ((prev: ContactWithRelations[]) => ContactWithRelations[]),
   ) => void;
   addOrUpdateContact: (contact: ContactWithRelations) => void;
   removeContact: (id: string) => void;
@@ -71,14 +71,14 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
     (
       updater:
         | ContactWithRelations[]
-        | ((prev: ContactWithRelations[]) => ContactWithRelations[])
+        | ((prev: ContactWithRelations[]) => ContactWithRelations[]),
     ) => {
       const prevCurrent = contactsStoreRef?.current ?? [];
       const next =
         typeof updater === "function"
           ? (
               updater as (
-                prev: ContactWithRelations[]
+                prev: ContactWithRelations[],
               ) => ContactWithRelations[]
             )(prevCurrent)
           : updater;
@@ -87,7 +87,7 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
       setVersion((v) => v + 1);
       notifySubscribers();
     },
-    []
+    [],
   );
 
   const addOrUpdateContact = useCallback<ContactsApi["addOrUpdateContact"]>(
@@ -100,23 +100,23 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
         return next;
       });
     },
-    [setContacts]
+    [setContacts],
   );
 
   const removeContact = useCallback<ContactsApi["removeContact"]>(
     (id) => {
       setContacts((prev) => prev.filter((c) => c.id !== id));
     },
-    [setContacts]
+    [setContacts],
   );
 
   const setContactLabels = useCallback<ContactsApi["setContactLabels"]>(
     (id, labels) => {
       setContacts((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, labels } : c))
+        prev.map((c) => (c.id === id ? { ...c, labels } : c)),
       );
     },
-    [setContacts]
+    [setContacts],
   );
 
   const appendEventDate = useCallback<ContactsApi["appendEventDate"]>(
@@ -136,23 +136,22 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
                   ...(c.events ?? []),
                 ],
               }
-            : c
-        )
+            : c,
+        ),
       );
     },
-    [setContacts]
+    [setContacts],
   );
 
   const searchParams = useSearchParams();
   const q = (searchParams.get("q") ?? "").trim().toLowerCase();
-  const labelId = searchParams.get("labelId") ?? "";
+  const labels = searchParams.get("labelId") ?? "[]";
   const from = searchParams.get("from") ?? "";
   const to = searchParams.get("to") ?? "";
 
-  const selectedLabelIds = useMemo(
-    () =>
-      labelId && labelId !== "all" ? labelId.split(",").filter(Boolean) : [],
-    [labelId]
+  const selectedLabels = useMemo(
+    () => (labels && labels !== "all" ? JSON.parse(labels) : []),
+    [labels],
   );
 
   const fromDate = useMemo(() => (from ? new Date(from) : undefined), [from]);
@@ -181,8 +180,7 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
       const eventStrings: string[] = c.events
         ? c.events.flatMap((e) => [
             e?.nature?.label ?? "",
-            e?.attendus ?? "",
-            e?.resultat ?? "",
+            e?.commentaires ?? "",
           ])
         : [];
       const all = haystacks.concat(eventStrings).join("\n").toLowerCase();
@@ -190,10 +188,38 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
     };
 
     const matchesLabels = (c: ContactWithRelations): boolean => {
-      if (!selectedLabelIds.length) return true;
+      if (selectedLabels.length === 0) return true;
       const set = new Set(c.labels.map((l) => l.id));
-      // require ALL selected labels to be present
-      return selectedLabelIds.every((id) => set.has(id));
+
+      // If contact labels containts any of exclude labels, return false
+      // Otherwise, contact must contain all of "and" labels
+      // And at least one of "or" labels
+      const excludeLabels = selectedLabels.filter(
+        (l: SelectedState) => l.action === "exclude",
+      );
+      for (const l of excludeLabels) {
+        if (set.has(l.id)) return false;
+      }
+      const andLabels = selectedLabels.filter(
+        (l: SelectedState) => l.action === "and",
+      );
+      for (const l of andLabels) {
+        if (!set.has(l.id)) return false;
+      }
+      const orLabels = selectedLabels.filter(
+        (l: SelectedState) => l.action === "or",
+      );
+      if (orLabels.length > 0) {
+        let hasOne = false;
+        for (const l of orLabels) {
+          if (set.has(l.id)) {
+            hasOne = true;
+            break;
+          }
+        }
+        if (!hasOne) return false;
+      }
+      return true;
     };
 
     const matchesDates = (c: ContactWithRelations): boolean => {
@@ -209,9 +235,9 @@ export function useContacts(defaultContacts: ContactWithRelations[]): {
     };
 
     return items.filter(
-      (c) => matchesText(c) && matchesLabels(c) && matchesDates(c)
+      (c) => matchesText(c) && matchesLabels(c) && matchesDates(c),
     );
-  }, [allContacts, q, selectedLabelIds, fromDate, toDate]);
+  }, [allContacts, q, selectedLabels, fromDate, toDate]);
 
   return {
     contacts,

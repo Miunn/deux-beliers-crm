@@ -31,8 +31,7 @@ const getContacts = async (
               some: {
                 OR: [
                   { nature: { label: { contains: query } } },
-                  { attendus: { contains: query } },
-                  { resultat: { contains: query } },
+                  { commentaires: { contains: query } },
                 ],
               },
             },
@@ -70,7 +69,7 @@ const getContacts = async (
     where,
     include: {
       activite: true,
-      events: true,
+      events: { include: { nature: true } },
       labels: true,
     },
     orderBy: { nom: "asc" },

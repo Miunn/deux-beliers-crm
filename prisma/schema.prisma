@@ -19,9 +19,7 @@ model Event {
     date            DateTime
     nature          Nature?   @relation(fields: [natureId], references: [id])
     natureId        String?
-    attendus        String?   @db.Text
-    date_traitement DateTime?
-    resultat        String?   @db.Text
+    commentaires    String?   @db.Text
 
     contact   Contact @relation(fields: [contactId], references: [id])
     contactId String

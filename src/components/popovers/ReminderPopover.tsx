@@ -29,10 +29,23 @@ export default function ReminderPopover({
 
     setSaving(true);
     const r = await setReminder(contact.id, date);
-    addOrUpdateContact({ ...contact, rappel: date });
     setSaving(false);
 
     if (r.success) {
+      // Blur any active element so focus doesn't jump back to the popover trigger
+      // when we close it. Browsers may scroll focused elements into view which
+      // causes the viewport to jump on reorder — removing focus prevents that.
+      try {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      } catch (e) {
+        // ignore environments without a DOM
+      }
+
+      // Update the contact in context after blur to avoid scroll jumps.
+      addOrUpdateContact({ ...contact, rappel: date });
+
       setOpen(false);
       toast.success("Rappel enregistré");
       return;
@@ -51,12 +64,23 @@ export default function ReminderPopover({
           <Bell />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto overflow-hidden" align="start">
+      <PopoverContent
+        className="w-auto overflow-hidden"
+        align="start"
+        onCloseAutoFocus={(e) => {
+          // Prevent Radix from moving focus back to the trigger when the popover closes.
+          // Returning focus to the trigger can cause the page to jump (scroll) — prevent that.
+          e.preventDefault();
+        }}
+      >
         <CalendarPresets
           date={date}
           setDate={setDate}
           className="border-0"
-          calendarProps={{ disabled: (date) => date < new Date() }}
+          calendarProps={{
+            disabled: (date) =>
+              date < new Date(new Date().setHours(0, 0, 0, 0)),
+          }}
         />
         <div className="flex justify-between items-center">
           <p className="p-4 text-sm">

@@ -133,9 +133,6 @@ export async function POST(req: NextRequest) {
     }
     const date = String(e["Date"] ?? "");
     if (date && !isIsoDate(date)) errors.push(`Events.Date invalide: ${date}`);
-    const dtrait = String(e["DateTraitement"] ?? "");
-    if (dtrait && !isIsoDate(dtrait))
-      errors.push(`Events.DateTraitement invalide: ${dtrait}`);
   }
 
   for (const cl of contactLabels) {
@@ -241,11 +238,7 @@ export async function POST(req: NextRequest) {
             contactId: String(e["ContactId"]),
             date: new Date(String(e["Date"])) as unknown as Date,
             natureId: String(e["NatureId"] ?? "") || null,
-            attendus: (e["Attendus"] ?? null) as string | null,
-            date_traitement: String(e["DateTraitement"] ?? "")
-              ? (new Date(String(e["DateTraitement"])) as unknown as Date)
-              : null,
-            resultat: (e["Resultat"] ?? null) as string | null,
+            commentaires: (e["Commentaires"] ?? null) as string | null,
           })),
         });
       }

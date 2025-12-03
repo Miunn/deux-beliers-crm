@@ -52,7 +52,7 @@ export default function SignIn() {
         onError: (error) => {
           toast.error(error.error.message);
         },
-      }
+      },
     );
   };
 

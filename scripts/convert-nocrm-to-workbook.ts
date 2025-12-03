@@ -82,9 +82,7 @@ type EventOut = {
   Id: string;
   Date: string; // ISO
   NatureId?: string;
-  Attendus?: string;
-  DateTraitement?: string;
-  Resultat?: string;
+  Commentaires?: string;
   ContactId: string;
   ContactName: string;
 };
@@ -141,7 +139,7 @@ function extractTypeAndText(input: string): { type: string; text: string } {
   // Ensure the leading timestamp is fully removed from the content.
   const after = input.replace(
     /^\[(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2})]\s*[-–—]?\s*/,
-    ""
+    "",
   );
 
   // Strip any leading legacy label token like "Livraison:", "Abouti:", etc., keep only content
@@ -260,7 +258,7 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
 
   // Pre-create a few common natures
   CANONICAL_NATURE_LABELS.forEach((n) =>
-    natures.set(slugId(n), { Id: slugId(n), Label: n })
+    natures.set(slugId(n), { Id: slugId(n), Label: n }),
   );
 
   let eventCounter = 1;
@@ -349,7 +347,7 @@ function convert(inputPath: string, outputPath: string, encodingOpt?: string) {
           Id: makeId("evt", eventCounter++),
           Date: ts,
           NatureId: nid,
-          Resultat: text,
+          Commentaires: text,
           ContactId: String(id),
           ContactName: nom,
         });
@@ -386,7 +384,7 @@ function main() {
     process.argv[3] || path.join(process.cwd(), "nocrm-converted.xlsx");
   if (!input) {
     console.error(
-      "Usage: ts-node scripts/convert-nocrm-to-workbook.ts <input.csv> [output.xlsx]"
+      "Usage: ts-node scripts/convert-nocrm-to-workbook.ts <input.csv> [output.xlsx]",
     );
     process.exit(1);
   }

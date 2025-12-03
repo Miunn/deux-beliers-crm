@@ -67,11 +67,15 @@ export async function GET(req: NextRequest) {
     Observations: c.observations ?? "",
     Adresse: c.adresse ?? "",
     Horaires: c.horaires ?? "",
+<<<<<<< HEAD
+    Rappel: c.rappel ? new Date(c.rappel).toISOString() : "",
+=======
     Rappel: c.rappel
       ? c.rappel instanceof Date
         ? c.rappel.toISOString()
         : new Date(c.rappel).toISOString()
       : "",
+>>>>>>> feat/export-import-rappel
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
   }));
 
@@ -105,13 +109,7 @@ export async function GET(req: NextRequest) {
         ? e.date.toISOString()
         : new Date(e.date).toISOString(),
     NatureId: e.natureId ?? "",
-    Attendus: e.attendus ?? "",
-    DateTraitement: e.date_traitement
-      ? e.date_traitement instanceof Date
-        ? e.date_traitement.toISOString()
-        : new Date(e.date_traitement).toISOString()
-      : "",
-    Resultat: e.resultat ?? "",
+    Commentaires: e.commentaires ?? "",
     ContactId: e.contactId,
     ContactName:
       (e as { contact?: { nom?: string | null } }).contact?.nom ?? "",
