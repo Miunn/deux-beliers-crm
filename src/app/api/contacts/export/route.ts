@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
 
   const contactHeaders = [
     "Id",
+    "Archive",
     "Nom",
     "ActiviteId",
     "Ville",
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
   ];
   const contactRows = contacts.map((c) => ({
     Id: c.id,
+    Archive: c.active ? "FAUX" : "VRAI",
     Nom: c.nom,
     ActiviteId: c.activiteId ?? "",
     Ville: c.ville ?? "",
