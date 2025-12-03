@@ -22,15 +22,15 @@ export default async function Home() {
   const contacts = await ContactService.getContacts();
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       <Header title="Gestion clients" />
-      <div className="font-sans min-h-screen p-8 gap-16 sm:p-20">
-        <main className="container mx-auto flex flex-col gap-12">
+      <div className="overflow-y-auto">
+        <main className="container mx-auto flex-1 relative font-sans">
           <ContactsProvider defaultContacts={contacts}>
             <ContactList defaultContacts={contacts} />
           </ContactsProvider>
         </main>
       </div>
-    </>
+    </div>
   );
 }

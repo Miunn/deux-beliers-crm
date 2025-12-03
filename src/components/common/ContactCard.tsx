@@ -1,8 +1,15 @@
 "use client";
 
-import { Calendar, Pen, Plus, Trash } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  Pen,
+  Phone,
+  Plus,
+  Trash,
+  UserRound,
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { Activite, Contact, Label } from "../../../generated/prisma";
 import DeleteContact from "../dialogs/DeleteContact";
 import ContactDialog from "../dialogs/ContactDialog";
 import EventDialog from "../dialogs/EventDialog";
@@ -11,6 +18,7 @@ import { Badge } from "../ui/badge";
 import ReminderPopover from "../popovers/ReminderPopover";
 import { addWeeks } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ContactWithRelations } from "@/context/ContactsContext";
 
 function textColorForBg(bg: string): string {
   try {
@@ -28,10 +36,20 @@ function textColorForBg(bg: string): string {
 export default function ContactCard({
   contact,
 }: {
-  contact: Contact & { labels: Label[]; activite: Activite | null };
+  contact: ContactWithRelations;
 }) {
+  const lastEvent = contact.events
+    ? contact.events.reduce((latest, event) => {
+        const eventDate = new Date(event.date);
+        return eventDate > new Date(latest.date) ? event : latest;
+      }, contact.events[0])
+    : null;
+
   return (
-    <div className="rounded-xl border p-4 bg-white shadow-sm flex flex-col justify-between gap-2 relative">
+    <div
+      className="h-full rounded-xl border p-4 bg-white shadow-sm flex flex-col justify-between gap-2 relative"
+      data-contact-id={contact.id}
+    >
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -51,46 +69,36 @@ export default function ContactCard({
         {contact.rappel && (
           <div
             className={cn(
-              "text-sm inline-block",
+              "flex items-start gap-1 text-sm",
               contact.rappel <= addWeeks(new Date(), 1)
                 ? "font-semibold text-destructive"
                 : "",
             )}
           >
-            Rappel le:{" "}
-            <span>{new Date(contact.rappel).toLocaleDateString()}</span>
+            <Bell className="size-4 shrink-0" />
+            <p>{new Date(contact.rappel).toLocaleDateString()}</p>
           </div>
         )}
 
         <div className="text-sm text-gray-700 space-y-1">
           {contact.horaires ? (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: `Horaires: ${String(contact.horaires).replace(
-                  /\n/g,
-                  "<br/>",
-                )}`,
-              }}
-            />
-          ) : (
-            <div>
-              <p>
-                Horaires: <i>Aucun horaire renseigné</i>
-              </p>
+            <div className="flex items-start gap-1">
+              <Calendar className="size-4 shrink-0" />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: `${String(contact.horaires).replace(/\n/g, "<br/>")}`,
+                }}
+              />
             </div>
-          )}
+          ) : null}
           {contact.contact ? (
-            <div>Contact: {contact.contact}</div>
-          ) : (
-            <div>
-              <p>
-                Contact: <i>Aucun contact renseigné</i>
-              </p>
+            <div className="flex items-start gap-1">
+              <UserRound className="size-4" /> {contact.contact}
             </div>
-          )}
+          ) : null}
           {contact.telephone ? (
-            <div>
-              Tél.:{" "}
+            <div className="flex items-start gap-1">
+              <Phone className="size-4 shrink-0" />
               <a
                 className="text-indigo-700 underline"
                 href={`tel:${contact.telephone}`}
@@ -98,52 +106,16 @@ export default function ContactCard({
                 {contact.telephone}
               </a>
             </div>
-          ) : (
-            <div>
-              <p>
-                Tél.: <i>Aucun téléphone renseigné</i>
+          ) : null}
+          {lastEvent ? (
+            <div className="flex items-start gap-1">
+              <Calendar className="size-4 shrink-0" />
+              <p className="line-clamp-3">
+                <span className="font-medium"></span>
+                {lastEvent.commentaires}
               </p>
             </div>
-          )}
-          {contact.mail ? (
-            <div>
-              Email:{" "}
-              <a
-                className="text-indigo-700 underline"
-                href={`mailto:${contact.mail}`}
-              >
-                {contact.mail}
-              </a>
-            </div>
-          ) : (
-            <div>
-              <p>
-                Email: <i>Aucun email renseigné</i>
-              </p>
-            </div>
-          )}
-          {contact.adresse ? (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: `Adresse: ${String(contact.adresse).replace(
-                  /\n/g,
-                  "<br/>",
-                )}`,
-              }}
-            />
-          ) : (
-            <div>
-              <p>
-                Adresse: <i>Aucune adresse renseignée</i>
-              </p>
-            </div>
-          )}
-          {contact.observations && (
-            <div
-              className="text-gray-600 line-clamp-3"
-              dangerouslySetInnerHTML={{ __html: contact.observations }}
-            />
-          )}
+          ) : null}
         </div>
       </div>
 

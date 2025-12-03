@@ -20,8 +20,8 @@ export default function ContactFilters() {
     setText,
     hasReminder,
     setHasReminder,
-    selectedLabelIds,
-    setSelectedLabelIds,
+    selectedLabels,
+    setSelectedLabels,
     dateRange,
     setDateRange,
     resetFilters,
@@ -48,13 +48,13 @@ export default function ContactFilters() {
   // one-time initial hydration from URL params (q, labelId)
   useEffect(() => {
     const urlQ = searchParams.get("q") ?? "";
-    const urlLabelIds = searchParams.get("labelId")?.split(",") ?? [];
+    const urlLabelIds = JSON.parse(searchParams.get("labelId") ?? "[]");
     if (urlQ && !text) {
       setText(urlQ);
       setLocalText(urlQ);
     }
-    if (urlLabelIds.length && selectedLabelIds.length === 0)
-      setSelectedLabelIds(urlLabelIds.filter(Boolean));
+    if (urlLabelIds.length && selectedLabels.length === 0)
+      setSelectedLabels(urlLabelIds.filter(Boolean));
     // dates are not encoded currently in URL in this component
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -136,8 +136,8 @@ export default function ContactFilters() {
           })) ?? []
         }
         placeholder="Libellés"
-        onValueChange={setSelectedLabelIds}
-        defaultValue={selectedLabelIds}
+        onValueChange={setSelectedLabels}
+        defaultValue={selectedLabels}
       />
       <SortByDropdown sortState={sortState} setSortState={setSortState} />
     </>

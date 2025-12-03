@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 function autoFitColumns<T extends Record<string, unknown>>(
   ws: XLSX.WorkSheet,
   rows: T[],
-  headers: string[]
+  headers: string[],
 ) {
   const widths = headers.map((h) => ({ wch: Math.max(8, String(h).length) }));
   for (const row of rows) {
@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     "Observations",
     "Adresse",
     "Horaires",
+    "Rappel",
     "Labels",
   ];
   const contactRows = contacts.map((c) => ({
@@ -64,6 +65,7 @@ export async function GET(req: NextRequest) {
     Observations: c.observations ?? "",
     Adresse: c.adresse ?? "",
     Horaires: c.horaires ?? "",
+    Rappel: c.rappel ? new Date(c.rappel).toISOString() : "",
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
   }));
 
@@ -97,13 +99,7 @@ export async function GET(req: NextRequest) {
         ? e.date.toISOString()
         : new Date(e.date).toISOString(),
     NatureId: e.natureId ?? "",
-    Attendus: e.attendus ?? "",
-    DateTraitement: e.date_traitement
-      ? e.date_traitement instanceof Date
-        ? e.date_traitement.toISOString()
-        : new Date(e.date_traitement).toISOString()
-      : "",
-    Resultat: e.resultat ?? "",
+    Commentaires: e.commentaires ?? "",
     ContactId: e.contactId,
     ContactName:
       (e as { contact?: { nom?: string | null } }).contact?.nom ?? "",
@@ -111,7 +107,7 @@ export async function GET(req: NextRequest) {
 
   const contactLabelHeaders = ["ContactId", "LabelId"];
   const contactLabelRows = contacts.flatMap((c) =>
-    c.labels.map((l) => ({ ContactId: c.id, LabelId: l.id }))
+    c.labels.map((l) => ({ ContactId: c.id, LabelId: l.id })),
   );
 
   const wb = XLSX.utils.book_new();
