@@ -202,6 +202,7 @@ export async function POST(req: NextRequest) {
         await tx.contact.createMany({
           data: contacts.map((c) => ({
             id: String(c["Id"]),
+            active: c["Archive"] === "VRAI" ? false : true,
             nom: String(c["Nom"] ?? ""),
             activiteId: String(c["ActiviteId"] ?? "") || null,
             rappel: String(c["Rappel"] ?? "")

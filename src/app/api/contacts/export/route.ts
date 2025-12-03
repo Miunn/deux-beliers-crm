@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
 
   const contactHeaders = [
     "Id",
+    "Archive",
     "Nom",
     "ActiviteId",
     "Ville",
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
   ];
   const contactRows = contacts.map((c) => ({
     Id: c.id,
+    Archive: c.active ? "FAUX" : "VRAI",
     Nom: c.nom,
     ActiviteId: c.activiteId ?? "",
     Ville: c.ville ?? "",
@@ -65,7 +67,15 @@ export async function GET(req: NextRequest) {
     Observations: c.observations ?? "",
     Adresse: c.adresse ?? "",
     Horaires: c.horaires ?? "",
+<<<<<<< HEAD
     Rappel: c.rappel ? new Date(c.rappel).toISOString() : "",
+=======
+    Rappel: c.rappel
+      ? c.rappel instanceof Date
+        ? c.rappel.toISOString()
+        : new Date(c.rappel).toISOString()
+      : "",
+>>>>>>> feat/export-import-rappel
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
   }));
 
