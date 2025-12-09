@@ -39,7 +39,7 @@ export default function ReminderPopover({
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
-      } catch (e) {
+      } catch {
         // ignore environments without a DOM
       }
 

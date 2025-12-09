@@ -42,7 +42,7 @@ export const CREATE_NATURE_FORM_SCHEMA = z
 export const CREATE_EVENT_FORM_SCHEMA = z
   .object({
     date: z.date(),
-    natureId: z.string().min(1, { message: "La nature est requise" }),
+    natureId: z.string().optional(),
     commentaires: z.string().optional(),
   })
   .strict();

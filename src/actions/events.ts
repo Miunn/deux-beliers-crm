@@ -50,27 +50,20 @@ export async function createEventWithReminder(
         data: {
           date: parsed.data.date,
           commentaires: parsed.data.commentaires,
-          nature: { connect: { id: parsed.data.natureId } },
+          nature: parsed.data.natureId
+            ? { connect: { id: parsed.data.natureId } }
+            : undefined,
           contact: { connect: { id: contactId } },
         },
       });
-      // Find or create a Nature with label "Rappel"
-      const rappelNature = await tx.nature.upsert({
-        where: { label: "Rappel" },
-        update: {},
-        create: { label: "Rappel" },
-      });
-      await tx.event.create({
-        data: {
-          date: reminderDate,
-          commentaires: "Rappel programmé",
-          nature: { connect: { id: rappelNature.id } },
-          contact: { connect: { id: contactId } },
-        },
+      await tx.contact.update({
+        where: { id: contactId },
+        data: { rappel: reminderDate },
       });
     });
     return { success: true } as const;
-  } catch {
+  } catch (e) {
+    console.error(e);
     return {
       error: "Erreur lors de la création de l'événement avec rappel",
     } as const;
@@ -97,21 +90,14 @@ export async function updateEventWithReminder(
         data: {
           date: parsed.data.date,
           commentaires: parsed.data.commentaires,
-          nature: { connect: { id: parsed.data.natureId } },
+          nature: parsed.data.natureId
+            ? { connect: { id: parsed.data.natureId } }
+            : undefined,
         },
       });
-      const rappelNature = await tx.nature.upsert({
-        where: { label: "Rappel" },
-        update: {},
-        create: { label: "Rappel" },
-      });
-      await tx.event.create({
-        data: {
-          date: reminderDate,
-          commentaires: `Rappel programmé`,
-          nature: { connect: { id: rappelNature.id } },
-          contact: { connect: { id: updated.contactId } },
-        },
+      await tx.contact.update({
+        where: { id: updated.contactId },
+        data: { rappel: reminderDate },
       });
     });
     return { success: true } as const;

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 type CreateEventInput = {
   date: Date;
-  natureId: string;
+  natureId?: string;
   commentaires?: string;
 };
 
@@ -31,7 +31,7 @@ const create = async (contactId: string, data: CreateEventInput) => {
     data: {
       date: data.date,
       commentaires: data.commentaires,
-      nature: { connect: { id: data.natureId } },
+      nature: data.natureId ? { connect: { id: data.natureId } } : undefined,
       contact: { connect: { id: contactId } },
     },
     include: { nature: true },

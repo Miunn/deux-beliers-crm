@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useContactsContext } from "@/context/ContactsContext";
 import { Plus } from "lucide-react";
 import ContactCard from "./ContactCard";

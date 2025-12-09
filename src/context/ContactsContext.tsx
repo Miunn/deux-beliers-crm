@@ -40,7 +40,9 @@ type ContactsContextValue = {
   setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
   resetFilters: () => void;
   // mutations
-  addOrUpdateContact: (contact: ContactWithRelations) => void;
+  addOrUpdateContact: (
+    contact: Partial<ContactWithRelations> | ContactWithRelations,
+  ) => void;
   removeContact: (id: string) => void;
   setContactLabels: (id: string, labels: Label[]) => void;
   appendEventDate: (contactId: string, date: Date | string) => void;
@@ -77,15 +79,35 @@ export function ContactsProvider({
     setDateRange(undefined);
   }, []);
 
-  const addOrUpdateContact = useCallback((contact: ContactWithRelations) => {
-    setAllContacts((prev) => {
-      const index = prev.findIndex((c) => c.id === contact.id);
-      if (index === -1) return [contact, ...prev];
-      const next = prev.slice();
-      next[index] = { ...prev[index], ...contact };
-      return next;
-    });
-  }, []);
+  const addOrUpdateContact = useCallback(
+    (contact: Partial<ContactWithRelations> | ContactWithRelations) => {
+      setAllContacts((prev) => {
+        const index = prev.findIndex((c) => c.id === contact.id);
+        if (index === -1) {
+          // Check if contact has all required fields to be added
+          if (
+            !contact.id ||
+            !("nom" in contact) ||
+            !("labels" in contact) ||
+            !("activite" in contact) ||
+            !("events" in contact)
+          ) {
+            console.log(
+              "Cannot add contact, missing required fields:",
+              contact,
+            );
+            return prev;
+          }
+          return [...prev, contact as ContactWithRelations];
+        }
+        const next = prev.slice();
+        next[index] = { ...prev[index], ...contact } as ContactWithRelations;
+        console.log("Updated contact:", next[index]);
+        return next;
+      });
+    },
+    [],
+  );
 
   const removeContact = useCallback((id: string) => {
     setAllContacts((prev) => prev.filter((c) => c.id !== id));

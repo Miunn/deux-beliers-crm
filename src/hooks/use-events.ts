@@ -4,15 +4,17 @@ import { Event, Nature, Contact } from "../../generated/prisma";
 
 export type EventWithNature = Event & { nature: Nature | null };
 
-const fetcher = (url: string): Promise<EventWithNature[]> =>
+const fetcher = (
+  url: string,
+): Promise<{ contact: Contact; events: EventWithNature[] }> =>
   fetch(url).then((r) => r.json());
 
 export const useEventsByContact = (contactId: string | null | undefined) => {
   const key = contactId ? `/api/contacts/${contactId}/events` : null;
-  const { data, error, isLoading, mutate } = useSWR<EventWithNature[]>(
-    key,
-    fetcher
-  );
+  const { data, error, isLoading, mutate } = useSWR<{
+    contact: Contact;
+    events: EventWithNature[];
+  }>(key, fetcher);
   return { data, error, isLoading, mutate };
 };
 
@@ -46,7 +48,7 @@ export const useWeeklyEvents = (defaultEvents: EventWithRelations[]) => {
     {
       fallbackData: defaultEvents,
       //   revalidateOnMount: defaultEvents === undefined,
-    }
+    },
   );
   return { data, error, isLoading, mutate, start, end };
 };

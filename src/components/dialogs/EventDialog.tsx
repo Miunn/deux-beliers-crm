@@ -63,7 +63,7 @@ export default function EventDialog({
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
   const { data: events, mutate, isLoading } = useEventsByContact(contactId);
-  const { appendEventDate } = useContactsContext();
+  const { appendEventDate, addOrUpdateContact } = useContactsContext();
   const { data: natures } = useNatures();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
@@ -151,21 +151,24 @@ export default function EventDialog({
     <>
       <Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
         {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
-        <DialogContent className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5">
+        <DialogContent
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
+        >
           <DialogHeader className="contents space-y-0 text-left">
             <DialogTitle className="border-b px-6 py-4 text-base">
-              Suivi des événements
+              Suivi des événements - {events?.contact.nom}
             </DialogTitle>
             <div className="relative overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">Historique</div>
                 {isLoading && <div className="text-sm">Chargement…</div>}
-                {events?.length === 0 && (
+                {events?.events.length === 0 && (
                   <div className="text-sm text-muted-foreground">
                     Aucun événement.
                   </div>
                 )}
-                {events?.map((e) => renderEvent(e))}
+                {events?.events.map((e) => renderEvent(e))}
               </div>
 
               <div className="w-full h-full row-start-1 md:row-start-auto md:col-start-2">
@@ -333,6 +336,29 @@ export default function EventDialog({
               toast.success("Événement et rappel enregistrés");
             }
             mutate();
+
+            // Close the dialog first so Radix doesn't attempt to restore focus to the trigger
+            // while we update the contacts list. Prevents focus-driven scrolling.
+            internalOnOpenChange(false);
+
+            // Defer the context update so the dialog close / focus plumbing finishes
+            // before ContactList's anchor-preservation runs. Also blur the active element
+            // to avoid focus-based scrolls (matches behaviour in ReminderPopover).
+            setTimeout(() => {
+              try {
+                if (document.activeElement instanceof HTMLElement) {
+                  document.activeElement.blur();
+                }
+              } catch {
+                // ignore environments without a DOM
+              }
+
+              addOrUpdateContact({
+                id: contactId,
+                rappel: reminderDate,
+              });
+            }, 0);
+
             setEditingEventId(null);
             form.reset({
               date: new Date(),
