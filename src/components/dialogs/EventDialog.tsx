@@ -94,6 +94,7 @@ export default function EventDialog({
         natureId: "",
         commentaires: "",
       });
+      setIsOpen(false);
     }
   };
 
@@ -140,12 +141,22 @@ export default function EventDialog({
         <Pencil className="size-3" />
       </Button>
       <div className="font-medium">
-        {new Date(e.date).toLocaleDateString()}{" "}
+        {new Date(e.date).toLocaleString().slice(undefined, -3)}{" "}
         {e.natureId ? `• ${e.nature?.label}` : ""}
       </div>
       {e.commentaires && <p>{e.commentaires}</p>}
     </div>
   );
+
+  const dateToDatetimeLocal = (date: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
   return (
     <>
@@ -186,12 +197,10 @@ export default function EventDialog({
                             <FormLabel>Date</FormLabel>
                             <FormControl>
                               <Input
-                                type="date"
+                                type="datetime-local"
                                 value={
                                   field.value
-                                    ? new Date(field.value)
-                                        .toISOString()
-                                        .slice(0, 10)
+                                    ? dateToDatetimeLocal(field.value)
                                     : ""
                                 }
                                 onChange={(e) =>
