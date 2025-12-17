@@ -2,20 +2,18 @@
 
 import { ActivitesService } from "@/data/activites-service";
 import { CREATE_ACTIVITE_FORM_SCHEMA } from "@/lib/definitions";
-import { auth } from "@/lib/auth";
 import z from "zod";
-import { headers } from "next/headers";
+import { AuthLayer } from "@/data/auth-layer";
 
 export async function createActivite(
   data: z.infer<typeof CREATE_ACTIVITE_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
+
   const validatedData = CREATE_ACTIVITE_FORM_SCHEMA.safeParse(data);
 
   if (!validatedData.success) {

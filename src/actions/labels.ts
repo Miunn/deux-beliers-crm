@@ -2,18 +2,18 @@
 
 import { LabelsService } from "@/data/labels-service";
 import { CREATE_LABEL_FORM_SCHEMA } from "@/lib/definitions";
-import { auth } from "@/lib/auth";
 import z from "zod";
-import { headers } from "next/headers";
+import { AuthLayer } from "@/data/auth-layer";
 
 export async function createLabel(
-  data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const validated = CREATE_LABEL_FORM_SCHEMA.safeParse(data);
   if (!validated.success) {
     return { error: validated.error.message } as const;
@@ -38,11 +38,12 @@ export async function createLabel(
 }
 
 export async function deleteLabel(id: string) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   try {
     await LabelsService.delete(id);
     return { success: true } as const;
@@ -53,13 +54,13 @@ export async function deleteLabel(id: string) {
 
 export async function updateLabel(
   id: string,
-  data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_LABEL_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
 
   const validated = CREATE_LABEL_FORM_SCHEMA.safeParse(data);
   if (!validated.success) {

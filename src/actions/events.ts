@@ -2,20 +2,20 @@
 
 import { EventsService } from "@/data/events-service";
 import { CREATE_EVENT_FORM_SCHEMA } from "@/lib/definitions";
-import { auth } from "@/lib/auth";
 import z from "zod";
-import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { AuthLayer } from "@/data/auth-layer";
 
 export async function createEvent(
   contactId: string,
   data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const parsed = CREATE_EVENT_FORM_SCHEMA.safeParse(data);
   if (!parsed.success) return { error: parsed.error.message } as const;
 
@@ -36,11 +36,12 @@ export async function createEventWithReminder(
   data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
   reminderDate: Date,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const parsed = CREATE_EVENT_FORM_SCHEMA.safeParse(data);
   if (!parsed.success) return { error: parsed.error.message } as const;
 
@@ -75,11 +76,12 @@ export async function updateEventWithReminder(
   data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
   reminderDate: Date,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const parsed = CREATE_EVENT_FORM_SCHEMA.safeParse(data);
   if (!parsed.success) return { error: parsed.error.message } as const;
 
@@ -107,11 +109,12 @@ export async function updateEventWithReminder(
 }
 
 export async function deleteEvent(id: string) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   try {
     await EventsService.delete(id);
     return { success: true } as const;
@@ -124,11 +127,12 @@ export async function updateEvent(
   id: string,
   data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const parsed = CREATE_EVENT_FORM_SCHEMA.safeParse(data);
   if (!parsed.success) return { error: parsed.error.message } as const;
 

@@ -1,19 +1,19 @@
 "use server";
 
+import { AuthLayer } from "@/data/auth-layer";
 import { NaturesService } from "@/data/natures-service";
 import { CREATE_NATURE_FORM_SCHEMA } from "@/lib/definitions";
-import { auth } from "@/lib/auth";
 import z from "zod";
-import { headers } from "next/headers";
 
 export async function createNature(
-  data: z.infer<typeof CREATE_NATURE_FORM_SCHEMA>
+  data: z.infer<typeof CREATE_NATURE_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   const parsed = CREATE_NATURE_FORM_SCHEMA.safeParse(data);
   if (!parsed.success) return { error: parsed.error.message } as const;
 
@@ -34,12 +34,35 @@ export async function createNature(
   }
 }
 
+export async function updateNature(
+  id: string,
+  data: z.infer<typeof CREATE_NATURE_FORM_SCHEMA>,
+) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
+  const parsed = CREATE_NATURE_FORM_SCHEMA.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.message } as const;
+
+  try {
+    await NaturesService.update(id, { label: parsed.data.label });
+    return { success: true } as const;
+  } catch (e: unknown) {
+    console.error(e);
+    return { error: "Error lors de la mise à jour de la nature" } as const;
+  }
+}
+
 export async function deleteNature(id: string) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) return { error: "Unauthorized" } as const;
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
+    return { error: "Unauthorized" } as const;
+  }
+
   try {
     await NaturesService.delete(id);
     return { success: true } as const;
