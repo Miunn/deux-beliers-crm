@@ -1,21 +1,19 @@
 "use server";
 
+import z from "zod";
 import { ContactService } from "@/data/contact-service";
 import { NEW_CONTACT_FORM_SCHEMA } from "@/lib/definitions";
-import { auth } from "@/lib/auth";
-import z from "zod";
-import { headers } from "next/headers";
+import { AuthLayer } from "@/data/auth-layer";
 
 export async function createContact(
   data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
+
   const validatedData = NEW_CONTACT_FORM_SCHEMA.safeParse(data);
 
   if (!validatedData.success) {
@@ -36,13 +34,12 @@ export async function updateContact(
   id: string,
   data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>,
 ) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
+
   const validatedData = NEW_CONTACT_FORM_SCHEMA.safeParse(data);
 
   if (!validatedData.success) {
@@ -63,13 +60,12 @@ export async function updateContact(
 }
 
 export async function deleteContact(id: string) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
+
   try {
     await ContactService.delete(id);
     return { success: true };
@@ -85,13 +81,12 @@ export async function deleteContact(id: string) {
 }
 
 export async function updateContactLabels(id: string, labelIds: string[]) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
+
   const arr = z.array(z.string());
   const parsed = arr.safeParse(labelIds);
   if (!parsed.success) {
@@ -111,11 +106,9 @@ export async function updateContactLabels(id: string, labelIds: string[]) {
 }
 
 export async function setReminder(id: string, reminder: Date) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({
-    headers: hdrs,
-  });
-  if (!session) {
+  const isAuth = await AuthLayer.isAuthenticated();
+
+  if (!isAuth) {
     return { error: "Unauthorized" } as const;
   }
 
