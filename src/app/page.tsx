@@ -27,7 +27,7 @@ export default async function Home() {
       <div className="overflow-y-auto">
         <main className="container mx-auto flex-1 relative font-sans">
           <ContactsProvider defaultContacts={contacts}>
-            <ContactList defaultContacts={contacts} />
+            <ContactList />
           </ContactsProvider>
         </main>
       </div>

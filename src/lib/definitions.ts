@@ -15,6 +15,8 @@ export const NEW_CONTACT_FORM_SCHEMA = z
     adresse: z.string().optional(),
     horaires: z.string().optional(),
     active: z.boolean().default(true).optional(),
+    kanbanColumnId: z.string().optional(),
+    kanbanPosition: z.number().optional(),
   })
   .strict();
 
@@ -65,3 +67,10 @@ export const ACCOUNT_FORM_SCHEMA = z
       path: ["passwordConfirmation"],
     },
   );
+
+export const CREATE_KANBAN_COLUMN_FORM_SCHEMA = z
+  .object({
+    name: z.string(),
+    color: z.string(),
+  })
+  .strict();

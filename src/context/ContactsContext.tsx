@@ -86,7 +86,6 @@ export function ContactsProvider({
         if (index === -1) {
           // Check if contact has all required fields to be added
           if (
-            !contact.id ||
             !("nom" in contact) ||
             !("labels" in contact) ||
             !("activite" in contact) ||
@@ -102,7 +101,6 @@ export function ContactsProvider({
         }
         const next = prev.slice();
         next[index] = { ...prev[index], ...contact } as ContactWithRelations;
-        console.log("Updated contact:", next[index]);
         return next;
       });
     },

@@ -13,7 +13,7 @@ import {
 } from "../ui/dialog";
 import { deleteContact } from "@/actions/contacts";
 import { useState } from "react";
-import { useContacts } from "@/hooks/use-contacts";
+import { useContactsContext } from "@/context/ContactsContext";
 
 export default function DeleteContact({
   contact,
@@ -26,7 +26,7 @@ export default function DeleteContact({
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
 }) {
-  const { removeContact } = useContacts([]);
+  const { removeContact } = useContactsContext();
   const [isOpen, setIsOpen] = useState(open);
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
