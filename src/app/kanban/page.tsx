@@ -4,10 +4,8 @@ import Header from "@/components/layout/Header";
 import { KanbanBoardProvider } from "@/components/ui/kanban";
 import { ContactsProvider } from "@/context/ContactsContext";
 import { ContactService } from "@/data/contact-service";
-import { KanbanService } from "@/data/kanban-service";
 
 export default async function KanbanPage() {
-  const columns = await KanbanService.get();
   const contacts = await ContactService.getContacts();
 
   return (

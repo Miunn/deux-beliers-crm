@@ -496,39 +496,6 @@ function MyKanbanBoardColumn({
     onMoveCardToColumn(column.id, 0, card);
   }
 
-  function handleDropOverListItem(cardId: string) {
-    return (
-      dataTransferData: string,
-      dropDirection: KanbanBoardDropDirection,
-    ) => {
-      const card = JSON.parse(dataTransferData) as ContactWithRelations;
-      const cardIndex = column.items.findIndex(({ id }) => id === cardId);
-      const currentCardIndex = column.items.findIndex(
-        ({ id }) => id === card.id,
-      );
-
-      const baseIndex = dropDirection === "top" ? cardIndex : cardIndex + 1;
-      const targetIndex =
-        currentCardIndex !== -1 && currentCardIndex < baseIndex
-          ? baseIndex - 1
-          : baseIndex;
-
-      // Safety check to ensure targetIndex is within bounds
-      const safeTargetIndex = Math.max(
-        0,
-        Math.min(targetIndex, column.items.length),
-      );
-      const overCard = column.items[safeTargetIndex];
-
-      if (card.id === overCard?.id) {
-        onDragCancel(card.id);
-      } else {
-        onMoveCardToColumn(column.id, safeTargetIndex, card);
-        onDragEnd(card.id, overCard?.id || column.id);
-      }
-    };
-  }
-
   return (
     <KanbanBoardColumn
       columnId={column.id}
@@ -602,7 +569,11 @@ function MyKanbanBoardColumn({
 
       <KanbanBoardColumnList ref={listReference}>
         {column.items.map((card) => (
-          <KanbanBoardColumnListItem cardId={card.id} key={card.id}>
+          <KanbanBoardColumnListItem
+            cardId={card.id}
+            key={card.id}
+            onDropOverListItem={handleDropOverColumn}
+          >
             <MyKanbanBoardCard
               card={card}
               isActive={activeCardId === card.id}
@@ -749,9 +720,18 @@ function MyKanbanBoardCard({
       <p className="text-xs">{card.ville}</p>*/}
         <ContactInnerContent
           contact={card}
-          onClickEdit={() => setOpenEdit(true)}
-          onClickEvents={() => setOpenEvents(true)}
-          onClickDelete={() => setOpenDelete(true)}
+          onClickEdit={(e) => {
+            e.stopPropagation();
+            setOpenEdit(true);
+          }}
+          onClickEvents={(e) => {
+            e.stopPropagation();
+            setOpenEvents(true);
+          }}
+          onClickDelete={(e) => {
+            e.stopPropagation();
+            setOpenDelete(true);
+          }}
         />
         {/*<KanbanBoardCardButtonGroup disabled={isActive}>
         <KanbanBoardCardButton

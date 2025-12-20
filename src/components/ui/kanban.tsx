@@ -606,10 +606,7 @@ export type KanbanBoardDropDirection = "none" | "top" | "bottom";
 
 export type KanbanBoardColumnListItemProps = {
   cardId: string;
-  onDropOverListItem?: (
-    dataTransferData: string,
-    dropDirection: KanbanBoardDropDirection,
-  ) => void;
+  onDropOverListItem?: (dataTransferData: string) => void;
 };
 
 export const kanbanBoardColumnListItemClassNames =
@@ -650,7 +647,7 @@ export function KanbanBoardColumnListItem({
       onDrop={(event) => {
         event.stopPropagation();
         const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
-        onDropOverListItem?.(data, dropDirection);
+        onDropOverListItem?.(data);
 
         onDragEnd(JSON.parse(data).id as string, cardId);
         setDropDirection("none");
@@ -776,7 +773,7 @@ export function KanbanBoardCardDescription({
   return (
     <p
       className={cn(
-        "text-card-foreground text-sm leading-5 whitespace-pre-wrap",
+        "text-card-foreground text-xs leading-5 whitespace-pre-wrap",
         className,
       )}
       ref={ref}

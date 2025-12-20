@@ -33,7 +33,7 @@ export default async function ArchivePage() {
       <div className="font-sans min-h-screen p-8 gap-16 sm:p-20">
         <main className="container mx-auto flex flex-col gap-12">
           <ContactsProvider defaultContacts={contacts}>
-            <ContactList defaultContacts={contacts} />
+            <ContactList />
           </ContactsProvider>
         </main>
       </div>

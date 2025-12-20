@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import React from "react";
+import React, { MouseEventHandler } from "react";
 
 export default function ContactInnerContent({
   contact,
@@ -28,9 +28,9 @@ export default function ContactInnerContent({
   onClickDelete,
 }: {
   contact: ContactWithRelations;
-  onClickEdit: () => void;
-  onClickEvents: () => void;
-  onClickDelete: () => void;
+  onClickEdit: MouseEventHandler<HTMLDivElement>;
+  onClickEvents: MouseEventHandler<HTMLDivElement>;
+  onClickDelete: MouseEventHandler<HTMLDivElement>;
 }) {
   return (
     <>

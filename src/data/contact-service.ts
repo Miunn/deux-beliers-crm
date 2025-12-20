@@ -137,100 +137,7 @@ const getContactsByColumn = async (columnId: string) => {
     include: { activite: true, events: true, labels: true },
   });
 
-  // Order in JS to treat nulls as last reliably and keep stable ordering
-  items.sort((a, b) => {
-    const pa = a.kanbanPosition ?? Number.MAX_SAFE_INTEGER;
-    const pb = b.kanbanPosition ?? Number.MAX_SAFE_INTEGER;
-    if (pa === pb) return a.nom.localeCompare(b.nom);
-    return pa - pb;
-  });
-
   return items;
-};
-
-/**
- * Bulk update positions. Expects updates: Array<{ id: string; kanbanPosition?: number | null; kanbanColumnId?: string | null }>
- * Uses prisma.$transaction to run updates atomically.
- */
-const bulkUpdatePositions = async (
-  updates: {
-    id: string;
-    kanbanPosition?: number | null;
-    kanbanColumnId?: string | null;
-  }[],
-) => {
-  if (!updates || updates.length === 0) return [];
-
-  const ops = updates.map((u) =>
-    prisma.contact.update({
-      where: { id: u.id },
-      data: {
-        kanbanPosition: u.kanbanPosition ?? null,
-        kanbanColumnId: u.kanbanColumnId ?? undefined,
-      },
-      include: { activite: true, events: true, labels: true },
-    }),
-  );
-
-  // Run all updates in a transaction to guarantee atomicity.
-  const results = await prisma.$transaction(ops);
-  return results;
-};
-
-/**
- * Initialize missing kanbanPosition values for a column.
- * - columnId: column to initialize
- * - gap: number gap between positions (default 1024)
- *
- * Strategy:
- * 1) Load contacts in column, ordered by existing position (nulls last)
- * 2) Assign positions sequentially with the given gap, only where kanbanPosition is null or positions are non-increasing
- * 3) Persist via bulkUpdatePositions
- *
- * Returns the list of updated contacts.
- */
-const initializeColumnPositions = async (
-  columnId: string,
-  gap: number = 1024,
-) => {
-  // Load contacts (null positions included)
-  const items = await prisma.contact.findMany({
-    where: { kanbanColumnId: columnId },
-    orderBy: [{ kanbanPosition: "asc" }, { nom: "asc" }],
-    select: { id: true, kanbanPosition: true, nom: true },
-  });
-
-  // Normalize ordering: treat null as +inf and then stable by name
-  items.sort((a, b) => {
-    const pa = a.kanbanPosition ?? Number.MAX_SAFE_INTEGER;
-    const pb = b.kanbanPosition ?? Number.MAX_SAFE_INTEGER;
-    if (pa === pb) return a.nom.localeCompare(b.nom);
-    return pa - pb;
-  });
-
-  // Build updates: assign positions for any item missing a position or to ensure strictly increasing sequence
-  const updates: {
-    id: string;
-    kanbanPosition: number;
-    kanbanColumnId: string;
-  }[] = [];
-  let nextPos = gap;
-  for (const item of items) {
-    // If item has no position or its position is less than nextPos (non-increasing), we will overwrite
-    if (item.kanbanPosition == null || item.kanbanPosition < nextPos) {
-      updates.push({
-        id: item.id,
-        kanbanPosition: nextPos,
-        kanbanColumnId: columnId,
-      });
-    }
-    nextPos += gap;
-  }
-
-  if (updates.length === 0) return [];
-
-  const results = await bulkUpdatePositions(updates);
-  return results;
 };
 
 export const ContactService = {
@@ -241,6 +148,4 @@ export const ContactService = {
   update,
   delete: del,
   getContactsByColumn,
-  bulkUpdatePositions,
-  initializeColumnPositions,
 };

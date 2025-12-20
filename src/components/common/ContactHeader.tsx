@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import ContactFilters from "./ContactFilters";
 import { cn } from "@/lib/utils";
 import { useContactsContext } from "@/context/ContactsContext";
+import { Suspense } from "react";
 
 export default function ContactHeader() {
   const { contacts } = useContactsContext();
@@ -26,7 +27,9 @@ export default function ContactHeader() {
             : `${contacts?.length} contacts`}
       </h2>
       <div className="flex flex-wrap justify-end gap-2">
-        <ContactFilters />
+        <Suspense>
+          <ContactFilters />
+        </Suspense>
         <ContactDialog mode="create">
           <Button variant="outline">
             <Plus className="size-4 mr-2" />
