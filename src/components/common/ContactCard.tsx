@@ -143,7 +143,7 @@ export default function ContactCard({
               <Pen />
             </Button>
           </ContactDialog>
-          <EventDialog contactId={contact.id}>
+          <EventDialog contact={contact}>
             <Button
               type="button"
               variant={"ghost"}

@@ -71,6 +71,7 @@ const getContacts = async (
       activite: true,
       events: { include: { nature: true } },
       labels: true,
+      kanbanColumn: true,
     },
     orderBy: { nom: "asc" },
   });
@@ -83,6 +84,7 @@ const create = async (data: Prisma.ContactCreateInput) => {
       activite: true,
       events: true,
       labels: true,
+      kanbanColumn: true,
     },
   });
 };
@@ -95,6 +97,7 @@ const update = async (id: string, data: Prisma.ContactUpdateInput) => {
       activite: true,
       events: true,
       labels: true,
+      kanbanColumn: true,
     },
   });
 };
@@ -102,7 +105,7 @@ const update = async (id: string, data: Prisma.ContactUpdateInput) => {
 const getById = async (id: string) => {
   return prisma.contact.findUnique({
     where: { id },
-    include: { activite: true, events: true, labels: true },
+    include: { activite: true, events: true, labels: true, kanbanColumn: true },
   });
 };
 

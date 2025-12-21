@@ -752,7 +752,7 @@ function MyKanbanBoardCard({
         onOpenChange={setOpenEdit}
       />
       <EventDialog
-        contactId={card.id}
+        contact={card}
         open={openEvents}
         onOpenChange={setOpenEvents}
       />

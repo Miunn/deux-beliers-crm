@@ -23,6 +23,7 @@ export type ContactWithRelations = Contact & {
   labels: Label[];
   activite: Activite | null;
   events?: ContactEventLite[];
+  kanbanColumn: { id: string; name: string; color: string } | null;
 };
 
 type ContactsContextValue = {
