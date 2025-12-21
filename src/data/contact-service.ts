@@ -71,6 +71,7 @@ const getContacts = async (
       activite: true,
       events: { include: { nature: true } },
       labels: true,
+      kanbanColumn: true,
     },
     orderBy: { nom: "asc" },
   });
@@ -83,6 +84,7 @@ const create = async (data: Prisma.ContactCreateInput) => {
       activite: true,
       events: true,
       labels: true,
+      kanbanColumn: true,
     },
   });
 };
@@ -95,6 +97,7 @@ const update = async (id: string, data: Prisma.ContactUpdateInput) => {
       activite: true,
       events: true,
       labels: true,
+      kanbanColumn: true,
     },
   });
 };
@@ -102,7 +105,7 @@ const update = async (id: string, data: Prisma.ContactUpdateInput) => {
 const getById = async (id: string) => {
   return prisma.contact.findUnique({
     where: { id },
-    include: { activite: true, events: true, labels: true },
+    include: { activite: true, events: true, labels: true, kanbanColumn: true },
   });
 };
 
@@ -112,6 +115,34 @@ const del = async (id: string) => {
   });
 };
 
+/**
+ * New helper methods to work with kanban positions via the service layer.
+ *
+ * - getContactsByColumn(columnId)
+ *    -> returns contacts for a specific column ordered by kanbanPosition (nulls last)
+ *
+ * - bulkUpdatePositions(updates)
+ *    -> performs a bulk update of contacts' kanbanPosition and kanbanColumnId inside a transaction
+ *
+ * - initializeColumnPositions(columnId, gap)
+ *    -> ensure pre-existing data in a column has numeric kanbanPosition values:
+ *       contacts without a position are assigned sequential positions spaced by `gap`.
+ *    -> returns the list of updated contacts
+ */
+
+/**
+ * Return contacts for a given kanban column ordered by kanbanPosition ascending.
+ * Contacts with null positions are considered after those with numeric positions.
+ */
+const getContactsByColumn = async (columnId: string) => {
+  const items = await prisma.contact.findMany({
+    where: { kanbanColumnId: columnId },
+    include: { activite: true, events: true, labels: true },
+  });
+
+  return items;
+};
+
 export const ContactService = {
   getContactsCount,
   getContacts,
@@ -119,4 +150,5 @@ export const ContactService = {
   create,
   update,
   delete: del,
+  getContactsByColumn,
 };

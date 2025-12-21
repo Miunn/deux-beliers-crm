@@ -11,13 +11,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import {
+  Archive,
+  Calendar1,
+  Download,
+  Loader2,
+  LogOut,
+  SquareKanban,
+  Tags,
+  Upload,
+  User,
+} from "lucide-react";
 import AccountDialog from "../common/AccountDialog";
 import { authClient } from "@/lib/auth-client";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type Props = {
   title: string;
@@ -53,30 +64,68 @@ export default function Header({ title }: Props) {
             {/* <Button variant={"link"} className="cursor-pointer text-white">
               Paramètres
             </Button> */}
-            <Button
-              onClick={() => setLabelsOpen(true)}
-              variant={"link"}
-              className="cursor-pointer"
-            >
-              Libellés
-            </Button>
-            <Button
-              onClick={() => setNaturesOpen(true)}
-              variant={"link"}
-              className="cursor-pointer"
-            >
-              Nature d&apos;événement
-            </Button>
-            <Button
-              variant={"link"}
-              className={cn(
-                "cursor-pointer",
-                pathname === "/archive" ? "underline" : "",
-              )}
-              asChild
-            >
-              <Link href="/archive">Archivés</Link>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className={cn(
+                    "cursor-pointer text-primary",
+                    pathname === "/kanban" ? "bg-accent" : "",
+                  )}
+                  asChild
+                >
+                  <Link href={"/kanban"}>
+                    <SquareKanban />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Kanban</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className={cn(
+                    "cursor-pointer text-primary",
+                    pathname === "/archive" ? "bg-accent" : "",
+                  )}
+                  asChild
+                >
+                  <Link href="/archive">
+                    <Archive />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Archivés</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  onClick={() => setLabelsOpen(true)}
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="cursor-pointer text-primary"
+                >
+                  <Tags />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Libellés</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  onClick={() => setNaturesOpen(true)}
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="cursor-pointer text-primary"
+                >
+                  <Calendar1 />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Natures d&apos;évènements</TooltipContent>
+            </Tooltip>
             <input
               id={fileInputId}
               type="file"
@@ -122,63 +171,85 @@ export default function Header({ title }: Props) {
                 }
               }}
             />
-            <Button
-              variant={"link"}
-              className="cursor-pointer"
-              onClick={() => document.getElementById(fileInputId)?.click()}
-            >
-              {importing ? "Import…" : "Importer"}
-            </Button>
-            <Button
-              variant={"link"}
-              className="cursor-pointer"
-              onClick={async () => {
-                const res = await fetch("/api/contacts/export");
-                if (!res.ok) return;
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "contacts.xlsx";
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              Exporter
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Tooltip>
+              <TooltipTrigger>
                 <Button
                   variant={"ghost"}
-                  size={"icon"}
                   className="cursor-pointer text-primary"
+                  size={"icon"}
+                  onClick={() => document.getElementById(fileInputId)?.click()}
+                  disabled={importing}
                 >
-                  <User />
+                  {importing ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Upload />
+                  )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setAccountOpen(true)}>
-                  <User />
-                  Compte
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    authClient.signOut({
-                      fetchOptions: {
-                        onSuccess: () => {
-                          router.push("/sign-in");
-                        },
-                      },
-                    })
-                  }
+              </TooltipTrigger>
+              <TooltipContent>Importer</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  size={"icon"}
+                  variant={"ghost"}
+                  className="cursor-pointer text-primary"
+                  onClick={async () => {
+                    const res = await fetch("/api/contacts/export");
+                    if (!res.ok) return;
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "contacts.xlsx";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
                 >
-                  <LogOut />
-                  Se déconnecter
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <Download />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Exporter</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={"ghost"}
+                      size={"icon"}
+                      className="cursor-pointer text-primary"
+                    >
+                      <User />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setAccountOpen(true)}>
+                      <User />
+                      Compte
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        authClient.signOut({
+                          fetchOptions: {
+                            onSuccess: () => {
+                              router.push("/sign-in");
+                            },
+                          },
+                        })
+                      }
+                    >
+                      <LogOut />
+                      Se déconnecter
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TooltipTrigger>
+              <TooltipContent>Compte</TooltipContent>
+            </Tooltip>
           </nav>
         </div>
       </div>

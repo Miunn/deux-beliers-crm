@@ -34,6 +34,7 @@ export async function updateContact(
   id: string,
   data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>,
 ) {
+  console.log("SERVER Update data");
   const isAuth = await AuthLayer.isAuthenticated();
 
   if (!isAuth) {
@@ -46,15 +47,19 @@ export async function updateContact(
     return { error: validatedData.error.message };
   }
 
-  const { activite, ...rest } = validatedData.data;
+  const { activite, kanbanColumnId, ...rest } = validatedData.data;
 
   try {
     const contact = await ContactService.update(id, {
       ...rest,
+      kanbanColumn: kanbanColumnId
+        ? { connect: { id: kanbanColumnId } }
+        : undefined,
       activite: activite ? { connect: { id: activite } } : { disconnect: true },
     });
     return contact;
-  } catch {
+  } catch (e) {
+    console.error(e);
     return { error: "Erreur lors de la mise à jour du contact" };
   }
 }

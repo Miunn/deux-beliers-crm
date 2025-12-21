@@ -37,14 +37,13 @@ import {
 } from "../ui/select";
 import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
-import { useContactsContext } from "@/context/ContactsContext";
-import { Activite, Contact, Label } from "../../../generated/prisma";
+import {
+  ContactWithRelations,
+  useContactsContext,
+} from "@/context/ContactsContext";
 import ArchiveDialog from "./ArchiveDialog";
-
-type ContactWithRelations = Contact & {
-  labels: Label[];
-  activite: Activite | null;
-};
+import { Badge } from "../ui/badge";
+import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 
 export default function ContactDialog({
   mode,
@@ -65,6 +64,7 @@ export default function ContactDialog({
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
   const [createActiviteOpen, setCreateActiviteOpen] = useState(false);
   const { addOrUpdateContact } = useContactsContext();
+  const { data: kanbanColumns } = useKanbanColumns();
 
   const form = useForm<z.infer<typeof NEW_CONTACT_FORM_SCHEMA>>({
     resolver: zodResolver(NEW_CONTACT_FORM_SCHEMA),
@@ -78,6 +78,7 @@ export default function ContactDialog({
       observations: contact?.observations ?? "",
       adresse: contact?.adresse ?? "",
       horaires: contact?.horaires ?? "",
+      kanbanColumnId: contact?.kanbanColumnId ?? kanbanColumns?.[0].id,
       active: true,
     },
   });
@@ -261,24 +262,55 @@ export default function ContactDialog({
                         )}
                       />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="observations"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col gap-2">
-                          <FormLabel className="h-fit">Observations</FormLabel>
-                          <FormControl>
-                            <Textarea className="h-full" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                    <div className="flex flex-col gap-4">
+                      <FormField
+                        control={form.control}
+                        name="kanbanColumnId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Kanban colonne</FormLabel>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {kanbanColumns?.map((col) => (
+                                  <SelectItem key={col.id} value={col.id}>
+                                    {col.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="observations"
+                        render={({ field }) => (
+                          <FormItem className="flex-1 flex flex-col gap-2">
+                            <FormLabel className="h-fit">
+                              Observations
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea className="h-full" {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </form>
                 </Form>
               </div>
             </div>
           </DialogHeader>
-          <DialogFooter className="border-t px-6 py-4">
+          <DialogFooter className="items-center border-t px-6 py-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Annuler

@@ -51,6 +51,9 @@ model Contact {
 
     active Boolean   @default(true)
 
+    kanbanColumn KanbanColumn? @relation(fields: [kanbanColumnId], references: [id])
+    kanbanColumnId String?
+
     events Event[]
     labels Label[]
 }
@@ -73,6 +76,14 @@ model Setting {
     id    String @id @default(cuid())
     key   String @unique
     value String
+}
+
+model KanbanColumn {
+    id String @id @default(cuid())
+    name String @db.Text
+    color String
+
+    contacts Contact[]
 }
 
 model User {

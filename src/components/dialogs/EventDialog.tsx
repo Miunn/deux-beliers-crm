@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -34,7 +34,10 @@ import {
 } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
-import { useContactsContext } from "@/context/ContactsContext";
+import {
+  ContactWithRelations,
+  useContactsContext,
+} from "@/context/ContactsContext";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
@@ -46,14 +49,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Label } from "../ui/label";
+import { updateContact } from "@/actions/contacts";
+import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 
 export default function EventDialog({
-  contactId,
+  contact,
   open,
   onOpenChange,
   children,
 }: {
-  contactId: string;
+  contact: ContactWithRelations;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
@@ -62,11 +68,19 @@ export default function EventDialog({
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
-  const { data: events, mutate, isLoading } = useEventsByContact(contactId);
+  const { data: events, mutate, isLoading } = useEventsByContact(contact.id);
   const { appendEventDate, addOrUpdateContact } = useContactsContext();
   const { data: natures } = useNatures();
+  const { data: kanbanColumns } = useKanbanColumns();
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
+  const [localKanbanColumnId, setLocalKanbanColumnId] = useState<
+    string | undefined
+  >(contact.kanbanColumnId ?? undefined);
+
+  useEffect(() => {
+    setLocalKanbanColumnId(contact.kanbanColumnId ?? undefined);
+  }, [contact.kanbanColumnId]);
 
   const form = useForm<z.infer<typeof CREATE_EVENT_FORM_SCHEMA>>({
     resolver: zodResolver(CREATE_EVENT_FORM_SCHEMA),
@@ -80,13 +94,13 @@ export default function EventDialog({
   const onSubmit = async (data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>) => {
     const res = editingEventId
       ? await updateEvent(editingEventId, data)
-      : await createEvent(contactId, data);
+      : await createEvent(contact.id, data);
     if ("error" in res) {
       toast.error(res.error);
     } else {
       toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
       // Optimistic: ensure date-filter sees this immediately
-      appendEventDate(contactId, data.date);
+      appendEventDate(contact.id, data.date);
       mutate();
       setEditingEventId(null);
       form.reset({
@@ -160,7 +174,19 @@ export default function EventDialog({
 
   return (
     <>
-      <Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
+      <Dialog
+        open={internalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            addOrUpdateContact({
+              id: contact.id,
+              kanbanColumnId: localKanbanColumnId ?? contact.kanbanColumnId,
+            });
+          }
+          internalOnOpenChange(open);
+        }}
+        modal={true}
+      >
         {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
         <DialogContent
           onCloseAutoFocus={(e) => e.preventDefault()}
@@ -257,6 +283,40 @@ export default function EventDialog({
                         )}
                       />
 
+                      <div className="space-y-2">
+                        <Label htmlFor="kanban-select" className="text-nowrap">
+                          Kanban colonne
+                        </Label>
+                        <Select
+                          value={localKanbanColumnId}
+                          onValueChange={(val) => {
+                            // Update local state so the Select inside the dialog reflects the choice
+                            // but avoid updating the shared ContactsContext immediately to prevent
+                            // the card from being moved/unmounted (which would close the dialog).
+                            setLocalKanbanColumnId(val);
+
+                            // Persist change to server. Do NOT call addOrUpdateContact here to avoid
+                            // immediate UI reordering that would unmount this dialog.
+                            updateContact(contact.id, {
+                              nom: contact.nom,
+                              mail: contact.mail ?? "",
+                              kanbanColumnId: val,
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue id="kanban-select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {kanbanColumns?.map((col) => (
+                              <SelectItem key={col.id} value={col.id}>
+                                {col.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="flex justify-end flex-wrap-reverse gap-2">
                         <Button
                           type="button"
@@ -336,7 +396,7 @@ export default function EventDialog({
 
           const action = editingEventId
             ? updateEventWithReminder(editingEventId, basePayload, reminderDate)
-            : createEventWithReminder(contactId, basePayload, reminderDate);
+            : createEventWithReminder(contact.id, basePayload, reminderDate);
 
           action.then((res) => {
             if ("error" in res) {
@@ -363,7 +423,7 @@ export default function EventDialog({
               }
 
               addOrUpdateContact({
-                id: contactId,
+                id: contact.id,
                 rappel: reminderDate,
               });
             }, 0);
