@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     "Activite",
     "Nature",
     "ContactLabels",
+    "KanbanColumns",
   ];
   const errors: string[] = [];
 
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
   const activites = readSheet<Row>(workbook, "Activite") ?? [];
   const natures = readSheet<Row>(workbook, "Nature") ?? [];
   const contactLabels = readSheet<Row>(workbook, "ContactLabels") ?? [];
+  const kanbanColumns = readSheet<Row>(workbook, "KanbanColumns") ?? [];
 
   // Validate headers presence
   //   const requireHeaders = (rows: Row[], headers: string[], sheet: string) => {
@@ -114,11 +116,16 @@ export async function POST(req: NextRequest) {
   const labelIds = new Set(labels.map((r) => String(r["Id"])));
   const natureIds = new Set(natures.map((r) => String(r["Id"])));
   const contactIds = new Set(contacts.map((r) => String(r["Id"])));
+  const kanbanIds = new Set(kanbanColumns.map((r) => String(r["Id"])));
 
   for (const c of contacts) {
     const aid = String(c["ActiviteId"] ?? "").trim();
     if (aid && !activiteIds.has(aid)) {
       errors.push(`Contacts.ActiviteId inconnu: ${aid}`);
+    }
+    const kid = String(c["KanbanColumnId"] ?? "").trim();
+    if (kid && !kanbanIds.has(kid)) {
+      errors.push(`Contacts.KanbanColumnId inconnu: ${kid}`);
     }
   }
 
@@ -169,6 +176,7 @@ export async function POST(req: NextRequest) {
       await tx.label.deleteMany({});
       await tx.nature.deleteMany({});
       await tx.activite.deleteMany({});
+      await tx.kanbanColumn.deleteMany({});
 
       // create base tables
       if (activites.length) {
@@ -197,6 +205,17 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Kanban columns
+      if (kanbanColumns.length) {
+        await tx.kanbanColumn.createMany({
+          data: kanbanColumns.map((k) => ({
+            id: String(k["Id"]),
+            name: String(k["Name"] ?? k["Label"] ?? ""),
+            color: String(k["Color"] ?? ""),
+          })),
+        });
+      }
+
       // contacts
       if (contacts.length) {
         await tx.contact.createMany({
@@ -215,6 +234,7 @@ export async function POST(req: NextRequest) {
             observations: (c["Observations"] ?? null) as string | null,
             adresse: (c["Adresse"] ?? null) as string | null,
             horaires: (c["Horaires"] ?? null) as string | null,
+            kanbanColumnId: String(c["KanbanColumnId"] ?? "") || null,
           })),
         });
       }

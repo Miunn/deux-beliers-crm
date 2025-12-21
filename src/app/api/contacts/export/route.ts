@@ -26,19 +26,21 @@ export async function GET(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
-  const [contacts, activites, labels, natures, events] = await Promise.all([
-    prisma.contact.findMany({
-      include: { labels: true },
-      orderBy: { nom: "asc" },
-    }),
-    prisma.activite.findMany({ orderBy: { label: "asc" } }),
-    prisma.label.findMany({ orderBy: { label: "asc" } }),
-    prisma.nature.findMany({ orderBy: { label: "asc" } }),
-    prisma.event.findMany({
-      orderBy: { date: "asc" },
-      include: { contact: true },
-    }),
-  ]);
+  const [contacts, activites, labels, natures, events, kanbanColumns] =
+    await Promise.all([
+      prisma.contact.findMany({
+        include: { labels: true },
+        orderBy: { nom: "asc" },
+      }),
+      prisma.activite.findMany({ orderBy: { label: "asc" } }),
+      prisma.label.findMany({ orderBy: { label: "asc" } }),
+      prisma.nature.findMany({ orderBy: { label: "asc" } }),
+      prisma.event.findMany({
+        orderBy: { date: "asc" },
+        include: { contact: true },
+      }),
+      prisma.kanbanColumn.findMany({ orderBy: { name: "asc" } }),
+    ]);
 
   const contactHeaders = [
     "Id",
@@ -54,6 +56,7 @@ export async function GET(req: NextRequest) {
     "Horaires",
     "Rappel",
     "Labels",
+    "KanbanColumnId",
   ];
   const contactRows = contacts.map((c) => ({
     Id: c.id,
@@ -73,6 +76,8 @@ export async function GET(req: NextRequest) {
         : new Date(c.rappel).toISOString()
       : "",
     Labels: (c.labels ?? []).map((l) => l.label).join(", "),
+    KanbanColumnId:
+      (c as { kanbanColumnId?: string | null }).kanbanColumnId ?? "",
   }));
 
   const activiteHeaders = ["Id", "Label"];
@@ -116,6 +121,14 @@ export async function GET(req: NextRequest) {
     c.labels.map((l) => ({ ContactId: c.id, LabelId: l.id })),
   );
 
+  // Kanban columns sheet
+  const kanbanHeaders = ["Id", "Name", "Color"];
+  const kanbanRows = kanbanColumns.map((k) => ({
+    Id: k.id,
+    Name: k.name,
+    Color: k.color,
+  }));
+
   const wb = XLSX.utils.book_new();
   const wsActivites = XLSX.utils.json_to_sheet(activiteRows, {
     header: activiteHeaders,
@@ -145,10 +158,16 @@ export async function GET(req: NextRequest) {
   });
   autoFitColumns(wsEvents, eventRows, eventHeaders);
 
-  // Append sheets in requested order: Contacts, Events, Labels, Activite, Nature, ContactLabels
+  const wsKanban = XLSX.utils.json_to_sheet(kanbanRows, {
+    header: kanbanHeaders,
+  });
+  autoFitColumns(wsKanban, kanbanRows, kanbanHeaders);
+
+  // Append sheets in requested order: Contacts, Events, Labels, KanbanColumns, Activite, Nature, ContactLabels
   XLSX.utils.book_append_sheet(wb, wsContacts, "Contacts");
   XLSX.utils.book_append_sheet(wb, wsEvents, "Events");
   XLSX.utils.book_append_sheet(wb, wsLabels, "Labels");
+  XLSX.utils.book_append_sheet(wb, wsKanban, "KanbanColumns");
   autoFitColumns(wsActivites, activiteRows, activiteHeaders);
   XLSX.utils.book_append_sheet(wb, wsActivites, "Activite");
   XLSX.utils.book_append_sheet(wb, wsNatures, "Nature");

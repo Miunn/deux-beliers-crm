@@ -65,7 +65,7 @@ export default function Header({ title }: Props) {
               Paramètres
             </Button> */}
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   variant={"ghost"}
                   size={"icon"}
@@ -83,7 +83,7 @@ export default function Header({ title }: Props) {
               <TooltipContent>Kanban</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   variant={"ghost"}
                   size={"icon"}
@@ -101,7 +101,7 @@ export default function Header({ title }: Props) {
               <TooltipContent>Archivés</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   onClick={() => setLabelsOpen(true)}
                   variant={"ghost"}
@@ -114,7 +114,7 @@ export default function Header({ title }: Props) {
               <TooltipContent>Libellés</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   onClick={() => setNaturesOpen(true)}
                   variant={"ghost"}
@@ -172,7 +172,7 @@ export default function Header({ title }: Props) {
               }}
             />
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   variant={"ghost"}
                   className="cursor-pointer text-primary"
@@ -190,7 +190,7 @@ export default function Header({ title }: Props) {
               <TooltipContent>Importer</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   size={"icon"}
                   variant={"ghost"}
@@ -215,7 +215,7 @@ export default function Header({ title }: Props) {
               <TooltipContent>Exporter</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
