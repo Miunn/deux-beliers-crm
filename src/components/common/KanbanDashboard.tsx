@@ -12,10 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useJsLoaded } from "@/hooks/use-js-loaded";
-import type {
-  KanbanBoardCircleColor,
-  KanbanBoardDropDirection,
-} from "@/components/ui/kanban";
+import type { KanbanBoardCircleColor } from "@/components/ui/kanban";
 import {
   KanbanBoard,
   KanbanBoardCard,

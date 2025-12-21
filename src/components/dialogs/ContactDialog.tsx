@@ -42,7 +42,6 @@ import {
   useContactsContext,
 } from "@/context/ContactsContext";
 import ArchiveDialog from "./ArchiveDialog";
-import { Badge } from "../ui/badge";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 
 export default function ContactDialog({
@@ -78,7 +77,8 @@ export default function ContactDialog({
       observations: contact?.observations ?? "",
       adresse: contact?.adresse ?? "",
       horaires: contact?.horaires ?? "",
-      kanbanColumnId: contact?.kanbanColumnId ?? kanbanColumns?.[0].id,
+      kanbanColumnId:
+        contact?.kanbanColumnId ?? kanbanColumns?.[0]?.id ?? undefined,
       active: true,
     },
   });
