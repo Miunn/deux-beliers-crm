@@ -30,7 +30,7 @@ export default async function ArchivePage() {
   return (
     <>
       <Header title="Gestion clients" />
-      <div className="font-sans min-h-screen p-8 gap-16 sm:p-20">
+      <div className="font-sans min-h-screen px-8 pb-8 gap-16 sm:px-20 sm:pb-20">
         <main className="container mx-auto flex flex-col gap-12">
           <ContactsProvider defaultContacts={contacts}>
             <ContactList />
