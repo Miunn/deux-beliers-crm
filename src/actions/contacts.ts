@@ -24,7 +24,9 @@ export async function createContact(
 
 	const contact = await ContactService.create({
 		...rest,
-		kanbanColumn: { connect: { id: kanbanColumnId } },
+		kanbanColumn: kanbanColumnId
+			? { connect: { id: kanbanColumnId } }
+			: undefined,
 		activite: activite ? { connect: { id: activite } } : undefined,
 	});
 
