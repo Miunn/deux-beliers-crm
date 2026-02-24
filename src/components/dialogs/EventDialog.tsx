@@ -22,7 +22,7 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Phone, Trash2 } from "lucide-react";
 import DeleteEvent from "./DeleteEvent";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -199,7 +199,12 @@ export default function EventDialog({
 				>
 					<DialogHeader className="contents space-y-0 text-left">
 						<DialogTitle className="border-b px-6 py-4 text-base">
-							Suivi des événements - {events?.contact.nom}
+							Suivi des événements - {events?.contact.nom} -{" "}
+							<Phone
+								className="inline size-4"
+								strokeWidth={2.5}
+							/>{" "}
+							{events?.contact.telephone || "N/A"}
 						</DialogTitle>
 						<div className="relative overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div className="space-y-2">
