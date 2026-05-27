@@ -2,53 +2,26 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CREATE_EVENT_FORM_SCHEMA } from "@/lib/definitions";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "../ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Loader2, Pencil, Phone, Trash2 } from "lucide-react";
 import DeleteEvent from "./DeleteEvent";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import {
-	createEvent,
-	updateEvent,
-	createEventWithReminder,
-	updateEventWithReminder,
-} from "@/actions/events";
+import { createEvent, updateEvent, createEventWithReminder, updateEventWithReminder } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
-import {
-	ContactWithRelations,
-	useContactsContext,
-} from "@/context/ContactsContext";
+import { ContactWithRelations, useContactsContext } from "@/context/ContactsContext";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
 import { addMonths } from "date-fns";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Label } from "../ui/label";
 import { updateContact } from "@/actions/contacts";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
@@ -68,15 +41,15 @@ export default function EventDialog({
 	const internalOpen = open ?? isOpen;
 	const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
-	const { data: events, mutate, isLoading } = useEventsByContact(contact.id);
+	const { data: events, mutate, isLoading } = useEventsByContact(internalOpen ? contact.id : null);
 	const { appendEventDate, addOrUpdateContact } = useContactsContext();
 	const { data: natures } = useNatures();
 	const { data: kanbanColumns } = useKanbanColumns();
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
 	const [reminderOpen, setReminderOpen] = useState(false);
-	const [localKanbanColumnId, setLocalKanbanColumnId] = useState<
-		string | undefined
-	>(contact.kanbanColumnId ?? undefined);
+	const [localKanbanColumnId, setLocalKanbanColumnId] = useState<string | undefined>(
+		contact.kanbanColumnId ?? undefined,
+	);
 
 	useEffect(() => {
 		setLocalKanbanColumnId(contact.kanbanColumnId ?? undefined);
@@ -92,15 +65,11 @@ export default function EventDialog({
 	});
 
 	const onSubmit = async (data: z.infer<typeof CREATE_EVENT_FORM_SCHEMA>) => {
-		const res = editingEventId
-			? await updateEvent(editingEventId, data)
-			: await createEvent(contact.id, data);
+		const res = editingEventId ? await updateEvent(editingEventId, data) : await createEvent(contact.id, data);
 		if ("error" in res) {
 			toast.error(res.error);
 		} else {
-			toast.success(
-				editingEventId ? "Événement mis à jour" : "Événement créé",
-			);
+			toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
 			// Optimistic: ensure date-filter sees this immediately
 			appendEventDate(contact.id, data.date);
 			mutate();
@@ -157,8 +126,7 @@ export default function EventDialog({
 				<Pencil className="size-3" />
 			</Button>
 			<div className="font-medium">
-				{new Date(e.date).toLocaleString().slice(undefined, -3)}{" "}
-				{e.natureId ? `• ${e.nature?.label}` : ""}
+				{new Date(e.date).toLocaleString().slice(undefined, -3)} {e.natureId ? `• ${e.nature?.label}` : ""}
 			</div>
 			{e.commentaires && <p>{e.commentaires}</p>}
 		</div>
@@ -182,17 +150,14 @@ export default function EventDialog({
 					if (!open) {
 						addOrUpdateContact({
 							id: contact.id,
-							kanbanColumnId:
-								localKanbanColumnId ?? contact.kanbanColumnId,
+							kanbanColumnId: localKanbanColumnId ?? contact.kanbanColumnId,
 						});
 					}
 					internalOnOpenChange(open);
 				}}
 				modal={true}
 			>
-				{children ? (
-					<DialogTrigger asChild>{children}</DialogTrigger>
-				) : null}
+				{children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
 				<DialogContent
 					onCloseAutoFocus={(e) => e.preventDefault()}
 					className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
@@ -200,24 +165,14 @@ export default function EventDialog({
 					<DialogHeader className="contents space-y-0 text-left">
 						<DialogTitle className="border-b px-6 py-4 text-base">
 							Suivi des événements - {events?.contact.nom} -{" "}
-							<Phone
-								className="inline size-4"
-								strokeWidth={2.5}
-							/>{" "}
-							{events?.contact.telephone || "N/A"}
+							<Phone className="inline size-4" strokeWidth={2.5} /> {events?.contact.telephone || "N/A"}
 						</DialogTitle>
 						<div className="relative overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div className="space-y-2">
-								<div className="text-sm text-muted-foreground">
-									Historique
-								</div>
-								{isLoading && (
-									<div className="text-sm">Chargement…</div>
-								)}
+								<div className="text-sm text-muted-foreground">Historique</div>
+								{isLoading && <div className="text-sm">Chargement…</div>}
 								{events?.events.length === 0 && (
-									<div className="text-sm text-muted-foreground">
-										Aucun événement.
-									</div>
+									<div className="text-sm text-muted-foreground">Aucun événement.</div>
 								)}
 								{events?.events.map((e) => renderEvent(e))}
 							</div>
@@ -225,38 +180,21 @@ export default function EventDialog({
 							<div className="w-full h-full row-start-1 md:row-start-auto md:col-start-2">
 								<div className="sticky top-0 right-0 space-y-4">
 									<Form {...form}>
-										<form
-											className="space-y-4"
-											onSubmit={form.handleSubmit(
-												onSubmit,
-											)}
-										>
+										<form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
 											<FormField
 												control={form.control}
 												name="date"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Date
-														</FormLabel>
+														<FormLabel>Date</FormLabel>
 														<FormControl>
 															<Input
 																type="datetime-local"
 																value={
-																	field.value
-																		? dateToDatetimeLocal(
-																				field.value,
-																			)
-																		: ""
+																	field.value ? dateToDatetimeLocal(field.value) : ""
 																}
 																onChange={(e) =>
-																	field.onChange(
-																		new Date(
-																			e
-																				.target
-																				.value,
-																		),
-																	)
+																	field.onChange(new Date(e.target.value))
 																}
 															/>
 														</FormControl>
@@ -269,38 +207,18 @@ export default function EventDialog({
 												name="natureId"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Nature
-														</FormLabel>
+														<FormLabel>Nature</FormLabel>
 														<FormControl>
-															<Select
-																value={
-																	field.value
-																}
-																onValueChange={
-																	field.onChange
-																}
-															>
+															<Select value={field.value} onValueChange={field.onChange}>
 																<SelectTrigger className="w-full">
 																	<SelectValue placeholder="Choisir une nature" />
 																</SelectTrigger>
 																<SelectContent>
-																	{natures?.map(
-																		(n) => (
-																			<SelectItem
-																				key={
-																					n.id
-																				}
-																				value={
-																					n.id
-																				}
-																			>
-																				{
-																					n.label
-																				}
-																			</SelectItem>
-																		),
-																	)}
+																	{natures?.map((n) => (
+																		<SelectItem key={n.id} value={n.id}>
+																			{n.label}
+																		</SelectItem>
+																	))}
 																</SelectContent>
 															</Select>
 														</FormControl>
@@ -313,9 +231,7 @@ export default function EventDialog({
 												name="commentaires"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Commentaires
-														</FormLabel>
+														<FormLabel>Commentaires</FormLabel>
 														<FormControl>
 															<Textarea
 																className="min-h-[100px] resize-y field-sizing-fixed"
@@ -329,10 +245,7 @@ export default function EventDialog({
 											/>
 
 											<div className="space-y-2">
-												<Label
-													htmlFor="kanban-select"
-													className="text-nowrap"
-												>
+												<Label htmlFor="kanban-select" className="text-nowrap">
 													Kanban colonne
 												</Label>
 												<Select
@@ -341,41 +254,26 @@ export default function EventDialog({
 														// Update local state so the Select inside the dialog reflects the choice
 														// but avoid updating the shared ContactsContext immediately to prevent
 														// the card from being moved/unmounted (which would close the dialog).
-														setLocalKanbanColumnId(
-															val,
-														);
+														setLocalKanbanColumnId(val);
 
 														// Persist change to server. Do NOT call addOrUpdateContact here to avoid
 														// immediate UI reordering that would unmount this dialog.
-														updateContact(
-															contact.id,
-															{
-																nom: contact.nom,
-																mail:
-																	contact.mail ??
-																	"",
-																kanbanColumnId:
-																	val,
-															},
-														);
+														updateContact(contact.id, {
+															nom: contact.nom,
+															mail: contact.mail ?? "",
+															kanbanColumnId: val,
+														});
 													}}
 												>
 													<SelectTrigger className="w-full">
 														<SelectValue id="kanban-select" />
 													</SelectTrigger>
 													<SelectContent>
-														{kanbanColumns?.map(
-															(col) => (
-																<SelectItem
-																	key={col.id}
-																	value={
-																		col.id
-																	}
-																>
-																	{col.name}
-																</SelectItem>
-															),
-														)}
+														{kanbanColumns?.map((col) => (
+															<SelectItem key={col.id} value={col.id}>
+																{col.name}
+															</SelectItem>
+														))}
 													</SelectContent>
 												</Select>
 											</div>
@@ -386,13 +284,9 @@ export default function EventDialog({
 													variant="outline"
 													onClick={() => {
 														if (editingEventId) {
-															setEditingEventId(
-																null,
-															);
+															setEditingEventId(null);
 														} else {
-															internalOnOpenChange(
-																false,
-															);
+															internalOnOpenChange(false);
 														}
 														form.reset({
 															date: new Date(),
@@ -406,35 +300,21 @@ export default function EventDialog({
 												<Button
 													type="button"
 													variant="outline"
-													disabled={
-														form.formState
-															.isSubmitting
-													}
-													onClick={() =>
-														setReminderOpen(true)
-													}
+													disabled={form.formState.isSubmitting}
+													onClick={() => setReminderOpen(true)}
 												>
-													{form.formState
-														.isSubmitting ? (
+													{form.formState.isSubmitting ? (
 														<>
 															<Loader2 className="w-4 h-4 animate-spin" />
-															Enregistrement avec
-															rappel...
+															Enregistrement avec rappel...
 														</>
 													) : (
 														"Enregistrer avec rappel"
 													)}
 												</Button>
 
-												<Button
-													type="submit"
-													disabled={
-														form.formState
-															.isSubmitting
-													}
-												>
-													{form.formState
-														.isSubmitting ? (
+												<Button type="submit" disabled={form.formState.isSubmitting}>
+													{form.formState.isSubmitting ? (
 														<>
 															<Loader2 className="w-4 h-4 animate-spin" />
 															Enregistrement...
@@ -463,26 +343,13 @@ export default function EventDialog({
 			<ReminderDateDialog
 				open={reminderOpen}
 				onOpenChange={setReminderOpen}
-				defaultDate={
-					addMonths(form.getValues("date") as Date, 1) ??
-					addMonths(new Date(), 1)
-				}
+				defaultDate={addMonths(form.getValues("date") as Date, 1) ?? addMonths(new Date(), 1)}
 				onConfirm={(reminderDate) => {
-					const basePayload = form.getValues() as z.infer<
-						typeof CREATE_EVENT_FORM_SCHEMA
-					>;
+					const basePayload = form.getValues() as z.infer<typeof CREATE_EVENT_FORM_SCHEMA>;
 
 					const action = editingEventId
-						? updateEventWithReminder(
-								editingEventId,
-								basePayload,
-								reminderDate,
-							)
-						: createEventWithReminder(
-								contact.id,
-								basePayload,
-								reminderDate,
-							);
+						? updateEventWithReminder(editingEventId, basePayload, reminderDate)
+						: createEventWithReminder(contact.id, basePayload, reminderDate);
 
 					action.then((res) => {
 						if ("error" in res) {
@@ -501,10 +368,7 @@ export default function EventDialog({
 						// to avoid focus-based scrolls (matches behaviour in ReminderPopover).
 						setTimeout(() => {
 							try {
-								if (
-									document.activeElement instanceof
-									HTMLElement
-								) {
+								if (document.activeElement instanceof HTMLElement) {
 									document.activeElement.blur();
 								}
 							} catch {
