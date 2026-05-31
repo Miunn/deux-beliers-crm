@@ -5,23 +5,8 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import ManageLabelsSheet from "../sheet/ManageLabels";
 import ManageNaturesSheet from "../sheet/ManageNatures";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import {
-  Archive,
-  Calendar1,
-  Download,
-  Loader2,
-  LogOut,
-  SquareKanban,
-  Tags,
-  Upload,
-  User,
-} from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Archive, Calendar1, Download, Loader2, LogOut, SquareKanban, Tags, Upload, User } from "lucide-react";
 import AccountDialog from "../common/AccountDialog";
 import { authClient } from "@/lib/auth-client";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,253 +16,230 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type Props = {
-  title: string;
+	title: string;
 };
 
 export default function Header({ title }: Props) {
-  const pathname = usePathname();
-  const [labelsOpen, setLabelsOpen] = useState(false);
-  const [naturesOpen, setNaturesOpen] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  const fileInputId = "__import_contacts_file_input";
-  const router = useRouter();
-  const [importError, setImportError] = useState<string | null>(null);
-  const [importDetails, setImportDetails] = useState<string[]>([]);
+	const pathname = usePathname();
+	const [labelsOpen, setLabelsOpen] = useState(false);
+	const [naturesOpen, setNaturesOpen] = useState(false);
+	const [importing, setImporting] = useState(false);
+	const [accountOpen, setAccountOpen] = useState(false);
+	const fileInputId = "__import_contacts_file_input";
+	const router = useRouter();
+	const [importError, setImportError] = useState<string | null>(null);
+	const [importDetails, setImportDetails] = useState<string[]>([]);
 
-  return (
-    <header className="bg-background p-4 z-10 border-b">
-      <div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <Link href={"/"} className="flex items-center gap-2">
-          <Image
-            src="/cropped-icon-gold.svg"
-            alt="Deux Béliers"
-            width={30}
-            height={30}
-          />
-          <h1 className="text-xl text-primary text-nowrap font-medium">
-            {title}
-          </h1>
-        </Link>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <nav className="whitespace-nowrap flex items-center flex-wrap gap-3">
-            {/* <Button variant={"link"} className="cursor-pointer text-white">
+	return (
+		<header className="bg-background p-4 z-10 border-b">
+			<div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+				<Link href={"/"} className="flex items-center gap-2">
+					<Image src="/cropped-icon-gold.svg" alt="Deux Béliers" width={30} height={30} />
+					<h1 className="text-xl text-primary text-nowrap font-medium">{title}</h1>
+				</Link>
+				<div className="flex items-center gap-3 w-full md:w-auto">
+					<nav className="whitespace-nowrap flex items-center flex-wrap gap-3">
+						{/* <Button variant={"link"} className="cursor-pointer text-white">
               Paramètres
             </Button> */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={"ghost"}
-                  size={"icon"}
-                  className={cn(
-                    "cursor-pointer text-primary",
-                    pathname === "/kanban" ? "bg-accent" : "",
-                  )}
-                  asChild
-                >
-                  <Link href={"/kanban"}>
-                    <SquareKanban />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Kanban</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={"ghost"}
-                  size={"icon"}
-                  className={cn(
-                    "cursor-pointer text-primary",
-                    pathname === "/archive" ? "bg-accent" : "",
-                  )}
-                  asChild
-                >
-                  <Link href="/archive">
-                    <Archive />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Archivés</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => setLabelsOpen(true)}
-                  variant={"ghost"}
-                  size={"icon"}
-                  className="cursor-pointer text-primary"
-                >
-                  <Tags />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Libellés</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => setNaturesOpen(true)}
-                  variant={"ghost"}
-                  size={"icon"}
-                  className="cursor-pointer text-primary"
-                >
-                  <Calendar1 />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Natures d&apos;évènements</TooltipContent>
-            </Tooltip>
-            <input
-              id={fileInputId}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={async (e) => {
-                const input = e.currentTarget;
-                const file = input.files?.[0];
-                if (!file) return;
-                setImporting(true);
-                setImportError(null);
-                setImportDetails([]);
-                try {
-                  const fd = new FormData();
-                  fd.append("file", file);
-                  const res = await fetch("/api/contacts/import", {
-                    method: "POST",
-                    body: fd,
-                  });
-                  if (!res.ok) {
-                    let message = "Import échoué";
-                    let details: string[] = [];
-                    try {
-                      const json = await res.json();
-                      message = json?.error || message;
-                      details = Array.isArray(json?.details)
-                        ? json.details
-                        : [];
-                    } catch {}
-                    setImportError(message);
-                    setImportDetails(details);
-                  } else {
-                    // Hard reload to revalidate and refresh all data/UI
-                    window.location.reload();
-                  }
-                } catch (e) {
-                  console.log("Import error:", e);
-                  setImportError("Import échoué");
-                } finally {
-                  setImporting(false);
-                  // reset input to allow reselecting same file
-                  input.value = "";
-                }
-              }}
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={"ghost"}
-                  className="cursor-pointer text-primary"
-                  size={"icon"}
-                  onClick={() => document.getElementById(fileInputId)?.click()}
-                  disabled={importing}
-                >
-                  {importing ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Upload />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Importer</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size={"icon"}
-                  variant={"ghost"}
-                  className="cursor-pointer text-primary"
-                  onClick={async () => {
-                    const res = await fetch("/api/contacts/export");
-                    if (!res.ok) return;
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "contacts.xlsx";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  <Download />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Exporter</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={"ghost"}
-                      size={"icon"}
-                      className="cursor-pointer text-primary"
-                    >
-                      <User />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setAccountOpen(true)}>
-                      <User />
-                      Compte
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        authClient.signOut({
-                          fetchOptions: {
-                            onSuccess: () => {
-                              router.push("/sign-in");
-                            },
-                          },
-                        })
-                      }
-                    >
-                      <LogOut />
-                      Se déconnecter
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipTrigger>
-              <TooltipContent>Compte</TooltipContent>
-            </Tooltip>
-          </nav>
-        </div>
-      </div>
-      <ManageLabelsSheet open={labelsOpen} onOpenChange={setLabelsOpen} />
-      <ManageNaturesSheet open={naturesOpen} onOpenChange={setNaturesOpen} />
-      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
-      <Dialog
-        open={!!importError}
-        onOpenChange={(open) => !open && setImportError(null)}
-      >
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Erreur d’import</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-destructive">{importError}</p>
-            {importDetails.length > 0 ? (
-              <div className="max-h-64 overflow-auto rounded border p-2">
-                <ul className="list-disc pl-5 text-sm">
-                  {importDetails.map((d, i) => (
-                    <li key={i}>{d}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </header>
-  );
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={"ghost"}
+									size={"icon"}
+									className={cn(pathname === "/kanban" ? "bg-accent" : "")}
+									asChild
+								>
+									<Link href={"/kanban"}>
+										<SquareKanban />
+									</Link>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Kanban</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={"ghost"}
+									size={"icon"}
+									className={cn(
+										"cursor-pointer text-primary",
+										pathname === "/archive" ? "bg-accent" : "",
+									)}
+									asChild
+								>
+									<Link href="/archive">
+										<Archive />
+									</Link>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Archivés</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									onClick={() => setLabelsOpen(true)}
+									variant={"ghost"}
+									size={"icon"}
+									className="cursor-pointer text-primary"
+								>
+									<Tags />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Libellés</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									onClick={() => setNaturesOpen(true)}
+									variant={"ghost"}
+									size={"icon"}
+									className="cursor-pointer text-primary"
+								>
+									<Calendar1 />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Natures d&apos;évènements</TooltipContent>
+						</Tooltip>
+						<input
+							id={fileInputId}
+							type="file"
+							accept=".xlsx,.xls"
+							className="hidden"
+							onChange={async (e) => {
+								const input = e.currentTarget;
+								const file = input.files?.[0];
+								if (!file) return;
+								setImporting(true);
+								setImportError(null);
+								setImportDetails([]);
+								try {
+									const fd = new FormData();
+									fd.append("file", file);
+									const res = await fetch("/api/contacts/import", {
+										method: "POST",
+										body: fd,
+									});
+									if (!res.ok) {
+										let message = "Import échoué";
+										let details: string[] = [];
+										try {
+											const json = await res.json();
+											message = json?.error || message;
+											details = Array.isArray(json?.details) ? json.details : [];
+										} catch {}
+										setImportError(message);
+										setImportDetails(details);
+									} else {
+										// Hard reload to revalidate and refresh all data/UI
+										window.location.reload();
+									}
+								} catch (e) {
+									console.log("Import error:", e);
+									setImportError("Import échoué");
+								} finally {
+									setImporting(false);
+									// reset input to allow reselecting same file
+									input.value = "";
+								}
+							}}
+						/>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={"ghost"}
+									className="cursor-pointer text-primary"
+									size={"icon"}
+									onClick={() => document.getElementById(fileInputId)?.click()}
+									disabled={importing}
+								>
+									{importing ? <Loader2 className="animate-spin" /> : <Upload />}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Importer</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size={"icon"}
+									variant={"ghost"}
+									className="cursor-pointer text-primary"
+									onClick={async () => {
+										const res = await fetch("/api/contacts/export");
+										if (!res.ok) return;
+										const blob = await res.blob();
+										const url = URL.createObjectURL(blob);
+										const a = document.createElement("a");
+										a.href = url;
+										a.download = "contacts.xlsx";
+										document.body.appendChild(a);
+										a.click();
+										a.remove();
+										URL.revokeObjectURL(url);
+									}}
+								>
+									<Download />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Exporter</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant={"ghost"} size={"icon"} className="cursor-pointer text-primary">
+											<User />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent>
+										<DropdownMenuItem onClick={() => setAccountOpen(true)}>
+											<User />
+											Compte
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={() =>
+												authClient.signOut({
+													fetchOptions: {
+														onSuccess: () => {
+															router.push("/sign-in");
+														},
+													},
+												})
+											}
+										>
+											<LogOut />
+											Se déconnecter
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TooltipTrigger>
+							<TooltipContent>Compte</TooltipContent>
+						</Tooltip>
+					</nav>
+				</div>
+			</div>
+			<ManageLabelsSheet open={labelsOpen} onOpenChange={setLabelsOpen} />
+			<ManageNaturesSheet open={naturesOpen} onOpenChange={setNaturesOpen} />
+			<AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
+			<Dialog open={!!importError} onOpenChange={(open) => !open && setImportError(null)}>
+				<DialogContent className="max-w-xl">
+					<DialogHeader>
+						<DialogTitle>Erreur d’import</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-3">
+						<p className="text-sm text-destructive">{importError}</p>
+						{importDetails.length > 0 ? (
+							<div className="max-h-64 overflow-auto rounded border p-2">
+								<ul className="list-disc pl-5 text-sm">
+									{importDetails.map((d, i) => (
+										<li key={i}>{d}</li>
+									))}
+								</ul>
+							</div>
+						) : null}
+					</div>
+				</DialogContent>
+			</Dialog>
+		</header>
+	);
 }
