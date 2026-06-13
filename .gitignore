@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
+
+nocrm-converted.xlsx
+nocrm-leads-2025-11-20-MjY5NQ.csv

@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import ManageLabelsSheet from "../sheet/ManageLabels";
 import ManageNaturesSheet from "../sheet/ManageNatures";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { Archive, Calendar1, Download, Loader2, LogOut, SquareKanban, Tags, Upload, User } from "lucide-react";
+import { Archive, Calendar1, Download, LayoutList, Loader2, LogOut, SquareKanban, Tags, Upload, User } from "lucide-react";
 import AccountDialog from "../common/AccountDialog";
 import { authClient } from "@/lib/auth-client";
 import { usePathname, useRouter } from "next/navigation";
@@ -33,7 +33,13 @@ export default function Header({ title }: Props) {
 	return (
 		<header className="bg-background p-4 z-10 border-b">
 			<div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-				<Link href={"/"} className="flex items-center gap-2">
+				<Link
+					href={"/"}
+					className={cn(
+						"flex items-center gap-2",
+						pathname === "/" ? "opacity-100" : "opacity-90 hover:opacity-100",
+					)}
+				>
 					<Image src="/cropped-icon-gold.svg" alt="Deux Béliers" width={30} height={30} />
 					<h1 className="text-xl text-primary text-nowrap font-medium">{title}</h1>
 				</Link>
@@ -42,6 +48,21 @@ export default function Header({ title }: Props) {
 						{/* <Button variant={"link"} className="cursor-pointer text-white">
               Paramètres
             </Button> */}
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={"ghost"}
+									size={"icon"}
+									className={cn(pathname === "/table" ? "bg-accent" : "")}
+									asChild
+								>
+									<Link href={"/table"}>
+										<LayoutList />
+									</Link>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Tableau</TooltipContent>
+						</Tooltip>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button

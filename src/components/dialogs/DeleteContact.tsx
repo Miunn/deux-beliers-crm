@@ -13,7 +13,7 @@ import {
 } from "../ui/dialog";
 import { deleteContact } from "@/actions/contacts";
 import { useState } from "react";
-import { useContactsContext } from "@/context/ContactsContext";
+import { contactActions } from "@/stores/contacts-store";
 
 export default function DeleteContact({
   contact,
@@ -26,10 +26,10 @@ export default function DeleteContact({
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
 }) {
-  const { removeContact } = useContactsContext();
   const [isOpen, setIsOpen] = useState(open);
   const internalOpen = open ?? isOpen;
   const internalOnOpenChange = onOpenChange ?? setIsOpen;
+
   const deleteContactAction = async (id: string) => {
     deleteContact(id).then((res) => {
       if (res && "error" in res) {
@@ -37,7 +37,7 @@ export default function DeleteContact({
       } else {
         toast.success("Contact supprimé avec succès");
         internalOnOpenChange(false);
-        removeContact(id);
+        contactActions.removeContact(id);
       }
     });
   };

@@ -10,7 +10,7 @@ import { Badge } from "../ui/badge";
 import ReminderPopover from "../popovers/ReminderPopover";
 import { addWeeks } from "date-fns";
 import { cn, textColorForBg } from "@/lib/utils";
-import { ContactWithRelations } from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
 import { useMemo } from "react";
 
 export default function ContactCard({ contact }: { contact: ContactWithRelations }) {

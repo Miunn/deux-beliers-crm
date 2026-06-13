@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { Metadata } from "next";
 import { ContactService } from "@/data/contact-service";
-import { ContactsProvider } from "@/context/ContactsContext";
+import ContactsShell from "@/components/common/ContactsShell";
 
 export const metadata: Metadata = {
   title: "Deux Beliers CRM",
@@ -32,9 +32,9 @@ export default async function ArchivePage() {
       <Header title="Gestion clients" />
       <div className="font-sans min-h-screen px-8 pb-8 gap-16 sm:px-20 sm:pb-20">
         <main className="container mx-auto flex flex-col gap-12">
-          <ContactsProvider defaultContacts={contacts}>
+          <ContactsShell defaultContacts={contacts}>
             <ContactList />
-          </ContactsProvider>
+          </ContactsShell>
         </main>
       </div>
     </>

@@ -12,10 +12,8 @@ import {
 } from "../ui/dialog";
 import { toast } from "sonner";
 import React from "react";
-import {
-  ContactWithRelations,
-  useContactsContext,
-} from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
+import { contactActions } from "@/stores/contacts-store";
 import { Loader2 } from "lucide-react";
 
 export default function ArchiveDialog({
@@ -27,7 +25,6 @@ export default function ArchiveDialog({
 }) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const { removeContact } = useContactsContext();
 
   const handleArchive = async () => {
     setLoading(true);
@@ -43,7 +40,7 @@ export default function ArchiveDialog({
       return;
     }
 
-    removeContact(contact.id);
+    contactActions.removeContact(contact.id);
     toast.success("Contact archivé avec succès");
     setOpen(false);
     setLoading(false);

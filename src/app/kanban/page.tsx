@@ -2,7 +2,7 @@ import ContactHeader from "@/components/common/ContactHeader";
 import { KanbanDashboard } from "@/components/common/KanbanDashboard";
 import Header from "@/components/layout/Header";
 import { KanbanBoardProvider } from "@/components/ui/kanban";
-import { ContactsProvider } from "@/context/ContactsContext";
+import ContactsShell from "@/components/common/ContactsShell";
 import { ContactService } from "@/data/contact-service";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -22,14 +22,14 @@ export default async function KanbanPage() {
       <Header title="Gestion clients" />
       <div className="overflow-y-auto">
         <main className="max-w-[90%] mx-auto flex-1 relative font-sans space-y-2">
-          <ContactsProvider defaultContacts={contacts}>
+          <ContactsShell defaultContacts={contacts}>
             <ContactHeader />
             <KanbanBoardProvider>
               <KanbanDashboard />
             </KanbanBoardProvider>
             {/*<KanbanDashboard defaultColumns={columns} />
             </KanbanBoardProvider>*/}
-          </ContactsProvider>
+          </ContactsShell>
         </main>
       </div>
     </div>

@@ -5,10 +5,8 @@ import CalendarPresets from "../ui/calendar-presets";
 import { useState } from "react";
 import { setReminder } from "@/actions/contacts";
 import { toast } from "sonner";
-import {
-  ContactWithRelations,
-  useContactsContext,
-} from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
+import { contactActions } from "@/stores/contacts-store";
 
 export default function ReminderPopover({
   contact,
@@ -20,8 +18,6 @@ export default function ReminderPopover({
   );
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
-  const { addOrUpdateContact } = useContactsContext();
-
   const save = async () => {
     if (!date) {
       return;
@@ -44,7 +40,7 @@ export default function ReminderPopover({
       }
 
       // Update the contact in context after blur to avoid scroll jumps.
-      addOrUpdateContact({ ...contact, rappel: date });
+      contactActions.addOrUpdateContact({ ...contact, rappel: date });
 
       setOpen(false);
       toast.success("Rappel enregistré");

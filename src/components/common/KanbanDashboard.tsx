@@ -1,12 +1,7 @@
 "use client";
 
 /* REMOVE eslint-disable unicorn/no-null */
-import {
-	MoreHorizontalIcon,
-	PenIcon,
-	PlusIcon,
-	Trash2Icon,
-} from "lucide-react";
+import { MoreHorizontalIcon, PenIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -43,21 +38,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
-import {
-	ContactWithRelations,
-	useContactsContext,
-} from "@/context/ContactsContext";
-import {
-	createKanbanColumn,
-	deleteKanbanColumn,
-	updateKanbanColumn,
-} from "@/actions/kanban";
+import { ContactWithRelations } from "@/types/contact-types";
+import { useDerivedContacts } from "@/hooks/use-derived-contacts";
+import { contactActions } from "@/stores/contacts-store";
+import { createKanbanColumn, deleteKanbanColumn, updateKanbanColumn } from "@/actions/kanban";
 import { createContact, updateContact } from "@/actions/contacts";
 
 import ContactInnerContent from "./ContactInnerContent";
@@ -74,25 +60,23 @@ type Column = {
 
 export function KanbanDashboard() {
 	const { data: columns, mutate: mutateColumns } = useKanbanColumns([]);
-	const { contacts, addOrUpdateContact, removeContact } =
-		useContactsContext();
+	const { contacts } = useDerivedContacts();
 
 	const data = useMemo<Column[]>(() => {
 		if (!columns) return [];
 
-		const contactsByColumns: Record<string, ContactWithRelations[]> =
-			contacts.reduce(
-				(acc, contact) => {
-					const columnId = contact.kanbanColumnId || "uncategorized";
-					if (!acc[columnId]) {
-						acc[columnId] = [];
-					}
+		const contactsByColumns: Record<string, ContactWithRelations[]> = contacts.reduce(
+			(acc, contact) => {
+				const columnId = contact.kanbanColumnId || "uncategorized";
+				if (!acc[columnId]) {
+					acc[columnId] = [];
+				}
 
-					acc[columnId].push(contact);
-					return acc;
-				},
-				{} as Record<string, ContactWithRelations[]>,
-			);
+				acc[columnId].push(contact);
+				return acc;
+			},
+			{} as Record<string, ContactWithRelations[]>,
+		);
 
 		return columns.map((column) => ({
 			id: column.id,
@@ -107,8 +91,7 @@ export function KanbanDashboard() {
 
 	function scrollRight() {
 		if (scrollContainerReference.current) {
-			scrollContainerReference.current.scrollLeft =
-				scrollContainerReference.current.scrollWidth;
+			scrollContainerReference.current.scrollLeft = scrollContainerReference.current.scrollWidth;
 		}
 	}
 
@@ -147,7 +130,7 @@ export function KanbanDashboard() {
 
 	async function handleAddCard(columnId: string, cardContent: string) {
 		console.log("Handle add");
-		addOrUpdateContact({
+		contactActions.addOrUpdateContact({
 			nom: cardContent,
 			kanbanColumnId: columnId,
 			mail: "",
@@ -174,7 +157,7 @@ export function KanbanDashboard() {
 
 	function handleDeleteCard(cardId: string) {
 		console.log("Delete card");
-		removeContact(cardId);
+		contactActions.removeContact(cardId);
 		// setColumns((previousColumns) =>
 		//   previousColumns.map((column) =>
 		//     column.items.some((card) => card.id === cardId)
@@ -184,12 +167,8 @@ export function KanbanDashboard() {
 		// );
 	}
 
-	async function handleMoveCardToColumn(
-		columnId: string,
-		index: number,
-		card: ContactWithRelations,
-	) {
-		addOrUpdateContact({
+	async function handleMoveCardToColumn(columnId: string, index: number, card: ContactWithRelations) {
+		contactActions.addOrUpdateContact({
 			...card,
 			id: card.id,
 			kanbanColumnId: columnId,
@@ -203,7 +182,7 @@ export function KanbanDashboard() {
 
 	function handleUpdateCardTitle(cardId: string, cardTitle: string) {
 		console.log("Update card");
-		addOrUpdateContact({
+		contactActions.addOrUpdateContact({
 			id: cardId,
 			nom: cardTitle,
 		});
@@ -229,7 +208,7 @@ export function KanbanDashboard() {
 		columnId: string;
 		cardIndex: number;
 	} | null>(null);
-	const { onDragStart, onDragEnd, onDragCancel, onDragOver } = useDndEvents();
+	const { onDragStart, onDragEnd, onDragCancel } = useDndEvents();
 
 	// This helper returns the appropriate overId after a card is placed.
 	// If there's another card below, return that card's id, otherwise return the column's id.
@@ -257,10 +236,7 @@ export function KanbanDashboard() {
 		return { columnIndex: -1, cardIndex: -1 };
 	}
 
-	function moveActiveCard(
-		cardId: string,
-		direction: "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown",
-	) {
+	function moveActiveCard(cardId: string, direction: "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown") {
 		const { columnIndex, cardIndex } = findCardPosition(cardId);
 		if (columnIndex === -1 || cardIndex === -1) return;
 
@@ -276,29 +252,20 @@ export function KanbanDashboard() {
 				break;
 			}
 			case "ArrowDown": {
-				newCardIndex = Math.min(
-					cardIndex + 1,
-					data[columnIndex].items.length - 1,
-				);
+				newCardIndex = Math.min(cardIndex + 1, data[columnIndex].items.length - 1);
 
 				break;
 			}
 			case "ArrowLeft": {
 				newColumnIndex = Math.max(columnIndex - 1, 0);
 				// Keep same cardIndex if possible, or if out of range, insert at end
-				newCardIndex = Math.min(
-					newCardIndex,
-					data[newColumnIndex].items.length,
-				);
+				newCardIndex = Math.min(newCardIndex, data[newColumnIndex].items.length);
 
 				break;
 			}
 			case "ArrowRight": {
 				newColumnIndex = Math.min(columnIndex + 1, data.length - 1);
-				newCardIndex = Math.min(
-					newCardIndex,
-					data[newColumnIndex].items.length,
-				);
+				newCardIndex = Math.min(newCardIndex, data[newColumnIndex].items.length);
 
 				break;
 			}
@@ -310,17 +277,12 @@ export function KanbanDashboard() {
 		});
 
 		// Find the card's new position and announce it.
-		const { columnIndex: updatedColumnIndex, cardIndex: updatedCardIndex } =
-			findCardPosition(cardId);
-		const overId = getOverId(data[updatedColumnIndex], updatedCardIndex);
+		const { columnIndex: updatedColumnIndex, cardIndex: updatedCardIndex } = findCardPosition(cardId);
 
 		// onDragOver(cardId, overId);
 	}
 
-	function handleCardKeyDown(
-		event: KeyboardEvent<HTMLDivElement>,
-		cardId: string,
-	) {
+	function handleCardKeyDown(event: KeyboardEvent<HTMLDivElement>, cardId: string) {
 		const { key } = event;
 
 		if (activeCardId === "" && key === " ") {
@@ -331,9 +293,7 @@ export function KanbanDashboard() {
 
 			const { columnIndex, cardIndex } = findCardPosition(cardId);
 			originalCardPositionReference.current =
-				columnIndex !== -1 && cardIndex !== -1
-					? { columnId: data[columnIndex].id, cardIndex }
-					: null;
+				columnIndex !== -1 && cardIndex !== -1 ? { columnId: data[columnIndex].id, cardIndex } : null;
 		} else if (activeCardId === cardId) {
 			// Card is already active.
 			// REMOVE eslint-disable-next-line unicorn/prefer-switch
@@ -359,21 +319,15 @@ export function KanbanDashboard() {
 
 				// Cancel the drag.
 				if (originalCardPositionReference.current) {
-					const { columnId, cardIndex } =
-						originalCardPositionReference.current;
-					const {
-						columnIndex: currentColumnIndex,
-						cardIndex: currentCardIndex,
-					} = findCardPosition(cardId);
+					const { columnId, cardIndex } = originalCardPositionReference.current;
+					const { columnIndex: currentColumnIndex, cardIndex: currentCardIndex } = findCardPosition(cardId);
 
 					// Revert card only if it moved.
 					if (
 						currentColumnIndex !== -1 &&
-						(columnId !== data[currentColumnIndex].id ||
-							cardIndex !== currentCardIndex)
+						(columnId !== data[currentColumnIndex].id || cardIndex !== currentCardIndex)
 					) {
-						const card =
-							data[currentColumnIndex].items[currentCardIndex];
+						const card = data[currentColumnIndex].items[currentCardIndex];
 						flushSync(() => {
 							handleMoveCardToColumn(columnId, cardIndex, card);
 						});
@@ -384,12 +338,7 @@ export function KanbanDashboard() {
 				originalCardPositionReference.current = null;
 
 				setActiveCardId("");
-			} else if (
-				key === "ArrowLeft" ||
-				key === "ArrowRight" ||
-				key === "ArrowUp" ||
-				key === "ArrowDown"
-			) {
+			} else if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown") {
 				event.preventDefault();
 				moveActiveCard(cardId, key);
 				// onDragOver is called inside moveActiveCard after placement.
@@ -453,29 +402,20 @@ function MyKanbanBoardColumn({
 	column: Column;
 	onAddCard: (columnId: string, cardContent: string) => void;
 	onCardBlur: () => void;
-	onCardKeyDown: (
-		event: KeyboardEvent<HTMLDivElement>,
-		cardId: string,
-	) => void;
+	onCardKeyDown: (event: KeyboardEvent<HTMLDivElement>, cardId: string) => void;
 	onDeleteCard: (cardId: string) => void;
 	onDeleteColumn: (columnId: string) => void;
-	onMoveCardToColumn: (
-		columnId: string,
-		index: number,
-		card: ContactWithRelations,
-	) => void;
+	onMoveCardToColumn: (columnId: string, index: number, card: ContactWithRelations) => void;
 	onUpdateCardTitle: (cardId: string, cardTitle: string) => void;
 	onUpdateColumnTitle: (columnId: string, columnTitle: string) => void;
 }) {
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
 	const listReference = useRef<HTMLUListElement>(null);
 	const moreOptionsButtonReference = useRef<HTMLButtonElement>(null);
-	const { onDragCancel, onDragEnd } = useDndEvents();
 
 	function scrollList() {
 		if (listReference.current) {
-			listReference.current.scrollTop =
-				listReference.current.scrollHeight;
+			listReference.current.scrollTop = listReference.current.scrollHeight;
 		}
 	}
 
@@ -501,22 +441,14 @@ function MyKanbanBoardColumn({
 	}
 
 	return (
-		<KanbanBoardColumn
-			columnId={column.id}
-			key={column.id}
-			onDropOverColumn={handleDropOverColumn}
-		>
+		<KanbanBoardColumn columnId={column.id} key={column.id} onDropOverColumn={handleDropOverColumn}>
 			<KanbanBoardColumnHeader>
 				{isEditingTitle ? (
 					<form
 						className="w-full"
 						onSubmit={handleSubmit}
 						onBlur={(event) => {
-							if (
-								!event.currentTarget.contains(
-									event.relatedTarget,
-								)
-							) {
+							if (!event.currentTarget.contains(event.relatedTarget)) {
 								closeDropdownMenu();
 							}
 						}}
@@ -543,14 +475,10 @@ function MyKanbanBoardColumn({
 
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<KanbanBoardColumnIconButton
-									ref={moreOptionsButtonReference}
-								>
+								<KanbanBoardColumnIconButton ref={moreOptionsButtonReference}>
 									<MoreHorizontalIcon />
 
-									<span className="sr-only">
-										More options for {column.title}
-									</span>
+									<span className="sr-only">More options for {column.title}</span>
 								</KanbanBoardColumnIconButton>
 							</DropdownMenuTrigger>
 
@@ -558,18 +486,14 @@ function MyKanbanBoardColumn({
 								<DropdownMenuLabel>Column</DropdownMenuLabel>
 
 								<DropdownMenuGroup>
-									<DropdownMenuItem
-										onClick={() => setIsEditingTitle(true)}
-									>
+									<DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
 										<PenIcon />
 										Edit Details
 									</DropdownMenuItem>
 
 									<DropdownMenuItem
 										className="text-destructive"
-										onClick={() =>
-											onDeleteColumn(column.id)
-										}
+										onClick={() => onDeleteColumn(column.id)}
 									>
 										<Trash2Icon />
 										Delete
@@ -583,11 +507,7 @@ function MyKanbanBoardColumn({
 
 			<KanbanBoardColumnList ref={listReference}>
 				{column.items.map((card) => (
-					<KanbanBoardColumnListItem
-						cardId={card.id}
-						key={card.id}
-						onDropOverListItem={handleDropOverColumn}
-					>
+					<KanbanBoardColumnListItem cardId={card.id} key={card.id} onDropOverListItem={handleDropOverColumn}>
 						<MyKanbanBoardCard
 							card={card}
 							isActive={activeCardId === card.id}
@@ -600,11 +520,7 @@ function MyKanbanBoardColumn({
 				))}
 			</KanbanBoardColumnList>
 
-			<MyNewKanbanBoardCard
-				column={column}
-				onAddCard={onAddCard}
-				scrollList={scrollList}
-			/>
+			<MyNewKanbanBoardCard column={column} onAddCard={onAddCard} scrollList={scrollList} />
 		</KanbanBoardColumn>
 	);
 }
@@ -614,16 +530,12 @@ function MyKanbanBoardCard({
 	isActive,
 	onCardBlur,
 	onCardKeyDown,
-	onDeleteCard,
 	onUpdateCardTitle,
 }: {
 	card: ContactWithRelations;
 	isActive: boolean;
 	onCardBlur: () => void;
-	onCardKeyDown: (
-		event: KeyboardEvent<HTMLDivElement>,
-		cardId: string,
-	) => void;
+	onCardKeyDown: (event: KeyboardEvent<HTMLDivElement>, cardId: string) => void;
 	onDeleteCard: (cardId: string) => void;
 	onUpdateCardTitle: (cardId: string, cardTitle: string) => void;
 }) {
@@ -646,11 +558,7 @@ function MyKanbanBoardCard({
 		}
 
 		// Refocus the card after it was discarded with the keyboard.
-		if (
-			!isActive &&
-			previousIsActiveReference.current &&
-			wasCancelledReference.current
-		) {
+		if (!isActive && previousIsActiveReference.current && wasCancelledReference.current) {
 			kanbanBoardCardReference.current?.focus();
 			wasCancelledReference.current = false;
 		}
@@ -688,9 +596,7 @@ function MyKanbanBoardCard({
 						// Clear the error message if input is valid
 						input.setCustomValidity("");
 					} else {
-						input.setCustomValidity(
-							"Card content cannot be empty or just whitespace.",
-						);
+						input.setCustomValidity("Card content cannot be empty or just whitespace.");
 					}
 				}}
 				onKeyDown={(event) => {
@@ -761,22 +667,9 @@ function MyKanbanBoardCard({
         </KanbanBoardCardButton>
       </KanbanBoardCardButtonGroup>*/}
 			</KanbanBoardCard>
-			<ContactDialog
-				mode="edit"
-				contact={card}
-				open={openEdit}
-				onOpenChange={setOpenEdit}
-			/>
-			<EventDialog
-				contact={card}
-				open={openEvents}
-				onOpenChange={setOpenEvents}
-			/>
-			<DeleteContact
-				contact={card}
-				open={openDelete}
-				onOpenChange={setOpenDelete}
-			/>
+			<ContactDialog mode="edit" contact={card} open={openEdit} onOpenChange={setOpenEdit} />
+			<EventDialog contact={card} open={openEvents} onOpenChange={setOpenEvents} />
+			<DeleteContact contact={card} open={openDelete} onOpenChange={setOpenDelete} />
 		</>
 	);
 }
@@ -844,15 +737,12 @@ function MyNewKanbanBoardCard({
 						name="cardContent"
 						onChange={handleInputChange}
 						onInput={(event) => {
-							const input =
-								event.currentTarget as HTMLTextAreaElement;
+							const input = event.currentTarget as HTMLTextAreaElement;
 							if (/\S/.test(input.value)) {
 								// Clear the error message if input is valid
 								input.setCustomValidity("");
 							} else {
-								input.setCustomValidity(
-									"Card content cannot be empty or just whitespace.",
-								);
+								input.setCustomValidity("Card content cannot be empty or just whitespace.");
 							}
 						}}
 						onKeyDown={(event) => {
@@ -876,12 +766,7 @@ function MyNewKanbanBoardCard({
 						Add
 					</Button>
 
-					<Button
-						onClick={handleCancelClick}
-						size="sm"
-						variant="outline"
-						type="button"
-					>
+					<Button onClick={handleCancelClick} size="sm" variant="outline" type="button">
 						Cancel
 					</Button>
 				</KanbanBoardColumnFooter>
@@ -889,10 +774,7 @@ function MyNewKanbanBoardCard({
 		</>
 	) : (
 		<KanbanBoardColumnFooter>
-			<KanbanBoardColumnButton
-				onClick={handleAddCardClick}
-				ref={newCardButtonReference}
-			>
+			<KanbanBoardColumnButton onClick={handleAddCardClick} ref={newCardButtonReference}>
 				<PlusIcon />
 
 				<span aria-hidden>New card</span>
@@ -903,11 +785,7 @@ function MyNewKanbanBoardCard({
 	);
 }
 
-function MyNewKanbanBoardColumn({
-	onAddColumn,
-}: {
-	onAddColumn: (columnTitle?: string) => void;
-}) {
+function MyNewKanbanBoardColumn({ onAddColumn }: { onAddColumn: (columnTitle?: string) => void }) {
 	const [showEditor, setShowEditor] = useState(false);
 	const newColumnButtonReference = useRef<HTMLButtonElement>(null);
 	const inputReference = useRef<HTMLInputElement>(null);
@@ -969,12 +847,7 @@ function MyNewKanbanBoardColumn({
 					Add
 				</Button>
 
-				<Button
-					onClick={handleCancelClick}
-					size="sm"
-					type="button"
-					variant="outline"
-				>
+				<Button onClick={handleCancelClick} size="sm" type="button" variant="outline">
 					Cancel
 				</Button>
 			</KanbanBoardColumnFooter>
@@ -982,11 +855,7 @@ function MyNewKanbanBoardColumn({
 	) : (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button
-					onClick={handleAddColumnClick}
-					ref={newColumnButtonReference}
-					variant="outline"
-				>
+				<Button onClick={handleAddColumnClick} ref={newColumnButtonReference} variant="outline">
 					<PlusIcon />
 
 					<span className="sr-only">Add column</span>

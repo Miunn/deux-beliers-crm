@@ -37,10 +37,8 @@ import {
 } from "../ui/select";
 import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
-import {
-	ContactWithRelations,
-	useContactsContext,
-} from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
+import { contactActions } from "@/stores/contacts-store";
 import ArchiveDialog from "./ArchiveDialog";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 
@@ -62,7 +60,6 @@ export default function ContactDialog({
 	const internalOpen = open ?? isOpen;
 	const internalOnOpenChange = onOpenChange ?? setIsOpen;
 	const [createActiviteOpen, setCreateActiviteOpen] = useState(false);
-	const { addOrUpdateContact } = useContactsContext();
 	const { data: kanbanColumns } = useKanbanColumns();
 
 	const form = useForm<z.infer<typeof NEW_CONTACT_FORM_SCHEMA>>({
@@ -99,7 +96,7 @@ export default function ContactDialog({
 			);
 			internalOnOpenChange(false);
 			// ensure returned contact has relations (actions return with include)
-			addOrUpdateContact(res as ContactWithRelations);
+			contactActions.addOrUpdateContact(res as ContactWithRelations);
 			if (mode === "create") form.reset();
 		}
 	};
