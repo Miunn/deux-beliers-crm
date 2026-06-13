@@ -1,4 +1,4 @@
-import { ContactWithRelations } from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
 import { Bell, Calendar, EllipsisVertical, Pen, Phone, Trash, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addWeeks } from "date-fns";

@@ -1,12 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { useContactsContext } from "@/context/ContactsContext";
+import { useDerivedContacts } from "@/hooks/use-derived-contacts";
 import ContactCard from "./ContactCard";
 import ContactHeader from "./ContactHeader";
 
 export default function ContactList() {
-  const { contacts } = useContactsContext();
+  const { contacts } = useDerivedContacts();
 
   // Anchor-based scroll preservation:
   // We remember the absolute page Y of each rendered contact element between renders.

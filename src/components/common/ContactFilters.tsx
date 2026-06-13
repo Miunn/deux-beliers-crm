@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MultiSelect } from "../ui/multi-select";
-import { useContactsContext } from "../../context/ContactsContext";
+import { useContactFilters } from "@/context/ContactFiltersContext";
 import { Checkbox } from "../ui/checkbox";
 import SortByDropdown from "./SortByDropdown";
 
@@ -28,7 +28,7 @@ export default function ContactFilters() {
     resetFilters,
     sortState,
     setSortState,
-  } = useContactsContext();
+  } = useContactFilters();
 
   // local debounced text input state
   const [localText, setLocalText] = useState<string>(text ?? "");

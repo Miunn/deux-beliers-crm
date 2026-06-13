@@ -40,7 +40,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
-import { ContactWithRelations, useContactsContext } from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
+import { useDerivedContacts } from "@/hooks/use-derived-contacts";
+import { contactActions } from "@/stores/contacts-store";
 import { createKanbanColumn, deleteKanbanColumn, updateKanbanColumn } from "@/actions/kanban";
 import { createContact, updateContact } from "@/actions/contacts";
 
@@ -58,7 +60,7 @@ type Column = {
 
 export function KanbanDashboard() {
 	const { data: columns, mutate: mutateColumns } = useKanbanColumns([]);
-	const { contacts, addOrUpdateContact, removeContact } = useContactsContext();
+	const { contacts } = useDerivedContacts();
 
 	const data = useMemo<Column[]>(() => {
 		if (!columns) return [];
@@ -128,7 +130,7 @@ export function KanbanDashboard() {
 
 	async function handleAddCard(columnId: string, cardContent: string) {
 		console.log("Handle add");
-		addOrUpdateContact({
+		contactActions.addOrUpdateContact({
 			nom: cardContent,
 			kanbanColumnId: columnId,
 			mail: "",
@@ -155,7 +157,7 @@ export function KanbanDashboard() {
 
 	function handleDeleteCard(cardId: string) {
 		console.log("Delete card");
-		removeContact(cardId);
+		contactActions.removeContact(cardId);
 		// setColumns((previousColumns) =>
 		//   previousColumns.map((column) =>
 		//     column.items.some((card) => card.id === cardId)
@@ -166,7 +168,7 @@ export function KanbanDashboard() {
 	}
 
 	async function handleMoveCardToColumn(columnId: string, index: number, card: ContactWithRelations) {
-		addOrUpdateContact({
+		contactActions.addOrUpdateContact({
 			...card,
 			id: card.id,
 			kanbanColumnId: columnId,
@@ -180,7 +182,7 @@ export function KanbanDashboard() {
 
 	function handleUpdateCardTitle(cardId: string, cardTitle: string) {
 		console.log("Update card");
-		addOrUpdateContact({
+		contactActions.addOrUpdateContact({
 			id: cardId,
 			nom: cardTitle,
 		});

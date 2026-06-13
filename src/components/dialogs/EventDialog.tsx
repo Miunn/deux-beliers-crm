@@ -16,7 +16,8 @@ import { toast } from "sonner";
 import { createEvent, updateEvent, createEventWithReminder, updateEventWithReminder } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
-import { ContactWithRelations, useContactsContext } from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
+import { contactActions } from "@/stores/contacts-store";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,6 @@ export default function EventDialog({
 	const internalOnOpenChange = onOpenChange ?? setIsOpen;
 
 	const { data: events, mutate, isLoading } = useEventsByContact(internalOpen ? contact.id : null);
-	const { appendEventDate, addOrUpdateContact } = useContactsContext();
 	const { data: natures } = useNatures();
 	const { data: kanbanColumns } = useKanbanColumns();
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export default function EventDialog({
 		} else {
 			toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
 			// Optimistic: ensure date-filter sees this immediately
-			appendEventDate(contact.id, data.date);
+			contactActions.appendEventDate(contact.id, data.date);
 			mutate();
 			setEditingEventId(null);
 			form.reset({
@@ -148,7 +148,7 @@ export default function EventDialog({
 				open={internalOpen}
 				onOpenChange={(open) => {
 					if (!open) {
-						addOrUpdateContact({
+						contactActions.addOrUpdateContact({
 							id: contact.id,
 							kanbanColumnId: localKanbanColumnId ?? contact.kanbanColumnId,
 						});
@@ -256,7 +256,7 @@ export default function EventDialog({
 														// the card from being moved/unmounted (which would close the dialog).
 														setLocalKanbanColumnId(val);
 
-														// Persist change to server. Do NOT call addOrUpdateContact here to avoid
+														// Persist change to server. Do NOT call contactActions.addOrUpdateContact here to avoid
 														// immediate UI reordering that would unmount this dialog.
 														updateContact(contact.id, {
 															nom: contact.nom,
@@ -375,7 +375,7 @@ export default function EventDialog({
 								// ignore environments without a DOM
 							}
 
-							addOrUpdateContact({
+							contactActions.addOrUpdateContact({
 								id: contact.id,
 								rappel: reminderDate,
 							});
