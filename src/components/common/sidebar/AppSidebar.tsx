@@ -5,18 +5,19 @@ import {
 	Calendar1,
 	Download,
 	GalleryVerticalEnd,
-	LucideIcon,
+	LayoutList,
 	SaveAll,
+	Settings,
 	SquareKanban,
-	SquareTerminal,
 	Tags,
 	Upload,
 } from "lucide-react";
 
-import { Group } from "@/components/common/sidebar/Group";
 import {
 	Sidebar,
 	SidebarContent,
+	SidebarGroup,
+	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
@@ -25,80 +26,6 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
-
-const content: {
-	[key: string]: {
-		title: string;
-		items: {
-			title: string;
-			url: string;
-			icon?: LucideIcon;
-			isActive?: boolean;
-			items?: { title: string; url: string }[];
-		}[];
-	};
-} = {
-	vues: {
-		title: "Vues",
-		items: [
-			{
-				title: "Cartes",
-				url: "/",
-				icon: GalleryVerticalEnd,
-			},
-			{
-				title: "Tableau",
-				url: "/table",
-				icon: SquareTerminal,
-			},
-			{
-				title: "Kanban",
-				url: "/kanban",
-				icon: SquareKanban,
-			},
-		],
-	},
-	contenu: {
-		title: "Contenu",
-		items: [
-			{
-				title: "Libellés",
-				url: "/labels",
-				icon: Tags,
-			},
-			{
-				title: "Natures d'évènements",
-				url: "/events",
-				icon: Calendar1,
-			},
-		],
-	},
-	donnees: {
-		title: "Données",
-		items: [
-			{
-				title: "Importer",
-				url: "/import",
-				icon: Upload,
-			},
-			{
-				title: "Télécharger",
-				url: "/download",
-				icon: Download,
-			},
-		],
-	},
-	sauvegardes: {
-		title: "Sauvegardes",
-		items: [
-			{
-				title: "Sauvegardes",
-				url: "/saves",
-				icon: SaveAll,
-			},
-		],
-	},
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (
@@ -119,9 +46,89 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				{Object.keys(content).map((key) => (
-					<Group key={key} title={content[key].title} items={content[key].items} />
-				))}
+				<SidebarGroup>
+					<SidebarGroupLabel>Vues</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Cartes"}>
+								<a href={"/"}>
+									<GalleryVerticalEnd /> <span>Cartes</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Tableau"}>
+								<a href={"/table"}>
+									<LayoutList /> <span>Tableau</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Kanban"}>
+								<a href={"/kanban"}>
+									<SquareKanban /> <span>Kanban</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Contenu</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Libellés"}>
+								<a href={"/tags"}>
+									<Tags /> <span>Libellés</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Natures d'évènements"}>
+								<a href={"/natures"}>
+									<Calendar1 /> <span>Natures d&apos;évènements</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Données</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Importer"}>
+								<a href={"/import"}>
+									<Upload /> <span>Importer</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Exporter"}>
+								<a href={"/export"}>
+									<Download /> <span>Exporter</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Divers</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Sauvegardes"}>
+								<a href={"/saves"}>
+									<SaveAll /> <span>Sauvegardes</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild tooltip={"Paramètres"}>
+								<a href={"/settings"}>
+									<Settings /> <span>Paramètres</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
 			</SidebarContent>
 			<SidebarRail />
 		</Sidebar>

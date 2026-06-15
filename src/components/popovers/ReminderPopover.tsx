@@ -2,7 +2,7 @@ import { Bell, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import CalendarPresets from "../ui/calendar-presets";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { setReminder } from "@/actions/contacts";
 import { toast } from "sonner";
 import { ContactWithRelations } from "@/types/contact-types";
@@ -18,6 +18,11 @@ export default function ReminderPopover({
   );
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setDate(contact.rappel ? new Date(contact.rappel) : undefined);
+  }, [contact.id, contact.rappel]);
+
   const save = async () => {
     if (!date) {
       return;

@@ -11,21 +11,42 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, XIcon } from "lucide-react";
 import React from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
 import { Input } from "./input";
+import { Button } from "./button";
+import ReminderWithinSevenDaysFilter from "@/components/table/ReminderWithinSevenDaysFilter";
+import EventDateRangeFilter from "@/components/table/EventDateRangeFilter";
+import LabelsFilter from "@/components/table/LabelsFilter";
+import { RAPPEL_WITHIN_SEVEN_DAYS_FILTER } from "@/components/table/column-filters";
+import { DateRange } from "react-day-picker";
+import { SelectedState } from "@/components/ui/multi-select";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	initialSorting?: SortingState;
+	onRowClick?: (row: TData) => void;
+	toolbarTrailing?: React.ReactNode;
+	showReminderWithinSevenDaysFilter?: boolean;
+	showEventDateRangeFilter?: boolean;
+	showLabelsFilter?: boolean;
 }
 
-export function DataTable<TData, TValue>({ columns, data, initialSorting = [] }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+	columns,
+	data,
+	initialSorting = [],
+	onRowClick,
+	toolbarTrailing,
+	showReminderWithinSevenDaysFilter = false,
+	showEventDateRangeFilter = false,
+	showLabelsFilter = false,
+}: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 	const [globalFilter, setGlobalFilter] = React.useState("");
@@ -41,18 +62,76 @@ export function DataTable<TData, TValue>({ columns, data, initialSorting = [] }:
 		onSortingChange: setSorting,
 		onGlobalFilterChange: setGlobalFilter,
 		state: { sorting, columnFilters, globalFilter },
+		initialState: {
+			pagination: {
+				pageSize: 25,
+			},
+		},
 		globalFilterFn: "includesString",
 	});
 
+	const rappelColumn = table.getColumn("rappel");
+	const lastEventColumn = table.getColumn("lastEvent");
+	const labelsColumn = table.getColumn("labels");
+	const hasReminderFilter = rappelColumn?.getFilterValue() === RAPPEL_WITHIN_SEVEN_DAYS_FILTER;
+	const eventDateRange = lastEventColumn?.getFilterValue() as DateRange | undefined;
+	const selectedLabels = (labelsColumn?.getFilterValue() as SelectedState[] | undefined) ?? [];
+
+	const clearFilters = () => {
+		table.setGlobalFilter("");
+		table.resetColumnFilters();
+	};
+
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center">
+			<div className="flex flex-wrap items-center justify-between gap-3">
 				<Input
 					placeholder="Filtrer les contacts"
 					value={globalFilter}
 					onChange={(event) => table.setGlobalFilter(event.target.value)}
 					className="max-w-sm"
 				/>
+				<div className="flex flex-wrap items-center gap-3">
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						title="Effacer les filtres"
+						onClick={clearFilters}
+					>
+						<XIcon size={16} />
+					</Button>
+					{showReminderWithinSevenDaysFilter ? (
+						<ReminderWithinSevenDaysFilter
+							checked={hasReminderFilter}
+							onCheckedChange={(checked) => {
+								rappelColumn?.setFilterValue(checked ? RAPPEL_WITHIN_SEVEN_DAYS_FILTER : undefined);
+							}}
+						/>
+					) : null}
+					{showEventDateRangeFilter ? (
+						<EventDateRangeFilter
+							value={eventDateRange}
+							onChange={(range) => {
+								const next = typeof range === "function" ? range(eventDateRange) : range;
+								if (!next?.from && !next?.to) {
+									lastEventColumn?.setFilterValue(undefined);
+								} else {
+									lastEventColumn?.setFilterValue(next);
+								}
+							}}
+						/>
+					) : null}
+					{showLabelsFilter ? (
+						<LabelsFilter
+							value={selectedLabels}
+							onChange={(labels) => {
+								labelsColumn?.setFilterValue(labels.length > 0 ? labels : undefined);
+							}}
+						/>
+					) : null}
+					{toolbarTrailing}
+				</div>
 			</div>
 			<div className="overflow-hidden rounded-md border">
 				<Table>
@@ -103,6 +182,18 @@ export function DataTable<TData, TValue>({ columns, data, initialSorting = [] }:
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
 									data-contact-id={(row.original as { id?: string }).id ?? row.id}
+									className={cn(onRowClick && "cursor-pointer hover:bg-muted/50")}
+									onClick={(event) => {
+										if (!onRowClick) return;
+										if (
+											(event.target as HTMLElement).closest(
+												"button, a, input, textarea, select, [data-no-row-click]",
+											)
+										) {
+											return;
+										}
+										onRowClick(row.original);
+									}}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell

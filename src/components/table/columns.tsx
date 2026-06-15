@@ -1,5 +1,6 @@
 "use client";
 
+import { DateRange } from "react-day-picker";
 import { ColumnDef } from "@tanstack/react-table";
 import { addWeeks } from "date-fns";
 import { Bell, Calendar, Pen, Phone, Trash, UserRound } from "lucide-react";
@@ -12,6 +13,9 @@ import DeleteContact from "../dialogs/DeleteContact";
 import EventDialog from "../dialogs/EventDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { compareRappelRows, getLastEvent } from "./sorting";
+import ReminderPopover from "../popovers/ReminderPopover";
+import { contactMatchesSelectedLabels, RAPPEL_WITHIN_SEVEN_DAYS_FILTER, contactHasEventInDateRange } from "./column-filters";
+import { SelectedState } from "../ui/multi-select";
 
 export const columns: ColumnDef<ContactWithRelations>[] = [
 	{
@@ -30,9 +34,17 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		},
 	},
 	{
-		accessorKey: "rappel",
+		id: "rappel",
+		accessorFn: (row) => (row.rappel ? new Date(row.rappel).getTime() : undefined),
+		sortUndefined: "last",
 		header: "Rappel",
 		sortingFn: (rowA, rowB) => compareRappelRows(rowA.original, rowB.original),
+		filterFn: (row, _columnId, filterValue) => {
+			if (filterValue !== RAPPEL_WITHIN_SEVEN_DAYS_FILTER) return true;
+			const rappel = row.original.rappel;
+			if (!rappel) return false;
+			return new Date(rappel) <= addWeeks(new Date(), 1);
+		},
 		cell: ({ row }) => {
 			const contact = row.original;
 			const isUrgentReminder = contact.rappel && contact.rappel <= addWeeks(new Date(), 1);
@@ -52,7 +64,7 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 					) : (
 						<span className="text-muted-foreground text-sm">—</span>
 					)}
-					{/*<ReminderPopover contact={contact} />*/}
+					<ReminderPopover contact={contact} />
 				</div>
 			);
 		},
@@ -119,6 +131,8 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		accessorKey: "lastEvent",
 		header: "Dernier événement",
 		enableSorting: false,
+		filterFn: (row, _columnId, filterValue) =>
+			contactHasEventInDateRange(row.original, filterValue as DateRange | undefined),
 		cell: ({ row }) => {
 			const lastEvent = getLastEvent(row.original);
 			return lastEvent ? (
@@ -135,6 +149,11 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		accessorKey: "labels",
 		header: "Libellés",
 		enableSorting: false,
+		filterFn: (row, _columnId, filterValue) =>
+			contactMatchesSelectedLabels(
+				row.original,
+				filterValue as SelectedState[] | undefined,
+			),
 		cell: ({ row }) => {
 			const contact = row.original;
 			return (
@@ -167,7 +186,11 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		cell: ({ row }) => {
 			const contact = row.original;
 			return (
-				<div className="flex items-center justify-end gap-0.5">
+				<div
+					className="flex items-center justify-end gap-0.5"
+					data-no-row-click
+					onClick={(event) => event.stopPropagation()}
+				>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<ContactDialog mode="edit" contact={contact}>

@@ -1,64 +1,59 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import { Button } from "../ui/button";
-import ManageLabelsSheet from "../sheet/ManageLabels";
-import ManageNaturesSheet from "../sheet/ManageNatures";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import {
-	Archive,
-	Calendar1,
-	Download,
-	LayoutList,
-	Loader2,
-	LogOut,
-	SquareKanban,
-	Tags,
-	Upload,
-	User,
-} from "lucide-react";
-import AccountDialog from "../common/AccountDialog";
-import { authClient } from "@/lib/auth-client";
-import { usePathname, useRouter } from "next/navigation";
-import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { SidebarTrigger } from "../ui/sidebar";
 
 type Props = {
 	title: string;
+	className?: string;
 };
 
-export default function Header({ title }: Props) {
+function pathToTitle(path: string): string {
+	switch (path) {
+		case "/table":
+			return "Tableau";
+		case "/kanban":
+			return "Kanban";
+		case "/archive":
+			return "Archivés";
+		case "/tags":
+			return "Libellés";
+		case "/natures":
+			return "Natures d'évènements";
+		case "/import":
+			return "Importer des données";
+		case "/export":
+			return "Exporter des données";
+		case "/saves":
+			return "Sauvegardes de données";
+		case "/settings":
+			return "Paramètres";
+		default:
+			return "";
+	}
+}
+
+export default function SidebarLayoutHeader({ className }: Props) {
 	const pathname = usePathname();
-	const [labelsOpen, setLabelsOpen] = useState(false);
-	const [naturesOpen, setNaturesOpen] = useState(false);
-	const [importing, setImporting] = useState(false);
-	const [accountOpen, setAccountOpen] = useState(false);
-	const fileInputId = "__import_contacts_file_input";
-	const router = useRouter();
-	const [importError, setImportError] = useState<string | null>(null);
-	const [importDetails, setImportDetails] = useState<string[]>([]);
 
 	return (
 		<header className="bg-background p-4 z-10 border-b">
-			<div className="container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-				<Link
-					href={"/"}
-					className={cn(
-						"flex items-center gap-2",
-						pathname === "/" ? "opacity-100" : "opacity-90 hover:opacity-100",
-					)}
-				>
-					<Image src="/cropped-icon-gold.svg" alt="Deux Béliers" width={30} height={30} />
-					<h1 className="text-xl text-primary text-nowrap font-medium">{title}</h1>
-				</Link>
-				<div className="flex items-center gap-3 w-full md:w-auto">
+			<div
+				className={cn(
+					"container mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+					className,
+				)}
+			>
+				<div className="flex items-center gap-3">
+					<SidebarTrigger />
+					{pathToTitle(pathname)}
+				</div>
+				{/*<div className="flex items-center gap-3 w-full md:w-auto">
 					<nav className="whitespace-nowrap flex items-center flex-wrap gap-3">
-						{/* <Button variant={"link"} className="cursor-pointer text-white">
-              Paramètres
-            </Button> */}
+						<Button variant={"link"} className="cursor-pointer text-white">
+							Paramètres
+						</Button>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -248,30 +243,8 @@ export default function Header({ title }: Props) {
 							<TooltipContent>Compte</TooltipContent>
 						</Tooltip>
 					</nav>
-				</div>
+				</div>*/}
 			</div>
-			<ManageLabelsSheet open={labelsOpen} onOpenChange={setLabelsOpen} />
-			<ManageNaturesSheet open={naturesOpen} onOpenChange={setNaturesOpen} />
-			<AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
-			<Dialog open={!!importError} onOpenChange={(open) => !open && setImportError(null)}>
-				<DialogContent className="max-w-xl">
-					<DialogHeader>
-						<DialogTitle>Erreur d’import</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-3">
-						<p className="text-sm text-destructive">{importError}</p>
-						{importDetails.length > 0 ? (
-							<div className="max-h-64 overflow-auto rounded border p-2">
-								<ul className="list-disc pl-5 text-sm">
-									{importDetails.map((d, i) => (
-										<li key={i}>{d}</li>
-									))}
-								</ul>
-							</div>
-						) : null}
-					</div>
-				</DialogContent>
-			</Dialog>
 		</header>
 	);
 }

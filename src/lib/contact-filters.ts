@@ -1,5 +1,6 @@
 import { DateRange } from "react-day-picker";
 import { SelectedState } from "@/components/ui/multi-select";
+import { contactMatchesSelectedLabels } from "@/components/table/column-filters";
 import { ContactWithRelations } from "@/types/contact-types";
 
 export type ContactFiltersState = {
@@ -29,19 +30,7 @@ export function filterContacts(
 		}
 
 		if (selectedLabels.length > 0) {
-			const set = new Set(c.labels.map((l) => l.id));
-			const excludeLabels = selectedLabels.filter((l) => l.action === "exclude");
-			for (const l of excludeLabels) {
-				if (set.has(l.id)) return false;
-			}
-			const andLabels = selectedLabels.filter((l) => l.action === "and");
-			for (const l of andLabels) {
-				if (!set.has(l.id)) return false;
-			}
-			const orLabels = selectedLabels.filter((l) => l.action === "or");
-			if (orLabels.length > 0) {
-				if (!orLabels.some((l) => set.has(l.id))) return false;
-			}
+			if (!contactMatchesSelectedLabels(c, selectedLabels)) return false;
 		}
 
 		if (fromDate || toDate) {

@@ -26,6 +26,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Label } from "../ui/label";
 import { updateContact } from "@/actions/contacts";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
+import { Skeleton } from "../ui/skeleton";
+
+function EventHistorySkeleton() {
+	return (
+		<div className="space-y-3">
+			{Array.from({ length: 3 }).map((_, index) => (
+				<div key={index} className="rounded-md border p-3 space-y-2">
+					<Skeleton className="h-4 w-3/5" />
+					<Skeleton className="h-3 w-full" />
+					<Skeleton className="h-3 w-4/5" />
+				</div>
+			))}
+		</div>
+	);
+}
 
 export default function EventDialog({
 	contact,
@@ -162,23 +177,25 @@ export default function EventDialog({
 					onCloseAutoFocus={(e) => e.preventDefault()}
 					className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
 				>
-					<DialogHeader className="contents space-y-0 text-left">
-						<DialogTitle className="border-b px-6 py-4 text-base">
-							Suivi des événements - {events?.contact.nom} -{" "}
-							<Phone className="inline size-4" strokeWidth={2.5} /> {events?.contact.telephone || "N/A"}
+					<DialogHeader className="flex min-h-0 flex-1 flex-col space-y-0 p-0 text-left gap-0">
+						<DialogTitle className="shrink-0 border-b px-6 py-4 text-base">
+							Suivi des événements - {contact.nom} - <Phone className="inline size-4" strokeWidth={2.5} />{" "}
+							{contact.telephone || "N/A"}
 						</DialogTitle>
-						<div className="relative overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div className="space-y-2">
-								<div className="text-sm text-muted-foreground">Historique</div>
-								{isLoading && <div className="text-sm">Chargement…</div>}
-								{events?.events.length === 0 && (
-									<div className="text-sm text-muted-foreground">Aucun événement.</div>
-								)}
-								{events?.events.map((e) => renderEvent(e))}
+						<div className="flex min-h-0 flex-1 flex-col-reverse overflow-hidden md:flex-row">
+							<div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:max-w-[50%] md:basis-1/2 md:border-r">
+								<div className="space-y-2">
+									<div className="text-sm text-muted-foreground">Historique</div>
+									{isLoading ? <EventHistorySkeleton /> : null}
+									{!isLoading && events?.events.length === 0 ? (
+										<div className="text-sm text-muted-foreground">Aucun événement.</div>
+									) : null}
+									{events?.events.map((e) => renderEvent(e))}
+								</div>
 							</div>
 
-							<div className="w-full h-full row-start-1 md:row-start-auto md:col-start-2">
-								<div className="sticky top-0 right-0 space-y-4">
+							<div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:max-w-[50%] md:basis-1/2">
+								<div className="space-y-4">
 									<Form {...form}>
 										<form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
 											<FormField
