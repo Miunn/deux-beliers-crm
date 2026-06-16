@@ -20,7 +20,7 @@ export default async function SettingsPage() {
 				<SidebarLayoutHeader title="Gestion clients" className="max-w-full w-full" />
 				<div className="overflow-y-auto">
 					<main className="mx-auto flex-1 relative font-sans px-6 py-8 max-w-3xl">
-						<h2 className="text-lg font-medium mb-10">Paramètres</h2>
+						<h2 className="text-lg font-medium mb-10">Informations du compte</h2>
 						<AccountContent />
 					</main>
 				</div>

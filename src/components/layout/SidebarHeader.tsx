@@ -11,9 +11,11 @@ type Props = {
 
 function pathToTitle(path: string): string {
 	switch (path) {
+		case "/new":
+			return "Clients";
 		case "/table":
 			return "Tableau";
-		case "/kanban":
+		case "/new/kanban":
 			return "Kanban";
 		case "/archive":
 			return "Archivés";
@@ -25,6 +27,8 @@ function pathToTitle(path: string): string {
 			return "Importer des données";
 		case "/export":
 			return "Exporter des données";
+		case "/new/archive":
+			return "Clients archivés";
 		case "/saves":
 			return "Sauvegardes de données";
 		case "/settings":
