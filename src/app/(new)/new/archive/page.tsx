@@ -23,7 +23,7 @@ export default async function ArchivePage() {
 	return (
 		<div className="pb-8 sm:pb-20">
 			<ContactsShell defaultContacts={contacts}>
-				<ContactList />
+				<ContactList variant="modern" />
 			</ContactsShell>
 		</div>
 	);

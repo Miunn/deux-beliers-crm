@@ -1,7 +1,8 @@
-import ContactHeader from "@/components/common/ContactHeader";
+import { Suspense } from "react";
 import { KanbanDashboard } from "@/components/common/KanbanDashboard";
-import { KanbanBoardProvider } from "@/components/ui/kanban";
 import ContactsShell from "@/components/common/ContactsShell";
+import ContactsViewToolbar from "@/components/layout/ContactsViewToolbar";
+import { KanbanBoardProvider } from "@/components/ui/kanban";
 import { ContactService } from "@/data/contact-service";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -17,14 +18,14 @@ export default async function KanbanPage() {
 	const contacts = await ContactService.getContacts();
 
 	return (
-		<div className="mx-auto flex-1 relative font-sans space-y-2">
+		<div className="flex flex-col gap-4">
 			<ContactsShell defaultContacts={contacts}>
-				<ContactHeader />
+				<Suspense>
+					<ContactsViewToolbar />
+				</Suspense>
 				<KanbanBoardProvider>
 					<KanbanDashboard />
 				</KanbanBoardProvider>
-				{/*<KanbanDashboard defaultColumns={columns} />
-            </KanbanBoardProvider>*/}
 			</ContactsShell>
 		</div>
 	);

@@ -1,11 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, Suspense } from "react";
 import { useDerivedContacts } from "@/hooks/use-derived-contacts";
+import ContactsViewToolbar from "@/components/layout/ContactsViewToolbar";
 import ContactCard from "./ContactCard";
 import ContactHeader from "./ContactHeader";
 
-export default function ContactList() {
+type ContactListProps = {
+	variant?: "legacy" | "modern";
+};
+
+export default function ContactList({ variant = "legacy" }: ContactListProps) {
   const { contacts } = useDerivedContacts();
 
   // Anchor-based scroll preservation:
@@ -84,8 +89,14 @@ export default function ContactList() {
   }, [contacts]);
 
   return (
-    <div className="flex flex-col gap-10 pb-20">
-      <ContactHeader />
+    <div className={variant === "modern" ? "flex flex-col gap-6 pb-20" : "flex flex-col gap-10 pb-20"}>
+      {variant === "modern" ? (
+        <Suspense>
+          <ContactsViewToolbar />
+        </Suspense>
+      ) : (
+        <ContactHeader />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {contacts?.length === 0 && (

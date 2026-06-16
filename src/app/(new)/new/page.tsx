@@ -17,7 +17,7 @@ export default async function Home() {
 	return (
 		<div className="flex-1 relative">
 			<ContactsShell defaultContacts={contacts}>
-				<ContactList />
+				<ContactList variant="modern" />
 			</ContactsShell>
 		</div>
 	);
