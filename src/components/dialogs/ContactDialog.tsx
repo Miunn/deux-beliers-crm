@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
 import { ContactWithRelations } from "@/types/contact-types";
-import { contactActions } from "@/stores/contacts-store";
+import { contactStore } from "@/stores/contacts-store";
 import ArchiveDialog from "./ArchiveDialog";
 import EventDialog from "./EventDialog";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
@@ -77,7 +77,7 @@ export default function ContactDialog({
 			toast.success(mode === "edit" ? "Contact mis à jour avec succès" : "Contact enregistré avec succès");
 			internalOnOpenChange(false);
 			// ensure returned contact has relations (actions return with include)
-			contactActions.addOrUpdateContact(res as ContactWithRelations);
+			contactStore.addOrUpdateContact(res as ContactWithRelations);
 			if (mode === "create") form.reset();
 		}
 	};
@@ -87,24 +87,22 @@ export default function ContactDialog({
 			<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
 				{children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
 				<DialogContent className="flex flex-col gap-0 p-0 min-w-[55%] sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
+					{mode === "edit" && contact ? (
+						<button
+							type="button"
+							title="Événements"
+							className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 z-20"
+							onClick={() => setEventOpen(true)}
+						>
+							<Calendar className="size-4" />
+							<span className="sr-only">Événements</span>
+						</button>
+					) : null}
 					<DialogHeader className="contents space-y-0 text-left">
 						<div className="relative border-b">
 							<DialogTitle className="px-6 py-4 pr-20 text-base">
 								{mode === "edit" ? "Modifier le contact" : "Ajouter un contact"}
 							</DialogTitle>
-							{mode === "edit" && contact ? (
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									title="Événements"
-									className="absolute top-3.5 right-10 size-8 opacity-70 hover:opacity-100"
-									onClick={() => setEventOpen(true)}
-								>
-									<Calendar className="size-4" />
-									<span className="sr-only">Événements</span>
-								</Button>
-							) : null}
 						</div>
 						<div className="overflow-y-auto">
 							<div className="p-6">

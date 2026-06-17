@@ -9,15 +9,16 @@ import { CREATE_EVENT_FORM_SCHEMA } from "@/lib/definitions";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Loader2, Pencil, Phone, Trash2 } from "lucide-react";
+import { Loader2, Pen, Pencil, Phone, Trash2 } from "lucide-react";
 import DeleteEvent from "./DeleteEvent";
+import ContactDialog from "./ContactDialog";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { createEvent, updateEvent, createEventWithReminder, updateEventWithReminder } from "@/actions/events";
 import ReminderDateDialog from "./ReminderDateDialog";
 import { useEventsByContact } from "@/hooks/use-events";
 import { ContactWithRelations } from "@/types/contact-types";
-import { contactActions } from "@/stores/contacts-store";
+import { contactStore } from "@/stores/contacts-store";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export default function EventDialog({
 	const { data: kanbanColumns } = useKanbanColumns();
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
 	const [reminderOpen, setReminderOpen] = useState(false);
+	const [contactOpen, setContactOpen] = useState(false);
 	const [localKanbanColumnId, setLocalKanbanColumnId] = useState<string | undefined>(
 		contact.kanbanColumnId ?? undefined,
 	);
@@ -86,7 +88,7 @@ export default function EventDialog({
 		} else {
 			toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
 			// Optimistic: ensure date-filter sees this immediately
-			contactActions.appendEventDate(contact.id, data.date);
+			contactStore.appendEventDate(contact.id, data.date);
 			mutate();
 			setEditingEventId(null);
 			form.reset({
@@ -163,7 +165,7 @@ export default function EventDialog({
 				open={internalOpen}
 				onOpenChange={(open) => {
 					if (!open) {
-						contactActions.addOrUpdateContact({
+						contactStore.addOrUpdateContact({
 							id: contact.id,
 							kanbanColumnId: localKanbanColumnId ?? contact.kanbanColumnId,
 						});
@@ -177,8 +179,17 @@ export default function EventDialog({
 					onCloseAutoFocus={(e) => e.preventDefault()}
 					className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
 				>
+					<button
+						type="button"
+						title="Modifier le contact"
+						className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 z-20 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+						onClick={() => setContactOpen(true)}
+					>
+						<Pen className="size-4" />
+						<span className="sr-only">Modifier le contact</span>
+					</button>
 					<DialogHeader className="flex min-h-0 flex-1 flex-col space-y-0 p-0 text-left gap-0">
-						<DialogTitle className="shrink-0 border-b px-6 py-4 text-base">
+						<DialogTitle className="shrink-0 border-b px-6 py-4 pr-20 text-base">
 							Suivi des événements - {contact.nom} - <Phone className="inline size-4" strokeWidth={2.5} />{" "}
 							{contact.telephone || "N/A"}
 						</DialogTitle>
@@ -392,7 +403,7 @@ export default function EventDialog({
 								// ignore environments without a DOM
 							}
 
-							contactActions.addOrUpdateContact({
+							contactStore.addOrUpdateContact({
 								id: contact.id,
 								rappel: reminderDate,
 							});
@@ -407,6 +418,7 @@ export default function EventDialog({
 					});
 				}}
 			/>
+			<ContactDialog mode="edit" contact={contact} open={contactOpen} onOpenChange={setContactOpen} />
 		</>
 	);
 }

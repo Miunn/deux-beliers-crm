@@ -6,99 +6,91 @@ import { useEffect, useState } from "react";
 import { setReminder } from "@/actions/contacts";
 import { toast } from "sonner";
 import { ContactWithRelations } from "@/types/contact-types";
-import { contactActions } from "@/stores/contacts-store";
+import { contactStore } from "@/stores/contacts-store";
 
-export default function ReminderPopover({
-  contact,
-}: {
-  contact: ContactWithRelations;
-}) {
-  const [date, setDate] = useState<Date | undefined>(
-    contact.rappel || undefined,
-  );
-  const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState(false);
+export default function ReminderPopover({ contact }: { contact: ContactWithRelations }) {
+	const [date, setDate] = useState<Date | undefined>(contact.rappel || undefined);
+	const [saving, setSaving] = useState(false);
+	const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    setDate(contact.rappel ? new Date(contact.rappel) : undefined);
-  }, [contact.id, contact.rappel]);
+	useEffect(() => {
+		setDate(contact.rappel ? new Date(contact.rappel) : undefined);
+	}, [contact.id, contact.rappel]);
 
-  const save = async () => {
-    if (!date) {
-      return;
-    }
+	const save = async () => {
+		if (!date) {
+			return;
+		}
 
-    setSaving(true);
-    const r = await setReminder(contact.id, date);
-    setSaving(false);
+		setSaving(true);
+		const r = await setReminder(contact.id, date);
+		setSaving(false);
 
-    if (r.success) {
-      // Blur any active element so focus doesn't jump back to the popover trigger
-      // when we close it. Browsers may scroll focused elements into view which
-      // causes the viewport to jump on reorder — removing focus prevents that.
-      try {
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-      } catch {
-        // ignore environments without a DOM
-      }
+		if (r.success) {
+			// Blur any active element so focus doesn't jump back to the popover trigger
+			// when we close it. Browsers may scroll focused elements into view which
+			// causes the viewport to jump on reorder — removing focus prevents that.
+			try {
+				if (document.activeElement instanceof HTMLElement) {
+					document.activeElement.blur();
+				}
+			} catch {
+				// ignore environments without a DOM
+			}
 
-      // Update the contact in context after blur to avoid scroll jumps.
-      contactActions.addOrUpdateContact({ ...contact, rappel: date });
+			// Update the contact in context after blur to avoid scroll jumps.
+			contactStore.addOrUpdateContact({ ...contact, rappel: date });
 
-      setOpen(false);
-      toast.success("Rappel enregistré");
-      return;
-    }
+			setOpen(false);
+			toast.success("Rappel enregistré");
+			return;
+		}
 
-    if (r.error) {
-      toast.error(`Erreur: ${r.error}`);
-      return;
-    }
-  };
+		if (r.error) {
+			toast.error(`Erreur: ${r.error}`);
+			return;
+		}
+	};
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size={"icon"}>
-          <Bell />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-auto overflow-hidden"
-        align="start"
-        onCloseAutoFocus={(e) => {
-          // Prevent Radix from moving focus back to the trigger when the popover closes.
-          // Returning focus to the trigger can cause the page to jump (scroll) — prevent that.
-          e.preventDefault();
-        }}
-      >
-        <CalendarPresets
-          date={date}
-          setDate={setDate}
-          className="border-0"
-          calendarProps={{
-            disabled: (date) =>
-              date < new Date(new Date().setHours(0, 0, 0, 0)),
-          }}
-        />
-        <div className="flex justify-between items-center">
-          <p className="p-4 text-sm">
-            Rappel le:{" "}
-            {date ? date.toLocaleDateString() : <i>Aucune date sélectionnée</i>}
-          </p>
-          <Button className="ml-auto" onClick={save} disabled={saving || !date}>
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement
-              </>
-            ) : (
-              <>Enregistrer</>
-            )}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<Button variant="ghost" size={"icon"}>
+					<Bell />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent
+				className="w-auto overflow-hidden"
+				align="start"
+				onCloseAutoFocus={(e) => {
+					// Prevent Radix from moving focus back to the trigger when the popover closes.
+					// Returning focus to the trigger can cause the page to jump (scroll) — prevent that.
+					e.preventDefault();
+				}}
+			>
+				<CalendarPresets
+					date={date}
+					setDate={setDate}
+					className="border-0"
+					calendarProps={{
+						disabled: (date) => date < new Date(new Date().setHours(0, 0, 0, 0)),
+					}}
+				/>
+				<div className="flex justify-between items-center">
+					<p className="p-4 text-sm">
+						Rappel le: {date ? date.toLocaleDateString() : <i>Aucune date sélectionnée</i>}
+					</p>
+					<Button className="ml-auto" onClick={save} disabled={saving || !date}>
+						{saving ? (
+							<>
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement
+							</>
+						) : (
+							<>Enregistrer</>
+						)}
+					</Button>
+				</div>
+			</PopoverContent>
+		</Popover>
+	);
 }

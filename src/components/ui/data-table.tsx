@@ -11,7 +11,7 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, XIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, SearchIcon, XIcon } from "lucide-react";
 import React from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -85,12 +85,18 @@ export function DataTable<TData, TValue>({
 	return (
 		<div className="space-y-4">
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<Input
-					placeholder="Filtrer les contacts"
-					value={globalFilter}
-					onChange={(event) => table.setGlobalFilter(event.target.value)}
-					className="max-w-sm"
-				/>
+				<div className="relative w-full lg:max-w-2xs">
+					<Input
+						className="ps-9"
+						placeholder="Filtrer les contacts"
+						type="search"
+						value={globalFilter}
+						onChange={(event) => table.setGlobalFilter(event.target.value)}
+					/>
+					<div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+						<SearchIcon className="size-4" />
+					</div>
+				</div>
 				<div className="flex flex-wrap items-center gap-3">
 					<Button
 						type="button"

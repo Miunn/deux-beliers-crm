@@ -2,14 +2,8 @@ import ContactList from "@/components/common/ContactList";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { Metadata } from "next";
 import { ContactService } from "@/data/contact-service";
 import ContactsShell from "@/components/common/ContactsShell";
-
-export const metadata: Metadata = {
-	title: "Deux Beliers CRM",
-	description: "Deux Beliers CRM",
-};
 
 export default async function ArchivePage() {
 	const hdrs = await headers();

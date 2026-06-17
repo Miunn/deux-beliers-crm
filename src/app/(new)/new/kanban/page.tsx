@@ -18,15 +18,19 @@ export default async function KanbanPage() {
 	const contacts = await ContactService.getContacts();
 
 	return (
-		<div className="flex flex-col gap-4">
-			<ContactsShell defaultContacts={contacts}>
+		<ContactsShell defaultContacts={contacts}>
+			<div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
 				<Suspense>
-					<ContactsViewToolbar />
+					<ContactsViewToolbar className="shrink-0" />
 				</Suspense>
-				<KanbanBoardProvider>
-					<KanbanDashboard />
-				</KanbanBoardProvider>
-			</ContactsShell>
-		</div>
+				<div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+					<KanbanBoardProvider>
+						<div className="h-full min-w-0 w-full overflow-hidden [&>div]:h-full [&>div]:max-w-full">
+							<KanbanDashboard />
+						</div>
+					</KanbanBoardProvider>
+				</div>
+			</div>
+		</ContactsShell>
 	);
 }

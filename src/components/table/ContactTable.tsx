@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { columns } from "./columns";
 import { DataTable } from "../ui/data-table";
-import { contactActions, useContacts } from "@/stores/contacts-store";
+import { contactStore, useContacts } from "@/stores/contacts-store";
 import { ContactWithRelations } from "@/types/contact-types";
 import EventDialog from "../dialogs/EventDialog";
 import ContactDialog from "../dialogs/ContactDialog";
@@ -16,12 +16,12 @@ export default function ContactTable({ data }: { data?: ContactWithRelations[] }
 	const [eventOpen, setEventOpen] = useState(false);
 
 	if (!initialized.current) {
-		contactActions.setContacts(data ?? []);
+		contactStore.setContacts(data ?? []);
 		initialized.current = true;
 	}
 
 	useEffect(() => {
-		contactActions.setContacts(data ?? []);
+		contactStore.setContacts(data ?? []);
 	}, [data]);
 
 	const contacts = useContacts();

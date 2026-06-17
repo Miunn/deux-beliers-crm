@@ -42,7 +42,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 import { ContactWithRelations } from "@/types/contact-types";
 import { useDerivedContacts } from "@/hooks/use-derived-contacts";
-import { contactActions } from "@/stores/contacts-store";
+import { contactStore } from "@/stores/contacts-store";
 import { createKanbanColumn, deleteKanbanColumn, updateKanbanColumn } from "@/actions/kanban";
 import { createContact, updateContact } from "@/actions/contacts";
 
@@ -130,7 +130,7 @@ export function KanbanDashboard() {
 
 	async function handleAddCard(columnId: string, cardContent: string) {
 		console.log("Handle add");
-		contactActions.addOrUpdateContact({
+		contactStore.addOrUpdateContact({
 			nom: cardContent,
 			kanbanColumnId: columnId,
 			mail: "",
@@ -157,7 +157,7 @@ export function KanbanDashboard() {
 
 	function handleDeleteCard(cardId: string) {
 		console.log("Delete card");
-		contactActions.removeContact(cardId);
+		contactStore.removeContact(cardId);
 		// setColumns((previousColumns) =>
 		//   previousColumns.map((column) =>
 		//     column.items.some((card) => card.id === cardId)
@@ -168,7 +168,7 @@ export function KanbanDashboard() {
 	}
 
 	async function handleMoveCardToColumn(columnId: string, index: number, card: ContactWithRelations) {
-		contactActions.addOrUpdateContact({
+		contactStore.addOrUpdateContact({
 			...card,
 			id: card.id,
 			kanbanColumnId: columnId,
@@ -182,7 +182,7 @@ export function KanbanDashboard() {
 
 	function handleUpdateCardTitle(cardId: string, cardTitle: string) {
 		console.log("Update card");
-		contactActions.addOrUpdateContact({
+		contactStore.addOrUpdateContact({
 			id: cardId,
 			nom: cardTitle,
 		});

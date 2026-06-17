@@ -24,7 +24,7 @@ export function useContacts() {
 	return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-export const contactActions = {
+export const contactStore = {
 	setContacts(next: ContactWithRelations[]) {
 		contacts = next;
 		emit();
@@ -65,17 +65,17 @@ export const contactActions = {
 		contacts = contacts.map((c) =>
 			c.id === contactId
 				? {
-						...c,
-						events: [
-							{
-								id: `temp-${Date.now()}`,
-								date,
-								nature: null,
-								commentaires: null,
-							},
-							...(c.events ?? []),
-						],
-					}
+					...c,
+					events: [
+						{
+							id: `temp-${Date.now()}`,
+							date,
+							nature: null,
+							commentaires: null,
+						},
+						...(c.events ?? []),
+					],
+				}
 				: c,
 		);
 		emit();

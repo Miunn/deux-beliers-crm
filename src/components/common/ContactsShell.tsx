@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { ContactFiltersProvider } from "@/context/ContactFiltersContext";
-import { contactActions } from "@/stores/contacts-store";
+import { contactStore } from "@/stores/contacts-store";
 import { ContactWithRelations } from "@/types/contact-types";
 
 export default function ContactsShell({
@@ -14,12 +14,12 @@ export default function ContactsShell({
 }) {
 	const initialized = useRef(false);
 	if (!initialized.current) {
-		contactActions.setContacts(defaultContacts);
+		contactStore.setContacts(defaultContacts);
 		initialized.current = true;
 	}
 
 	useEffect(() => {
-		contactActions.setContacts(defaultContacts);
+		contactStore.setContacts(defaultContacts);
 	}, [defaultContacts]);
 
 	return <ContactFiltersProvider>{children}</ContactFiltersProvider>;

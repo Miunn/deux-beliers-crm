@@ -21,11 +21,7 @@ type Props = {
 	trailing?: ReactNode;
 };
 
-export default function ContactsViewToolbar({
-	className,
-	showCreateButton = true,
-	trailing,
-}: Props) {
+export default function ContactsViewToolbar({ className, showCreateButton = true, trailing }: Props) {
 	const searchParams = useSearchParams();
 	const { contacts } = useDerivedContacts();
 	const {
@@ -73,10 +69,7 @@ export default function ContactsViewToolbar({
 
 	const contactCount = contacts?.length ?? 0;
 	const hasActiveFilters =
-		Boolean(text.trim()) ||
-		hasReminder ||
-		selectedLabels.length > 0 ||
-		Boolean(dateRange?.from || dateRange?.to);
+		Boolean(text.trim()) || hasReminder || selectedLabels.length > 0 || Boolean(dateRange?.from || dateRange?.to);
 
 	const handleClearFilters = () => {
 		resetFilters();
@@ -87,7 +80,7 @@ export default function ContactsViewToolbar({
 	return (
 		<div className={cn("space-y-3 border-b pb-4", className)}>
 			<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-				<div className="relative w-full lg:max-w-sm">
+				<div className="relative w-full lg:max-w-2xs">
 					<Input
 						className="ps-9"
 						placeholder="Filtrer les contacts"
@@ -113,10 +106,7 @@ export default function ContactsViewToolbar({
 							Effacer
 						</Button>
 					) : null}
-					<ReminderWithinSevenDaysFilter
-						checked={hasReminder}
-						onCheckedChange={setHasReminder}
-					/>
+					<ReminderWithinSevenDaysFilter checked={hasReminder} onCheckedChange={setHasReminder} />
 					<EventDateRangeFilter value={dateRange} onChange={setDateRange} />
 					<LabelsFilter value={selectedLabels} onChange={setSelectedLabels} />
 					<SortByDropdown sortState={sortState} setSortState={setSortState} />
