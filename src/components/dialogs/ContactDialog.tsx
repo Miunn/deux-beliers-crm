@@ -14,32 +14,20 @@ import {
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NEW_CONTACT_FORM_SCHEMA } from "@/lib/definitions";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "../ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Calendar } from "lucide-react";
 import { createContact, updateContact } from "@/actions/contacts";
 import { toast } from "sonner";
 import { useActivites } from "@/hooks/use-activites";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import CreateActivite from "../sheet/CreateActivite";
 import { useState } from "react";
 import { ContactWithRelations } from "@/types/contact-types";
 import { contactActions } from "@/stores/contacts-store";
 import ArchiveDialog from "./ArchiveDialog";
+import EventDialog from "./EventDialog";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 
 export default function ContactDialog({
@@ -60,6 +48,7 @@ export default function ContactDialog({
 	const internalOpen = open ?? isOpen;
 	const internalOnOpenChange = onOpenChange ?? setIsOpen;
 	const [createActiviteOpen, setCreateActiviteOpen] = useState(false);
+	const [eventOpen, setEventOpen] = useState(false);
 	const { data: kanbanColumns } = useKanbanColumns();
 
 	const form = useForm<z.infer<typeof NEW_CONTACT_FORM_SCHEMA>>({
@@ -74,26 +63,18 @@ export default function ContactDialog({
 			observations: contact?.observations ?? "",
 			adresse: contact?.adresse ?? "",
 			horaires: contact?.horaires ?? "",
-			kanbanColumnId:
-				contact?.kanbanColumnId ?? kanbanColumns?.[0]?.id ?? "1",
+			kanbanColumnId: contact?.kanbanColumnId ?? kanbanColumns?.[0]?.id ?? "1",
 			active: true,
 		},
 	});
 
 	const onSubmit = async (data: z.infer<typeof NEW_CONTACT_FORM_SCHEMA>) => {
-		const res =
-			mode === "edit" && contact
-				? await updateContact(contact.id, data)
-				: await createContact(data);
+		const res = mode === "edit" && contact ? await updateContact(contact.id, data) : await createContact(data);
 
 		if (res && "error" in res) {
 			toast.error(res.error);
 		} else {
-			toast.success(
-				mode === "edit"
-					? "Contact mis à jour avec succès"
-					: "Contact enregistré avec succès",
-			);
+			toast.success(mode === "edit" ? "Contact mis à jour avec succès" : "Contact enregistré avec succès");
 			internalOnOpenChange(false);
 			// ensure returned contact has relations (actions return with include)
 			contactActions.addOrUpdateContact(res as ContactWithRelations);
@@ -104,16 +85,27 @@ export default function ContactDialog({
 	return (
 		<>
 			<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
-				{children ? (
-					<DialogTrigger asChild>{children}</DialogTrigger>
-				) : null}
+				{children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
 				<DialogContent className="flex flex-col gap-0 p-0 min-w-[55%] sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
 					<DialogHeader className="contents space-y-0 text-left">
-						<DialogTitle className="border-b px-6 py-4 text-base">
-							{mode === "edit"
-								? "Modifier le contact"
-								: "Ajouter un contact"}
-						</DialogTitle>
+						<div className="relative border-b">
+							<DialogTitle className="px-6 py-4 pr-20 text-base">
+								{mode === "edit" ? "Modifier le contact" : "Ajouter un contact"}
+							</DialogTitle>
+							{mode === "edit" && contact ? (
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									title="Événements"
+									className="absolute top-3.5 right-10 size-8 opacity-70 hover:opacity-100"
+									onClick={() => setEventOpen(true)}
+								>
+									<Calendar className="size-4" />
+									<span className="sr-only">Événements</span>
+								</Button>
+							) : null}
+						</div>
 						<div className="overflow-y-auto">
 							<div className="p-6">
 								<Form {...form}>
@@ -127,9 +119,7 @@ export default function ContactDialog({
 												name="nom"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Nom
-														</FormLabel>
+														<FormLabel>Nom</FormLabel>
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
@@ -142,17 +132,11 @@ export default function ContactDialog({
 												name="activite"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Activité
-														</FormLabel>
+														<FormLabel>Activité</FormLabel>
 														<div className="flex items-center gap-2">
 															<Select
-																onValueChange={
-																	field.onChange
-																}
-																defaultValue={
-																	field.value
-																}
+																onValueChange={field.onChange}
+																defaultValue={field.value}
 															>
 																<FormControl>
 																	<SelectTrigger className="flex-1">
@@ -160,38 +144,22 @@ export default function ContactDialog({
 																	</SelectTrigger>
 																</FormControl>
 																<SelectContent>
-																	{activites?.map(
-																		(
-																			activite,
-																		) => (
-																			<SelectItem
-																				key={
-																					activite.id
-																				}
-																				value={
-																					activite.id
-																				}
-																			>
-																				{
-																					activite.label
-																				}
-																			</SelectItem>
-																		),
-																	)}
+																	{activites?.map((activite) => (
+																		<SelectItem
+																			key={activite.id}
+																			value={activite.id}
+																		>
+																			{activite.label}
+																		</SelectItem>
+																	))}
 																</SelectContent>
 															</Select>
 
 															<Button
-																variant={
-																	"outline"
-																}
+																variant={"outline"}
 																size={"icon"}
 																type="button"
-																onClick={() =>
-																	setCreateActiviteOpen(
-																		true,
-																	)
-																}
+																onClick={() => setCreateActiviteOpen(true)}
 															>
 																<Plus className="w-4 h-4" />
 															</Button>
@@ -205,14 +173,9 @@ export default function ContactDialog({
 												name="ville"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Ville
-														</FormLabel>
+														<FormLabel>Ville</FormLabel>
 														<FormControl>
-															<Input
-																placeholder="Nantes"
-																{...field}
-															/>
+															<Input {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -223,9 +186,7 @@ export default function ContactDialog({
 												name="contact"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Contact
-														</FormLabel>
+														<FormLabel>Contact</FormLabel>
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
@@ -238,9 +199,7 @@ export default function ContactDialog({
 												name="telephone"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Téléphone
-														</FormLabel>
+														<FormLabel>Téléphone</FormLabel>
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
@@ -253,9 +212,7 @@ export default function ContactDialog({
 												name="mail"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Email
-														</FormLabel>
+														<FormLabel>Email</FormLabel>
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
@@ -268,15 +225,9 @@ export default function ContactDialog({
 												name="adresse"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Adresse postale
-														</FormLabel>
+														<FormLabel>Adresse postale</FormLabel>
 														<FormControl>
-															<Textarea
-																rows={3}
-																placeholder="30 rue de la Paix, 44000 Nantes"
-																{...field}
-															/>
+															<Textarea rows={3} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -287,15 +238,9 @@ export default function ContactDialog({
 												name="horaires"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Horaires
-														</FormLabel>
+														<FormLabel>Horaires</FormLabel>
 														<FormControl>
-															<Textarea
-																rows={3}
-																placeholder="Lundi à vendredi de 9h à 18h"
-																{...field}
-															/>
+															<Textarea rows={3} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -308,37 +253,19 @@ export default function ContactDialog({
 												name="kanbanColumnId"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>
-															Kanban colonne
-														</FormLabel>
-														<Select
-															value={field.value}
-															onValueChange={
-																field.onChange
-															}
-														>
+														<FormLabel>Kanban colonne</FormLabel>
+														<Select value={field.value} onValueChange={field.onChange}>
 															<FormControl>
 																<SelectTrigger className="w-full">
 																	<SelectValue />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
-																{kanbanColumns?.map(
-																	(col) => (
-																		<SelectItem
-																			key={
-																				col.id
-																			}
-																			value={
-																				col.id
-																			}
-																		>
-																			{
-																				col.name
-																			}
-																		</SelectItem>
-																	),
-																)}
+																{kanbanColumns?.map((col) => (
+																	<SelectItem key={col.id} value={col.id}>
+																		{col.name}
+																	</SelectItem>
+																))}
 															</SelectContent>
 														</Select>
 													</FormItem>
@@ -350,14 +277,9 @@ export default function ContactDialog({
 												name="observations"
 												render={({ field }) => (
 													<FormItem className="flex-1 flex flex-col gap-2">
-														<FormLabel className="h-fit">
-															Observations
-														</FormLabel>
+														<FormLabel className="h-fit">Observations</FormLabel>
 														<FormControl>
-															<Textarea
-																className="h-full"
-																{...field}
-															/>
+															<Textarea className="h-full" {...field} />
 														</FormControl>
 													</FormItem>
 												)}
@@ -398,10 +320,10 @@ export default function ContactDialog({
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-			<CreateActivite
-				open={createActiviteOpen}
-				onOpenChange={setCreateActiviteOpen}
-			/>
+			<CreateActivite open={createActiviteOpen} onOpenChange={setCreateActiviteOpen} />
+			{mode === "edit" && contact ? (
+				<EventDialog contact={contact} open={eventOpen} onOpenChange={setEventOpen} />
+			) : null}
 		</>
 	);
 }
