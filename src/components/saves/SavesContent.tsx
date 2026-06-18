@@ -17,6 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Download, EllipsisVertical, HardDrive, Loader2, SaveAll, Trash } from "lucide-react";
+import BackupHelpDialog from "./BackupHelpDialog";
 import { useSaves } from "@/hooks/use-saves";
 import type { BackupRecord, DiskState } from "@/data/backup-service";
 import { toast } from "sonner";
@@ -167,11 +168,12 @@ export default function SavesContent() {
 
 	return (
 		<>
-			<p className="text-sm text-muted-foreground mb-6">
-				Les sauvegardes automatiques enregistrent un export Excel complet sur le serveur.
-				Configurez un cron avec <code className="text-xs">npm run backup</code> ou un appel
-				HTTP vers <code className="text-xs">/api/cron/backup</code>.
-			</p>
+			<div className="flex items-start gap-1 mb-6">
+				<p className="text-sm text-muted-foreground">
+					Les sauvegardes automatiques enregistrent un export Excel complet sur le serveur.
+				</p>
+				<BackupHelpDialog />
+			</div>
 
 			{isLoading ? <p className="text-sm text-muted-foreground mb-8">Chargement…</p> : null}
 			{!isLoading && disk ? <DiskStatePanel disk={disk} /> : null}

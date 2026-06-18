@@ -179,7 +179,7 @@ export default function EventDialog({
 					onCloseAutoFocus={(e) => e.preventDefault()}
 					className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
 				>
-					<button
+					{/*<button
 						type="button"
 						title="Modifier le contact"
 						className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 z-20 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
@@ -187,7 +187,7 @@ export default function EventDialog({
 					>
 						<Pen className="size-4" />
 						<span className="sr-only">Modifier le contact</span>
-					</button>
+					</button>*/}
 					<DialogHeader className="flex min-h-0 flex-1 flex-col space-y-0 p-0 text-left gap-0">
 						<DialogTitle className="shrink-0 border-b px-6 py-4 pr-20 text-base">
 							Suivi des événements - {contact.nom} - <Phone className="inline size-4" strokeWidth={2.5} />{" "}
@@ -418,7 +418,7 @@ export default function EventDialog({
 					});
 				}}
 			/>
-			<ContactDialog mode="edit" contact={contact} open={contactOpen} onOpenChange={setContactOpen} />
+			{/*<ContactDialog mode="edit" contact={contact} open={contactOpen} onOpenChange={setContactOpen} />*/}
 		</>
 	);
 }

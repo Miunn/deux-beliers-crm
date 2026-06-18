@@ -87,7 +87,7 @@ export default function ContactDialog({
 			<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
 				{children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
 				<DialogContent className="flex flex-col gap-0 p-0 min-w-[55%] sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
-					{mode === "edit" && contact ? (
+					{/*{mode === "edit" && contact ? (
 						<button
 							type="button"
 							title="Événements"
@@ -97,7 +97,7 @@ export default function ContactDialog({
 							<Calendar className="size-4" />
 							<span className="sr-only">Événements</span>
 						</button>
-					) : null}
+					) : null}*/}
 					<DialogHeader className="contents space-y-0 text-left">
 						<div className="relative border-b">
 							<DialogTitle className="px-6 py-4 pr-20 text-base">
@@ -319,9 +319,9 @@ export default function ContactDialog({
 				</DialogContent>
 			</Dialog>
 			<CreateActivite open={createActiviteOpen} onOpenChange={setCreateActiviteOpen} />
-			{mode === "edit" && contact ? (
+			{/*{mode === "edit" && contact ? (
 				<EventDialog contact={contact} open={eventOpen} onOpenChange={setEventOpen} />
-			) : null}
+			) : null}*/}
 		</>
 	);
 }
