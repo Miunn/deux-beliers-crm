@@ -6,7 +6,7 @@ function getCronSecret(req: NextRequest): string | null {
 	if (authHeader?.startsWith("Bearer ")) {
 		return authHeader.slice("Bearer ".length);
 	}
-	return req.headers.get("x-cron-secret");
+	return req.headers.get("X-Cron-Secret");
 }
 
 export async function POST(req: NextRequest) {

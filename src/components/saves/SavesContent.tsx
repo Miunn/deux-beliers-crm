@@ -2,20 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "../ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "../ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Download, EllipsisVertical, HardDrive, Loader2, SaveAll, Trash } from "lucide-react";
 import BackupHelpDialog from "./BackupHelpDialog";
 import { useSaves } from "@/hooks/use-saves";
@@ -42,8 +30,7 @@ function formatSummary(save: BackupRecord) {
 }
 
 function DiskStatePanel({ disk }: { disk: DiskState }) {
-	const hasVolumeStats =
-		disk.diskTotalBytes != null && disk.diskUsedBytes != null && disk.diskFreeBytes != null;
+	const hasVolumeStats = disk.diskTotalBytes != null && disk.diskUsedBytes != null && disk.diskFreeBytes != null;
 	const usagePercent = hasVolumeStats
 		? Math.min(100, Math.round((disk.diskUsedBytes! / disk.diskTotalBytes!) * 100))
 		: null;
@@ -86,9 +73,7 @@ function DiskStatePanel({ disk }: { disk: DiskState }) {
 							{disk.backupsCount} fichier{disk.backupsCount > 1 ? "s" : ""}
 						</p>
 					</div>
-					<span className="font-medium tabular-nums shrink-0">
-						{formatBytes(disk.backupsSizeBytes)}
-					</span>
+					<span className="font-medium tabular-nums shrink-0">{formatBytes(disk.backupsSizeBytes)}</span>
 				</li>
 				<li className="py-3">
 					<p>Répertoire</p>
@@ -168,7 +153,7 @@ export default function SavesContent() {
 
 	return (
 		<>
-			<div className="flex items-start gap-1 mb-6">
+			<div className="flex items-center gap-1 mb-6">
 				<p className="text-sm text-muted-foreground">
 					Les sauvegardes automatiques enregistrent un export Excel complet sur le serveur.
 				</p>
@@ -190,10 +175,7 @@ export default function SavesContent() {
 			{!isLoading && saves && saves.length > 0 ? (
 				<ul className="divide-y border-y">
 					{saves.map((save) => (
-						<li
-							key={save.id}
-							className="flex items-start justify-between gap-4 py-4 text-sm"
-						>
+						<li key={save.id} className="flex items-start justify-between gap-4 py-4 text-sm">
 							<div className="min-w-0 space-y-1">
 								<div className="flex flex-wrap items-center gap-2">
 									<p className="font-medium">{formatDate(save.createdAt)}</p>
@@ -214,11 +196,7 @@ export default function SavesContent() {
 									onClick={() => handleDownload(save)}
 									disabled={downloadingId === save.id || deletingId === save.id}
 								>
-									{downloadingId === save.id ? (
-										<Loader2 className="animate-spin" />
-									) : (
-										<Download />
-									)}
+									{downloadingId === save.id ? <Loader2 className="animate-spin" /> : <Download />}
 									Télécharger
 								</Button>
 								<DropdownMenu>
@@ -236,10 +214,7 @@ export default function SavesContent() {
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align="end">
-										<DropdownMenuItem
-											variant="destructive"
-											onClick={() => setDeleteTarget(save)}
-										>
+										<DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(save)}>
 											<Trash />
 											Supprimer
 										</DropdownMenuItem>
@@ -266,11 +241,7 @@ export default function SavesContent() {
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setDeleteTarget(null)}
-							disabled={!!deletingId}
-						>
+						<Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={!!deletingId}>
 							Annuler
 						</Button>
 						<Button variant="destructive" onClick={handleDelete} disabled={!!deletingId}>
