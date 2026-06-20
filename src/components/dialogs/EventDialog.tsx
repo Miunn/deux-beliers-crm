@@ -11,7 +11,6 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Loader2, Pen, Pencil, Phone, Trash2 } from "lucide-react";
 import DeleteEvent from "./DeleteEvent";
-import ContactDialog from "./ContactDialog";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { createEvent, updateEvent, createEventWithReminder, updateEventWithReminder } from "@/actions/events";
@@ -28,6 +27,9 @@ import { Label } from "../ui/label";
 import { updateContact } from "@/actions/contacts";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
 import { Skeleton } from "../ui/skeleton";
+
+const dialogHeaderActionClassName =
+	"ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 z-20 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 function EventHistorySkeleton() {
 	return (
@@ -47,11 +49,13 @@ export default function EventDialog({
 	contact,
 	open,
 	onOpenChange,
+	onNavigateToContact,
 	children,
 }: {
 	contact: ContactWithRelations;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
+	onNavigateToContact?: () => void;
 	children?: React.ReactNode;
 }) {
 	const [isOpen, setIsOpen] = useState(open ?? false);
@@ -63,7 +67,6 @@ export default function EventDialog({
 	const { data: kanbanColumns } = useKanbanColumns();
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
 	const [reminderOpen, setReminderOpen] = useState(false);
-	const [contactOpen, setContactOpen] = useState(false);
 	const [localKanbanColumnId, setLocalKanbanColumnId] = useState<string | undefined>(
 		contact.kanbanColumnId ?? undefined,
 	);
@@ -179,15 +182,20 @@ export default function EventDialog({
 					onCloseAutoFocus={(e) => e.preventDefault()}
 					className="flex flex-col gap-0 p-0 w-[85%] h-full sm:max-h-[min(640px,80vh)] sm:max-w-5xl [&>button:last-child]:top-3.5"
 				>
-					{/*<button
-						type="button"
-						title="Modifier le contact"
-						className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 z-20 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-						onClick={() => setContactOpen(true)}
-					>
-						<Pen className="size-4" />
-						<span className="sr-only">Modifier le contact</span>
-					</button>*/}
+					{onNavigateToContact ? (
+						<button
+							type="button"
+							title="Modifier le contact"
+							className={dialogHeaderActionClassName}
+							onClick={() => {
+								internalOnOpenChange(false);
+								onNavigateToContact();
+							}}
+						>
+							<Pen className="size-4" />
+							<span className="sr-only">Modifier le contact</span>
+						</button>
+					) : null}
 					<DialogHeader className="flex min-h-0 flex-1 flex-col space-y-0 p-0 text-left gap-0">
 						<DialogTitle className="shrink-0 border-b px-6 py-4 pr-20 text-base">
 							Suivi des événements - {contact.nom} - <Phone className="inline size-4" strokeWidth={2.5} />{" "}
@@ -418,7 +426,6 @@ export default function EventDialog({
 					});
 				}}
 			/>
-			{/*<ContactDialog mode="edit" contact={contact} open={contactOpen} onOpenChange={setContactOpen} />*/}
 		</>
 	);
 }

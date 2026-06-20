@@ -3,19 +3,20 @@
 import { DateRange } from "react-day-picker";
 import { ColumnDef } from "@tanstack/react-table";
 import { addWeeks } from "date-fns";
-import { Bell, Calendar, Pen, Phone, Trash, UserRound } from "lucide-react";
+import { Bell, Calendar, Phone, UserRound } from "lucide-react";
 import { cn, textColorForBg } from "@/lib/utils";
 import { ContactWithRelations } from "@/types/contact-types";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import ContactDialog from "../dialogs/ContactDialog";
-import DeleteContact from "../dialogs/DeleteContact";
-import EventDialog from "../dialogs/EventDialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import ContactActionDialogs from "../dialogs/ContactActionDialogs";
 import { compareRappelRows, getLastEvent } from "./sorting";
 import ReminderPopover from "../popovers/ReminderPopover";
-import { contactMatchesSelectedLabels, RAPPEL_WITHIN_SEVEN_DAYS_FILTER, contactHasEventInDateRange } from "./column-filters";
+import {
+	contactMatchesSelectedLabels,
+	RAPPEL_WITHIN_SEVEN_DAYS_FILTER,
+	contactHasEventInDateRange,
+} from "./column-filters";
 import { SelectedState } from "../ui/multi-select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export const columns: ColumnDef<ContactWithRelations>[] = [
 	{
@@ -150,10 +151,7 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		header: "Libellés",
 		enableSorting: false,
 		filterFn: (row, _columnId, filterValue) =>
-			contactMatchesSelectedLabels(
-				row.original,
-				filterValue as SelectedState[] | undefined,
-			),
+			contactMatchesSelectedLabels(row.original, filterValue as SelectedState[] | undefined),
 		cell: ({ row }) => {
 			const contact = row.original;
 			return (
@@ -185,56 +183,7 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 		enableSorting: false,
 		cell: ({ row }) => {
 			const contact = row.original;
-			return (
-				<div
-					className="flex items-center justify-end gap-0.5"
-					data-no-row-click
-					onClick={(event) => event.stopPropagation()}
-				>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<ContactDialog mode="edit" contact={contact}>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									className="size-8"
-									title="Modifier le contact"
-								>
-									<Pen className="size-4" />
-								</Button>
-							</ContactDialog>
-						</TooltipTrigger>
-						<TooltipContent>Modifier</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<EventDialog contact={contact}>
-								<Button type="button" variant="ghost" size="icon" className="size-8" title="Événements">
-									<Calendar className="size-4" />
-								</Button>
-							</EventDialog>
-						</TooltipTrigger>
-						<TooltipContent>Événements</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<DeleteContact contact={contact}>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									className="size-8"
-									title="Supprimer le contact"
-								>
-									<Trash className="size-4 text-destructive" />
-								</Button>
-							</DeleteContact>
-						</TooltipTrigger>
-						<TooltipContent>Supprimer</TooltipContent>
-					</Tooltip>
-				</div>
-			);
+			return <ContactActionDialogs contact={contact} />;
 		},
 	},
 ];

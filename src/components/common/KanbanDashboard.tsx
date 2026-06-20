@@ -667,8 +667,25 @@ function MyKanbanBoardCard({
         </KanbanBoardCardButton>
       </KanbanBoardCardButtonGroup>*/}
 			</KanbanBoardCard>
-			<ContactDialog mode="edit" contact={card} open={openEdit} onOpenChange={setOpenEdit} />
-			<EventDialog contact={card} open={openEvents} onOpenChange={setOpenEvents} />
+			<ContactDialog
+				mode="edit"
+				contact={card}
+				open={openEdit}
+				onOpenChange={setOpenEdit}
+				onNavigateToEvents={() => {
+					setOpenEdit(false);
+					setOpenEvents(true);
+				}}
+			/>
+			<EventDialog
+				contact={card}
+				open={openEvents}
+				onOpenChange={setOpenEvents}
+				onNavigateToContact={() => {
+					setOpenEvents(false);
+					setOpenEdit(true);
+				}}
+			/>
 			<DeleteContact contact={card} open={openDelete} onOpenChange={setOpenDelete} />
 		</>
 	);

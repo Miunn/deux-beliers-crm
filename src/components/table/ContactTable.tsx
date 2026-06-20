@@ -12,8 +12,15 @@ import { Button } from "../ui/button";
 
 export default function ContactTable({ data }: { data?: ContactWithRelations[] }) {
 	const initialized = useRef(false);
-	const [eventContact, setEventContact] = useState<ContactWithRelations | null>(null);
+	const [dialogContact, setDialogContact] = useState<ContactWithRelations | null>(null);
+	const [editOpen, setEditOpen] = useState(false);
 	const [eventOpen, setEventOpen] = useState(false);
+
+	useEffect(() => {
+		if (!editOpen && !eventOpen) {
+			setDialogContact(null);
+		}
+	}, [editOpen, eventOpen]);
 
 	if (!initialized.current) {
 		contactStore.setContacts(data ?? []);
@@ -36,7 +43,8 @@ export default function ContactTable({ data }: { data?: ContactWithRelations[] }
 				showEventDateRangeFilter
 				showLabelsFilter
 				onRowClick={(contact) => {
-					setEventContact(contact);
+					setDialogContact(contact);
+					setEditOpen(false);
 					setEventOpen(true);
 				}}
 				toolbarTrailing={
@@ -48,15 +56,28 @@ export default function ContactTable({ data }: { data?: ContactWithRelations[] }
 					</ContactDialog>
 				}
 			/>
-			{eventContact ? (
-				<EventDialog
-					contact={eventContact}
-					open={eventOpen}
-					onOpenChange={(open) => {
-						setEventOpen(open);
-						if (!open) setEventContact(null);
-					}}
-				/>
+			{dialogContact ? (
+				<>
+					<ContactDialog
+						mode="edit"
+						contact={dialogContact}
+						open={editOpen}
+						onOpenChange={setEditOpen}
+						onNavigateToEvents={() => {
+							setEditOpen(false);
+							setEventOpen(true);
+						}}
+					/>
+					<EventDialog
+						contact={dialogContact}
+						open={eventOpen}
+						onOpenChange={setEventOpen}
+						onNavigateToContact={() => {
+							setEventOpen(false);
+							setEditOpen(true);
+						}}
+					/>
+				</>
 			) : null}
 		</>
 	);

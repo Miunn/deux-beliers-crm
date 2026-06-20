@@ -8,6 +8,7 @@ import {
 	Download,
 	GalleryVerticalEnd,
 	LayoutList,
+	Rss,
 	SaveAll,
 	Settings,
 	SquareKanban,
@@ -169,6 +170,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild tooltip={"Nouveautés"}>
+							<Link href={"/changelog"}>
+								<Rss /> <span>Nouveautés</span>
+							</Link>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
 					<SidebarMenuItem>
 						<SidebarMenuButton asChild tooltip={"Ancienne vue"}>
 							<Link href={"/"}>

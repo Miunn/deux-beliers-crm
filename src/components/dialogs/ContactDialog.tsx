@@ -27,20 +27,24 @@ import { useState } from "react";
 import { ContactWithRelations } from "@/types/contact-types";
 import { contactStore } from "@/stores/contacts-store";
 import ArchiveDialog from "./ArchiveDialog";
-import EventDialog from "./EventDialog";
 import { useKanbanColumns } from "@/hooks/kanban/use-columns";
+
+const dialogHeaderActionClassName =
+	"ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 z-20";
 
 export default function ContactDialog({
 	mode,
 	contact,
 	open,
 	onOpenChange,
+	onNavigateToEvents,
 	children,
 }: {
 	mode: "create" | "edit";
 	contact?: ContactWithRelations;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
+	onNavigateToEvents?: () => void;
 	children?: React.ReactNode;
 }) {
 	const { data: activites } = useActivites();
@@ -48,7 +52,6 @@ export default function ContactDialog({
 	const internalOpen = open ?? isOpen;
 	const internalOnOpenChange = onOpenChange ?? setIsOpen;
 	const [createActiviteOpen, setCreateActiviteOpen] = useState(false);
-	const [eventOpen, setEventOpen] = useState(false);
 	const { data: kanbanColumns } = useKanbanColumns();
 
 	const form = useForm<z.infer<typeof NEW_CONTACT_FORM_SCHEMA>>({
@@ -87,17 +90,20 @@ export default function ContactDialog({
 			<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
 				{children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
 				<DialogContent className="flex flex-col gap-0 p-0 min-w-[55%] sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
-					{/*{mode === "edit" && contact ? (
+					{mode === "edit" && contact && onNavigateToEvents ? (
 						<button
 							type="button"
 							title="Événements"
-							className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 z-20"
-							onClick={() => setEventOpen(true)}
+							className={dialogHeaderActionClassName}
+							onClick={() => {
+								internalOnOpenChange(false);
+								onNavigateToEvents();
+							}}
 						>
 							<Calendar className="size-4" />
 							<span className="sr-only">Événements</span>
 						</button>
-					) : null}*/}
+					) : null}
 					<DialogHeader className="contents space-y-0 text-left">
 						<div className="relative border-b">
 							<DialogTitle className="px-6 py-4 pr-20 text-base">
@@ -319,9 +325,6 @@ export default function ContactDialog({
 				</DialogContent>
 			</Dialog>
 			<CreateActivite open={createActiviteOpen} onOpenChange={setCreateActiviteOpen} />
-			{/*{mode === "edit" && contact ? (
-				<EventDialog contact={contact} open={eventOpen} onOpenChange={setEventOpen} />
-			) : null}*/}
 		</>
 	);
 }

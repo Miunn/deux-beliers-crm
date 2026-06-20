@@ -33,6 +33,8 @@ function pathToTitle(path: string): string {
 			return "Sauvegardes de données";
 		case "/settings":
 			return "Paramètres";
+		case "/changelog":
+			return "Changelog";
 		default:
 			return "";
 	}
