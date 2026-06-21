@@ -86,6 +86,25 @@ model KanbanColumn {
     contacts Contact[]
 }
 
+model Backup {
+    id               String   @id @default(cuid())
+    filename         String
+    source           String
+    sizeBytes        Int
+    contacts         Int
+    activeContacts   Int
+    archivedContacts Int
+    events           Int
+    labels           Int
+    natures          Int
+    activites        Int
+    kanbanColumns    Int
+    contactLabels    Int
+    createdAt        DateTime @default(now())
+
+    @@map("backup")
+}
+
 model User {
     id            String    @id
     name          String    @db.Text

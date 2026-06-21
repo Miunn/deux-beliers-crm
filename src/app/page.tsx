@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { ContactService } from "@/data/contact-service";
-import { ContactsProvider } from "@/context/ContactsContext";
+import ContactsShell from "@/components/common/ContactsShell";
 
 export default async function Home() {
 	const hdrs = await headers();
@@ -20,9 +20,9 @@ export default async function Home() {
 			<Header title="Gestion clients" />
 			<div className="overflow-y-auto">
 				<main className="container mx-auto flex-1 relative font-sans">
-					<ContactsProvider defaultContacts={contacts}>
+					<ContactsShell defaultContacts={contacts}>
 						<ContactList />
-					</ContactsProvider>
+					</ContactsShell>
 				</main>
 			</div>
 		</div>

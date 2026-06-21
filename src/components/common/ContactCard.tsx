@@ -1,16 +1,14 @@
 "use client";
 
-import { Bell, Calendar, Pen, Phone, Plus, Trash, UserRound } from "lucide-react";
+import { Bell, Calendar, Phone, Plus, UserRound } from "lucide-react";
 import { Button } from "../ui/button";
-import DeleteContact from "../dialogs/DeleteContact";
-import ContactDialog from "../dialogs/ContactDialog";
-import EventDialog from "../dialogs/EventDialog";
+import ContactActionDialogs from "../dialogs/ContactActionDialogs";
 import ContactLabelsPopover from "../popovers/ContactLabelsPopover";
 import { Badge } from "../ui/badge";
 import ReminderPopover from "../popovers/ReminderPopover";
 import { addWeeks } from "date-fns";
 import { cn, textColorForBg } from "@/lib/utils";
-import { ContactWithRelations } from "@/context/ContactsContext";
+import { ContactWithRelations } from "@/types/contact-types";
 import { useMemo } from "react";
 
 export default function ContactCard({ contact }: { contact: ContactWithRelations }) {
@@ -118,23 +116,7 @@ export default function ContactCard({ contact }: { contact: ContactWithRelations
 					</ContactLabelsPopover>
 				</div>
 
-				<div className="flex flex-no-wrap">
-					<ContactDialog mode="edit" contact={contact}>
-						<Button type="button" variant={"ghost"} size={"icon"} title="Modifier le contact">
-							<Pen />
-						</Button>
-					</ContactDialog>
-					<EventDialog contact={contact}>
-						<Button type="button" variant={"ghost"} size={"icon"} title="Événements">
-							<Calendar />
-						</Button>
-					</EventDialog>
-					<DeleteContact contact={contact}>
-						<Button type="button" variant={"ghost"} size={"icon"} title="Supprimer le contact">
-							<Trash className="text-destructive" />
-						</Button>
-					</DeleteContact>
-				</div>
+				<ContactActionDialogs contact={contact} layout="inline" />
 			</div>
 		</div>
 	);

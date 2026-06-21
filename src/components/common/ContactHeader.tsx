@@ -5,11 +5,11 @@ import ContactDialog from "../dialogs/ContactDialog";
 import { Button } from "../ui/button";
 import ContactFilters from "./ContactFilters";
 import { cn } from "@/lib/utils";
-import { useContactsContext } from "@/context/ContactsContext";
+import { useDerivedContacts } from "@/hooks/use-derived-contacts";
 import { Suspense } from "react";
 
 export default function ContactHeader() {
-  const { contacts } = useContactsContext();
+  const { contacts } = useDerivedContacts();
 
   return (
     <div
