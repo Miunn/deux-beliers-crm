@@ -19,7 +19,7 @@ export default async function KanbanPage() {
 
 	return (
 		<ContactsShell defaultContacts={contacts}>
-			<div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+			<div className="flex h-full min-h-0 flex-col gap-4">
 				<Suspense>
 					<ContactsViewToolbar className="shrink-0" />
 				</Suspense>

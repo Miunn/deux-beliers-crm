@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Plus, SearchIcon, XIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useContactFilters } from "@/context/ContactFiltersContext";
 import { useDerivedContacts } from "@/hooks/use-derived-contacts";
 import { cn } from "@/lib/utils";
+import { createPortal } from "react-dom";
 
 type Props = {
 	className?: string;
@@ -37,6 +38,7 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 		setSortState,
 		resetFilters,
 	} = useContactFilters();
+	const [headerContactCountRef, setHeaderContactCountRef] = useState<HTMLSpanElement>(null);
 
 	const [localText, setLocalText] = useState(text ?? "");
 
@@ -64,6 +66,11 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 		if (urlLabelIds.length && selectedLabels.length === 0) {
 			setSelectedLabels(urlLabelIds.filter(Boolean));
 		}
+
+		const element = document.getElementById("header-contact-count");
+		if (element) {
+			setHeaderContactCountRef(element);
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -78,53 +85,59 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 	};
 
 	return (
-		<div className={cn("space-y-3 border-b pb-4", className)}>
-			<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-				<div className="relative w-full lg:max-w-2xs">
-					<Input
-						className="ps-9"
-						placeholder="Filtrer les contacts"
-						type="search"
-						value={localText}
-						onChange={(event) => setLocalText(event.target.value)}
-					/>
-					<div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-						<SearchIcon className="size-4" />
+		<>
+			{headerContactCountRef &&
+				createPortal(
+					<span>
+						-{" "}
+						{contactCount === 0 ? "Aucun contact" : `${contactCount} contact${contactCount > 1 ? "s" : ""}`}
+					</span>,
+					headerContactCountRef,
+				)}
+			<div className={cn("space-y-3 border-b pb-4", className)}>
+				<div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+					<div className="relative w-full lg:max-w-2xs">
+						<Input
+							className="ps-9"
+							placeholder="Filtrer les contacts"
+							type="search"
+							value={localText}
+							onChange={(event) => setLocalText(event.target.value)}
+						/>
+						<div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+							<SearchIcon className="size-4" />
+						</div>
+					</div>
+
+					<div className="flex flex-wrap justify-end items-center gap-2">
+						{hasActiveFilters ? (
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="text-muted-foreground"
+								onClick={handleClearFilters}
+							>
+								<XIcon className="size-4" />
+								Effacer
+							</Button>
+						) : null}
+						<ReminderWithinSevenDaysFilter checked={hasReminder} onCheckedChange={setHasReminder} />
+						<EventDateRangeFilter value={dateRange} onChange={setDateRange} />
+						<LabelsFilter value={selectedLabels} onChange={setSelectedLabels} />
+						<SortByDropdown sortState={sortState} setSortState={setSortState} />
+						{trailing}
+						{showCreateButton ? (
+							<ContactDialog mode="create">
+								<Button variant="outline">
+									<Plus className="size-4" />
+									Créer un contact
+								</Button>
+							</ContactDialog>
+						) : null}
 					</div>
 				</div>
-
-				<div className="flex flex-wrap items-center gap-2">
-					{hasActiveFilters ? (
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="text-muted-foreground"
-							onClick={handleClearFilters}
-						>
-							<XIcon className="size-4" />
-							Effacer
-						</Button>
-					) : null}
-					<ReminderWithinSevenDaysFilter checked={hasReminder} onCheckedChange={setHasReminder} />
-					<EventDateRangeFilter value={dateRange} onChange={setDateRange} />
-					<LabelsFilter value={selectedLabels} onChange={setSelectedLabels} />
-					<SortByDropdown sortState={sortState} setSortState={setSortState} />
-					{trailing}
-					{showCreateButton ? (
-						<ContactDialog mode="create">
-							<Button variant="outline" size="sm">
-								<Plus className="size-4" />
-								Créer un contact
-							</Button>
-						</ContactDialog>
-					) : null}
-				</div>
 			</div>
-
-			<p className="text-sm text-muted-foreground">
-				{contactCount === 0 ? "Aucun contact" : `${contactCount} contact${contactCount > 1 ? "s" : ""}`}
-			</p>
-		</div>
+		</>
 	);
 }

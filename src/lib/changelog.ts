@@ -8,8 +8,8 @@ export type CHANGELOG_ENTRY = {
 
 export const CHANGELOG: CHANGELOG_ENTRY[] = [
 	{
-		version: "v0.0.1",
-		date: "20/06/2026",
+		version: "v1.0.0",
+		date: "21/06/2026",
 		description: "Cette version introduit la nouvelle interface, plus moderne, stable et performante ainsi que différente fonctionnalités.",
 		lines: [
 			{ type: "added", description: "Interface modernisé accessible depuis /new" },
@@ -23,7 +23,7 @@ export const CHANGELOG: CHANGELOG_ENTRY[] = [
 			{ type: "added", description: "Page des changements" },
 			{ type: "added", description: "Page de paramètres" },
 			{ type: "added", description: "Icone de navigation entre la modification et les évènements clients au sein des dialogs" },
-			{ type: "changed", description: "Styles des filtres des vues cartes et kanban" }
+			{ type: "changed", description: "Style des filtres des vues cartes et kanban" }
 		],
 	},
 ];

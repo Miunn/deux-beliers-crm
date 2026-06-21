@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "../ui/sidebar";
+import { useDerivedContacts } from "@/hooks/use-derived-contacts";
 
 type Props = {
 	title: string;
@@ -53,7 +54,9 @@ export default function SidebarLayoutHeader({ className }: Props) {
 			>
 				<div className="flex items-center gap-3">
 					<SidebarTrigger />
-					{pathToTitle(pathname)}
+					<span>
+						{pathToTitle(pathname)} <span id="header-contact-count" />
+					</span>
 				</div>
 				{/*<div className="flex items-center gap-3 w-full md:w-auto">
 					<nav className="whitespace-nowrap flex items-center flex-wrap gap-3">

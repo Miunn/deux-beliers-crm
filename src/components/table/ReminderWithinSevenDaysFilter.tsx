@@ -10,17 +10,9 @@ type Props = {
 
 export default function ReminderWithinSevenDaysFilter({ checked, onCheckedChange }: Props) {
 	return (
-		<Button
-			variant="outline"
-			onClick={() => onCheckedChange(!checked)}
-			className="cursor-default"
-			asChild
-		>
+		<Button variant="outline" onClick={() => onCheckedChange(!checked)} className="cursor-default" asChild>
 			<div>
-				<Checkbox
-					checked={checked}
-					onCheckedChange={(value) => onCheckedChange(value === true)}
-				/>
+				<Checkbox checked={checked} onCheckedChange={(value) => onCheckedChange(value === true)} />
 				Rappel dans les 7 jours
 			</div>
 		</Button>
