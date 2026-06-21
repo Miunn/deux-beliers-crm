@@ -3,12 +3,6 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "../ui/sidebar";
-import { useDerivedContacts } from "@/hooks/use-derived-contacts";
-
-type Props = {
-	title: string;
-	className?: string;
-};
 
 function pathToTitle(path: string): string {
 	switch (path) {
@@ -41,7 +35,7 @@ function pathToTitle(path: string): string {
 	}
 }
 
-export default function SidebarLayoutHeader({ className }: Props) {
+export default function SidebarLayoutHeader({ className }: { title: string; className?: string }) {
 	const pathname = usePathname();
 
 	return (
