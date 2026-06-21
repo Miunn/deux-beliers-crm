@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Plus, SearchIcon, XIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -38,7 +38,7 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 		setSortState,
 		resetFilters,
 	} = useContactFilters();
-	const [headerContactCountRef, setHeaderContactCountRef] = useState<HTMLSpanElement>(null);
+	const [headerContactCountRef, setHeaderContactCountRef] = useState<HTMLSpanElement>();
 
 	const [localText, setLocalText] = useState(text ?? "");
 
