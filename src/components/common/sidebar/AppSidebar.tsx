@@ -7,6 +7,7 @@ import {
 	Calendar1,
 	Download,
 	GalleryVerticalEnd,
+	LayoutDashboard,
 	LayoutList,
 	Rss,
 	SaveAll,
@@ -60,6 +61,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<SidebarGroup>
 					<SidebarGroupLabel>Vues</SidebarGroupLabel>
 					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								asChild
+								isActive={isNavActive(pathname, "/dashboard")}
+								tooltip={"Tableau de bord"}
+							>
+								<Link href={"/dashboard"}>
+									<LayoutDashboard /> <span>Tableau de bord</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
 						<SidebarMenuItem>
 							<SidebarMenuButton asChild isActive={isNavActive(pathname, "/new")} tooltip={"Cartes"}>
 								<Link href={"/new"}>

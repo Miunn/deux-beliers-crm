@@ -6,6 +6,8 @@ import { SidebarTrigger } from "../ui/sidebar";
 
 function pathToTitle(path: string): string {
 	switch (path) {
+		case "/dashboard":
+			return "Tableau de bord";
 		case "/new":
 			return "Clients";
 		case "/table":

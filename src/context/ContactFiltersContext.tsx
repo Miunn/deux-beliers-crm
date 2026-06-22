@@ -9,17 +9,18 @@ import React, {
 } from "react";
 import { DateRange } from "react-day-picker";
 import { SelectedState } from "@/components/ui/multi-select";
+import { ReminderFilter } from "@/lib/reminder-filter";
 import { ContactSortMethod } from "@/types/contact-types";
 
 type ContactFiltersContextValue = {
 	text: string;
 	selectedLabels: SelectedState[];
-	hasReminder: boolean;
+	reminderFilter: ReminderFilter;
 	dateRange: DateRange | undefined;
 	sortState: ContactSortMethod;
 	setText: (text: string) => void;
 	setSelectedLabels: (ids: SelectedState[]) => void;
-	setHasReminder: (has: boolean) => void;
+	setReminderFilter: (filter: ReminderFilter) => void;
 	setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
 	setSortState: React.Dispatch<React.SetStateAction<ContactSortMethod>>;
 	resetFilters: () => void;
@@ -31,7 +32,7 @@ const ContactFiltersContext = createContext<ContactFiltersContextValue | undefin
 
 export function ContactFiltersProvider({ children }: { children: React.ReactNode }) {
 	const [text, setText] = useState("");
-	const [hasReminder, setHasReminder] = useState(false);
+	const [reminderFilter, setReminderFilter] = useState<ReminderFilter>("all");
 	const [selectedLabels, setSelectedLabels] = useState<SelectedState[]>([]);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 	const [sortState, setSortState] = useState<ContactSortMethod>(
@@ -42,23 +43,24 @@ export function ContactFiltersProvider({ children }: { children: React.ReactNode
 		setText("");
 		setSelectedLabels([]);
 		setDateRange(undefined);
+		setReminderFilter("all");
 	}, []);
 
 	const value = useMemo(
 		() => ({
 			text,
 			selectedLabels,
-			hasReminder,
+			reminderFilter,
 			dateRange,
 			sortState,
 			setText,
 			setSelectedLabels,
-			setHasReminder,
+			setReminderFilter,
 			setDateRange,
 			setSortState,
 			resetFilters,
 		}),
-		[text, selectedLabels, hasReminder, dateRange, sortState, resetFilters],
+		[text, selectedLabels, reminderFilter, dateRange, sortState, resetFilters],
 	);
 
 	return (

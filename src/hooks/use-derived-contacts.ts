@@ -6,18 +6,18 @@ import { useContacts } from "@/stores/contacts-store";
 
 export function useDerivedContacts() {
 	const allContacts = useContacts();
-	const { text, hasReminder, selectedLabels, dateRange, sortState } =
+	const { text, reminderFilter, selectedLabels, dateRange, sortState } =
 		useContactFilters();
 
 	const filteredContacts = useMemo(
 		() =>
 			filterContacts(allContacts, {
 				text,
-				hasReminder,
+				reminderFilter,
 				selectedLabels,
 				dateRange,
 			}),
-		[allContacts, text, hasReminder, selectedLabels, dateRange],
+		[allContacts, text, reminderFilter, selectedLabels, dateRange],
 	);
 
 	const contacts = useMemo(() => {
