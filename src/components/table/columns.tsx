@@ -2,7 +2,6 @@
 
 import { DateRange } from "react-day-picker";
 import { ColumnDef } from "@tanstack/react-table";
-import { addWeeks } from "date-fns";
 import { Bell, Calendar, Phone, UserRound } from "lucide-react";
 import { cn, textColorForBg } from "@/lib/utils";
 import { ContactWithRelations } from "@/types/contact-types";
@@ -44,11 +43,11 @@ export const columns: ColumnDef<ContactWithRelations>[] = [
 			if (filterValue !== RAPPEL_WITHIN_SEVEN_DAYS_FILTER) return true;
 			const rappel = row.original.rappel;
 			if (!rappel) return false;
-			return new Date(rappel) <= addWeeks(new Date(), 1);
+			return new Date(rappel) <= new Date();
 		},
 		cell: ({ row }) => {
 			const contact = row.original;
-			const isUrgentReminder = contact.rappel && contact.rappel <= addWeeks(new Date(), 1);
+			const isUrgentReminder = contact.rappel && contact.rappel <= new Date();
 
 			return (
 				<div className="flex items-center gap-1.5 min-w-[120px]">

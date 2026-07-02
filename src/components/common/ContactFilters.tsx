@@ -6,11 +6,13 @@ import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import RangeCalendarPresets from "../ui/range-calendar-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MultiSelect } from "../ui/multi-select";
 import { useContactFilters } from "@/context/ContactFiltersContext";
 import { Checkbox } from "../ui/checkbox";
+import { parseLabelIdUrlParam, resolveLabelTokensToSelectedStates } from "@/lib/label-filter-url";
+import { parseReminderFilterParam } from "@/lib/reminder-filter";
 import SortByDropdown from "./SortByDropdown";
 
 export default function ContactFilters() {
@@ -19,8 +21,8 @@ export default function ContactFilters() {
   const {
     text,
     setText,
-    hasReminder,
-    setHasReminder,
+    reminderFilter,
+    setReminderFilter,
     selectedLabels,
     setSelectedLabels,
     dateRange,
@@ -32,6 +34,7 @@ export default function ContactFilters() {
 
   // local debounced text input state
   const [localText, setLocalText] = useState<string>(text ?? "");
+  const labelUrlHydratedRef = useRef(false);
 
   // keep local input in sync if external text changes (e.g., reset)
   useEffect(() => {
@@ -46,19 +49,33 @@ export default function ContactFilters() {
     return () => clearTimeout(t);
   }, [localText, setText]);
 
-  // one-time initial hydration from URL params (q, labelId)
+  // one-time initial hydration from URL params (q, reminder)
   useEffect(() => {
     const urlQ = searchParams.get("q") ?? "";
-    const urlLabelIds = JSON.parse(searchParams.get("labelId") ?? "[]");
+    const urlReminder = parseReminderFilterParam(searchParams.get("reminder"));
     if (urlQ && !text) {
       setText(urlQ);
       setLocalText(urlQ);
     }
-    if (urlLabelIds.length && selectedLabels.length === 0)
-      setSelectedLabels(urlLabelIds.filter(Boolean));
-    // dates are not encoded currently in URL in this component
+    if (urlReminder && reminderFilter === "all") setReminderFilter(urlReminder);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (labelUrlHydratedRef.current || selectedLabels.length > 0) return;
+
+    const tokens = parseLabelIdUrlParam(searchParams.get("labelId"));
+    if (!tokens.length) {
+      labelUrlHydratedRef.current = true;
+      return;
+    }
+
+    if (!labels?.length) return;
+
+    const resolved = resolveLabelTokensToSelectedStates(tokens, labels);
+    if (resolved.length) setSelectedLabels(resolved);
+    labelUrlHydratedRef.current = true;
+  }, [labels, searchParams, selectedLabels.length, setSelectedLabels]);
 
   return (
     <>
@@ -89,14 +106,14 @@ export default function ContactFilters() {
       </div>
       <Button
         variant={"outline"}
-        onClick={() => setHasReminder(!hasReminder)}
+        onClick={() => setReminderFilter(reminderFilter === "within7d" ? "all" : "within7d")}
         className="cursor-default"
         asChild
       >
         <div>
           <Checkbox
-            checked={hasReminder}
-            onCheckedChange={(checked) => setHasReminder(checked as boolean)}
+            checked={reminderFilter === "within7d"}
+            onCheckedChange={(checked) => setReminderFilter(checked ? "within7d" : "all")}
           />
           Rappel dans les 7 jours
         </div>

@@ -1,18 +1,19 @@
 import { DateRange } from "react-day-picker";
 import { SelectedState } from "@/components/ui/multi-select";
 import { contactMatchesSelectedLabels } from "@/components/table/column-filters";
+import { ReminderFilter, inSevenDaysFromNow, startOfToday } from "@/lib/reminder-filter";
 import { ContactWithRelations } from "@/types/contact-types";
 
 export type ContactFiltersState = {
 	text: string;
-	hasReminder: boolean;
+	reminderFilter: ReminderFilter;
 	selectedLabels: SelectedState[];
 	dateRange: DateRange | undefined;
 };
 
 export function filterContacts(
 	items: ContactWithRelations[],
-	{ text, hasReminder, selectedLabels, dateRange }: ContactFiltersState,
+	{ text, reminderFilter, selectedLabels, dateRange }: ContactFiltersState,
 ): ContactWithRelations[] {
 	if (!items.length) return items;
 
@@ -21,12 +22,18 @@ export function filterContacts(
 	const toDate = dateRange?.to;
 
 	return items.filter((c) => {
-		if (hasReminder) {
+		if (reminderFilter === "within7d") {
 			if (!c.rappel) return false;
-			const now = new Date();
-			const in7Days = new Date();
-			in7Days.setDate(now.getDate() + 7);
-			if (new Date(c.rappel) > in7Days) return false;
+			if (new Date(c.rappel) > inSevenDaysFromNow()) return false;
+		}
+
+		if (reminderFilter === "overdue") {
+			if (!c.rappel) return false;
+			if (new Date(c.rappel) >= startOfToday()) return false;
+		}
+
+		if (reminderFilter === "none") {
+			if (c.rappel) return false;
 		}
 
 		if (selectedLabels.length > 0) {

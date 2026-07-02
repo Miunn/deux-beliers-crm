@@ -21,7 +21,7 @@ import { contactStore } from "@/stores/contacts-store";
 import { useNatures } from "@/hooks/use-natures";
 import { Event, Nature } from "../../../generated/prisma";
 import { cn } from "@/lib/utils";
-import { addMonths } from "date-fns";
+import { addDays, addMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Label } from "../ui/label";
 import { updateContact } from "@/actions/contacts";
@@ -30,6 +30,21 @@ import { Skeleton } from "../ui/skeleton";
 
 const dialogHeaderActionClassName =
 	"ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3.5 right-12 z-20 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+
+function getTomorrowReminderDate() {
+	const tomorrow = new Date();
+	tomorrow.setDate(tomorrow.getDate() + 1);
+	return tomorrow;
+}
+
+function getAutomaticReminderUpdate(contact: ContactWithRelations, isUpdate: boolean): Date | undefined {
+	const tomorrow = getTomorrowReminderDate();
+	if (isUpdate) return tomorrow;
+	if (!contact.rappel || new Date(contact.rappel).getTime() < tomorrow.getTime()) {
+		return tomorrow;
+	}
+	return undefined;
+}
 
 function EventHistorySkeleton() {
 	return (
@@ -90,8 +105,20 @@ export default function EventDialog({
 			toast.error(res.error);
 		} else {
 			toast.success(editingEventId ? "Événement mis à jour" : "Événement créé");
-			// Optimistic: ensure date-filter sees this immediately
-			contactStore.appendEventDate(contact.id, data.date);
+			const nature = data.natureId ? (natures?.find((n) => n.id === data.natureId) ?? null) : null;
+			const rappel = getAutomaticReminderUpdate(contact, Boolean(editingEventId));
+			contactStore.syncContactEvent(
+				contact.id,
+				{
+					date: data.date,
+					commentaires: data.commentaires,
+					nature: nature ? { id: nature.id, label: nature.label } : null,
+				},
+				{
+					updateEventId: editingEventId ?? undefined,
+					...(rappel !== undefined ? { rappel } : {}),
+				},
+			);
 			mutate();
 			setEditingEventId(null);
 			form.reset({
@@ -379,7 +406,7 @@ export default function EventDialog({
 			<ReminderDateDialog
 				open={reminderOpen}
 				onOpenChange={setReminderOpen}
-				defaultDate={addMonths(form.getValues("date") as Date, 1) ?? addMonths(new Date(), 1)}
+				defaultDate={addDays(form.getValues("date") as Date, 45) ?? addDays(new Date(), 45)}
 				onConfirm={(reminderDate) => {
 					const basePayload = form.getValues() as z.infer<typeof CREATE_EVENT_FORM_SCHEMA>;
 
@@ -411,10 +438,21 @@ export default function EventDialog({
 								// ignore environments without a DOM
 							}
 
-							contactStore.addOrUpdateContact({
-								id: contact.id,
-								rappel: reminderDate,
-							});
+							const nature = basePayload.natureId
+								? (natures?.find((n) => n.id === basePayload.natureId) ?? null)
+								: null;
+							contactStore.syncContactEvent(
+								contact.id,
+								{
+									date: basePayload.date,
+									commentaires: basePayload.commentaires,
+									nature: nature ? { id: nature.id, label: nature.label } : null,
+								},
+								{
+									updateEventId: editingEventId ?? undefined,
+									rappel: reminderDate,
+								},
+							);
 						}, 0);
 
 						setEditingEventId(null);

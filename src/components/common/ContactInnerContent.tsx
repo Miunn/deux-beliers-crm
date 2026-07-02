@@ -1,7 +1,6 @@
 import { ContactWithRelations } from "@/types/contact-types";
 import { Bell, Calendar, EllipsisVertical, Pen, Phone, Trash, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { addWeeks } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import React, { MouseEventHandler } from "react";
 
@@ -55,7 +54,7 @@ export default function ContactInnerContent({
 					<div
 						className={cn(
 							"flex items-center gap-1 text-xs",
-							contact.rappel <= addWeeks(new Date(), 1) ? "font-semibold text-destructive" : "",
+							contact.rappel <= new Date() ? "font-semibold text-destructive" : "",
 						)}
 					>
 						<Bell className="size-3 shrink-0" />

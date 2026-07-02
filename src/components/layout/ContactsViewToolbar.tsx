@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Plus, SearchIcon, XIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContactFilters } from "@/context/ContactFiltersContext";
 import { useDerivedContacts } from "@/hooks/use-derived-contacts";
+import { useLabels } from "@/hooks/use-labels";
+import { parseLabelIdUrlParam, resolveLabelTokensToSelectedStates } from "@/lib/label-filter-url";
+import { parseReminderFilterParam } from "@/lib/reminder-filter";
 import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 
@@ -24,12 +27,13 @@ type Props = {
 
 export default function ContactsViewToolbar({ className, showCreateButton = true, trailing }: Props) {
 	const searchParams = useSearchParams();
+	const { data: labels } = useLabels();
 	const { contacts } = useDerivedContacts();
 	const {
 		text,
 		setText,
-		hasReminder,
-		setHasReminder,
+		reminderFilter,
+		setReminderFilter,
 		selectedLabels,
 		setSelectedLabels,
 		dateRange,
@@ -39,6 +43,7 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 		resetFilters,
 	} = useContactFilters();
 	const [headerContactCountRef, setHeaderContactCountRef] = useState<HTMLSpanElement>();
+	const labelUrlHydratedRef = useRef(false);
 
 	const [localText, setLocalText] = useState(text ?? "");
 
@@ -56,15 +61,15 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 
 	useEffect(() => {
 		const urlQ = searchParams.get("q") ?? "";
-		const urlLabelIds = JSON.parse(searchParams.get("labelId") ?? "[]");
+		const urlReminder = parseReminderFilterParam(searchParams.get("reminder"));
 
 		if (urlQ && !text) {
 			setText(urlQ);
 			setLocalText(urlQ);
 		}
 
-		if (urlLabelIds.length && selectedLabels.length === 0) {
-			setSelectedLabels(urlLabelIds.filter(Boolean));
+		if (urlReminder && reminderFilter === "all") {
+			setReminderFilter(urlReminder);
 		}
 
 		const element = document.getElementById("header-contact-count");
@@ -74,13 +79,33 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	useEffect(() => {
+		if (labelUrlHydratedRef.current || selectedLabels.length > 0) return;
+
+		const tokens = parseLabelIdUrlParam(searchParams.get("labelId"));
+		if (!tokens.length) {
+			labelUrlHydratedRef.current = true;
+			return;
+		}
+
+		if (!labels?.length) return;
+
+		const resolved = resolveLabelTokensToSelectedStates(tokens, labels);
+		if (resolved.length) {
+			setSelectedLabels(resolved);
+		}
+		labelUrlHydratedRef.current = true;
+	}, [labels, searchParams, selectedLabels.length, setSelectedLabels]);
+
 	const contactCount = contacts?.length ?? 0;
 	const hasActiveFilters =
-		Boolean(text.trim()) || hasReminder || selectedLabels.length > 0 || Boolean(dateRange?.from || dateRange?.to);
+		Boolean(text.trim()) ||
+		reminderFilter !== "all" ||
+		selectedLabels.length > 0 ||
+		Boolean(dateRange?.from || dateRange?.to);
 
 	const handleClearFilters = () => {
 		resetFilters();
-		setHasReminder(false);
 		setLocalText("");
 	};
 
@@ -122,7 +147,10 @@ export default function ContactsViewToolbar({ className, showCreateButton = true
 								Effacer
 							</Button>
 						) : null}
-						<ReminderWithinSevenDaysFilter checked={hasReminder} onCheckedChange={setHasReminder} />
+						<ReminderWithinSevenDaysFilter
+							checked={reminderFilter === "within7d"}
+							onCheckedChange={(checked) => setReminderFilter(checked ? "within7d" : "all")}
+						/>
 						<EventDateRangeFilter value={dateRange} onChange={setDateRange} />
 						<LabelsFilter value={selectedLabels} onChange={setSelectedLabels} />
 						<SortByDropdown sortState={sortState} setSortState={setSortState} />
