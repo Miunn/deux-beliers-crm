@@ -6,7 +6,6 @@ import ContactActionDialogs from "../dialogs/ContactActionDialogs";
 import ContactLabelsPopover from "../popovers/ContactLabelsPopover";
 import { Badge } from "../ui/badge";
 import ReminderPopover from "../popovers/ReminderPopover";
-import { addWeeks } from "date-fns";
 import { cn, textColorForBg } from "@/lib/utils";
 import { ContactWithRelations } from "@/types/contact-types";
 import { useMemo } from "react";
@@ -46,7 +45,7 @@ export default function ContactCard({ contact }: { contact: ContactWithRelations
 					<div
 						className={cn(
 							"flex items-start gap-1 text-sm",
-							contact.rappel <= addWeeks(new Date(), 1) ? "font-semibold text-destructive" : "",
+							contact.rappel <= new Date() ? "font-semibold text-destructive" : "",
 						)}
 					>
 						<Bell className="size-4 shrink-0" />

@@ -1,6 +1,17 @@
 import { useSyncExternalStore } from "react";
 import { Label } from "../../generated/prisma";
-import { ContactWithRelations } from "@/types/contact-types";
+import { ContactEventLite, ContactWithRelations } from "@/types/contact-types";
+
+type SyncContactEventInput = {
+	date: Date | string;
+	commentaires?: string | null;
+	nature?: ContactEventLite["nature"];
+};
+
+type SyncContactEventOptions = {
+	updateEventId?: string;
+	rappel?: Date | null;
+};
 
 type Listener = () => void;
 
@@ -61,23 +72,30 @@ export const contactStore = {
 		emit();
 	},
 
-	appendEventDate(contactId: string, date: Date | string) {
-		contacts = contacts.map((c) =>
-			c.id === contactId
-				? {
-					...c,
-					events: [
-						{
-							id: `temp-${Date.now()}`,
-							date,
-							nature: null,
-							commentaires: null,
-						},
-						...(c.events ?? []),
-					],
-				}
-				: c,
-		);
+	syncContactEvent(contactId: string, event: SyncContactEventInput, options?: SyncContactEventOptions) {
+		contacts = contacts.map((c) => {
+			if (c.id !== contactId) return c;
+
+			const eventEntry: ContactEventLite = {
+				id: options?.updateEventId ?? `temp-${Date.now()}`,
+				date: event.date,
+				commentaires: event.commentaires ?? null,
+				nature: event.nature ?? null,
+			};
+
+			const events =
+				options?.updateEventId && c.events?.some((existing) => existing.id === options.updateEventId)
+					? c.events.map((existing) =>
+							existing.id === options.updateEventId ? eventEntry : existing,
+						)
+					: [eventEntry, ...(c.events ?? [])];
+
+			return {
+				...c,
+				events,
+				...(options?.rappel !== undefined ? { rappel: options.rappel } : {}),
+			};
+		});
 		emit();
 	},
 };

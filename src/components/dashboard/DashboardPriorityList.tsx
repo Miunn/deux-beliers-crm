@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Bell } from "lucide-react";
-import { addWeeks } from "date-fns";
 
 import ContactActionDialogs from "@/components/dialogs/ContactActionDialogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,7 @@ function isOverdue(value: Date | string) {
 }
 
 function isUrgent(value: Date | string) {
-	return new Date(value) <= addWeeks(new Date(), 1);
+	return new Date(value) <= new Date();
 }
 
 export default function DashboardPriorityList({ contacts }: Props) {
