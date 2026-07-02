@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-	createContext,
-	useCallback,
-	useContext,
-	useMemo,
-	useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { SelectedState } from "@/components/ui/multi-select";
 import { ReminderFilter } from "@/lib/reminder-filter";
@@ -26,18 +20,14 @@ type ContactFiltersContextValue = {
 	resetFilters: () => void;
 };
 
-const ContactFiltersContext = createContext<ContactFiltersContextValue | undefined>(
-	undefined,
-);
+const ContactFiltersContext = createContext<ContactFiltersContextValue | undefined>(undefined);
 
 export function ContactFiltersProvider({ children }: { children: React.ReactNode }) {
 	const [text, setText] = useState("");
 	const [reminderFilter, setReminderFilter] = useState<ReminderFilter>("all");
 	const [selectedLabels, setSelectedLabels] = useState<SelectedState[]>([]);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-	const [sortState, setSortState] = useState<ContactSortMethod>(
-		ContactSortMethod.RappelAsc,
-	);
+	const [sortState, setSortState] = useState<ContactSortMethod>(ContactSortMethod.RappelAsc);
 
 	const resetFilters = useCallback(() => {
 		setText("");
@@ -63,11 +53,7 @@ export function ContactFiltersProvider({ children }: { children: React.ReactNode
 		[text, selectedLabels, reminderFilter, dateRange, sortState, resetFilters],
 	);
 
-	return (
-		<ContactFiltersContext.Provider value={value}>
-			{children}
-		</ContactFiltersContext.Provider>
-	);
+	return <ContactFiltersContext.Provider value={value}>{children}</ContactFiltersContext.Provider>;
 }
 
 export function useContactFilters() {

@@ -86,8 +86,8 @@ export const contactStore = {
 			const events =
 				options?.updateEventId && c.events?.some((existing) => existing.id === options.updateEventId)
 					? c.events.map((existing) =>
-							existing.id === options.updateEventId ? eventEntry : existing,
-						)
+						existing.id === options.updateEventId ? eventEntry : existing,
+					)
 					: [eventEntry, ...(c.events ?? [])];
 
 			return {
