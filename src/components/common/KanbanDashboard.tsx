@@ -1,8 +1,8 @@
 "use client";
 
 /* REMOVE eslint-disable unicorn/no-null */
-import { MoreHorizontalIcon, PenIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import { GripVertical, MoreHorizontalIcon, PenIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
@@ -14,6 +14,7 @@ import {
 	KanbanBoardCardTextarea,
 	KanbanBoardColumn,
 	KanbanBoardColumnButton,
+	KanbanBoardColumnDragHandle,
 	kanbanBoardColumnClassNames,
 	KanbanBoardColumnFooter,
 	KanbanBoardColumnHeader,
@@ -120,8 +121,92 @@ export function KanbanDashboard() {
 	}
 
 	async function handleUpdateColumnTitle(columnId: string, title: string) {
-		await updateKanbanColumn(columnId, { name: title, color: "#ffae80" });
+		const column = columns?.find((c) => c.id === columnId);
+		if (!column) return;
+
+		await updateKanbanColumn(columnId, { name: title, color: column.color });
 		mutateColumns();
+	}
+
+	const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
+	const [previewOrder, setPreviewOrder] = useState<string[] | null>(null);
+	const dropCommittedRef = useRef(false);
+	const lastDragOverTargetRef = useRef<string | null>(null);
+
+	const displayColumns = useMemo(() => {
+		if (!previewOrder) return data;
+		return previewOrder.map((id) => data.find((col) => col.id === id)).filter(Boolean) as Column[];
+	}, [data, previewOrder]);
+
+	function handleColumnDragStart(columnId: string) {
+		dropCommittedRef.current = false;
+		setDraggedColumnId(columnId);
+		setPreviewOrder(data.map((col) => col.id));
+	}
+
+	function handleColumnDragOverColumn(targetColumnId: string, insertBefore: boolean) {
+		if (!draggedColumnId || targetColumnId === draggedColumnId) return;
+
+		const key = `${targetColumnId}-${insertBefore ? "b" : "a"}`;
+		if (lastDragOverTargetRef.current === key) return;
+		lastDragOverTargetRef.current = key;
+
+		setPreviewOrder((prev) => {
+			if (!prev) return prev;
+			const fromIndex = prev.indexOf(draggedColumnId);
+			const targetIndex = prev.indexOf(targetColumnId);
+			if (fromIndex === -1 || targetIndex === -1) return prev;
+
+			const newOrder = [...prev];
+			newOrder.splice(fromIndex, 1);
+			const adjustedIndex = newOrder.indexOf(targetColumnId);
+			newOrder.splice(insertBefore ? adjustedIndex : adjustedIndex + 1, 0, draggedColumnId);
+			return newOrder;
+		});
+	}
+
+	function handleColumnDrop() {
+		dropCommittedRef.current = true;
+	}
+
+	async function handleColumnDragEnd() {
+		const shouldCommit = dropCommittedRef.current;
+		const finalOrder = previewOrder;
+		const movedColumnId = draggedColumnId;
+
+		lastDragOverTargetRef.current = null;
+		dropCommittedRef.current = false;
+
+		if (shouldCommit && finalOrder && columns && movedColumnId) {
+			const originalOrder = columns.map((c) => c.id);
+			const orderChanged = !finalOrder.every((id, i) => id === originalOrder[i]);
+
+			if (orderChanged) {
+				const reordered = finalOrder.map((id, index) => {
+					const col = columns.find((c) => c.id === id)!;
+					return { ...col, order: index };
+				});
+				mutateColumns(reordered, { revalidate: false });
+
+				setDraggedColumnId(null);
+				setPreviewOrder(null);
+
+				const newIndex = finalOrder.indexOf(movedColumnId);
+				const col = columns.find((c) => c.id === movedColumnId);
+				if (col) {
+					await updateKanbanColumn(movedColumnId, {
+						name: col.name,
+						color: col.color,
+						order: newIndex,
+					});
+					mutateColumns();
+				}
+				return;
+			}
+		}
+
+		setDraggedColumnId(null);
+		setPreviewOrder(null);
 	}
 
 	/*
@@ -353,16 +438,35 @@ export function KanbanDashboard() {
 	const jsLoaded = useJsLoaded();
 
 	return (
-		<KanbanBoard ref={scrollContainerReference} className="pl-4">
-			{data.map((column) =>
+		<KanbanBoard
+			ref={scrollContainerReference}
+			className="pl-4"
+			onDragOver={(event: DragEvent<HTMLDivElement>) => {
+				if (event.dataTransfer.types.includes("kanban-board-column")) {
+					event.preventDefault();
+				}
+			}}
+			onDrop={(event: DragEvent<HTMLDivElement>) => {
+				if (event.dataTransfer.types.includes("kanban-board-column")) {
+					event.preventDefault();
+					handleColumnDrop();
+				}
+			}}
+		>
+			{displayColumns.map((column) =>
 				jsLoaded ? (
 					<MyKanbanBoardColumn
+						key={column.id}
 						activeCardId={activeCardId}
 						column={column}
-						key={column.id}
+						isDragging={column.id === draggedColumnId}
 						onAddCard={handleAddCard}
 						onCardBlur={handleCardBlur}
 						onCardKeyDown={handleCardKeyDown}
+						onColumnDragEnd={handleColumnDragEnd}
+						onColumnDragOver={(insertBefore) => handleColumnDragOverColumn(column.id, insertBefore)}
+						onColumnDragStart={handleColumnDragStart}
+						onColumnDrop={handleColumnDrop}
 						onDeleteCard={handleDeleteCard}
 						onDeleteColumn={handleDeleteColumn}
 						onMoveCardToColumn={handleMoveCardToColumn}
@@ -389,9 +493,14 @@ export function KanbanDashboard() {
 function MyKanbanBoardColumn({
 	activeCardId,
 	column,
+	isDragging,
 	onAddCard,
 	onCardBlur,
 	onCardKeyDown,
+	onColumnDragEnd,
+	onColumnDragOver,
+	onColumnDragStart,
+	onColumnDrop,
 	onDeleteCard,
 	onDeleteColumn,
 	onMoveCardToColumn,
@@ -400,9 +509,14 @@ function MyKanbanBoardColumn({
 }: {
 	activeCardId: string;
 	column: Column;
+	isDragging: boolean;
 	onAddCard: (columnId: string, cardContent: string) => void;
 	onCardBlur: () => void;
 	onCardKeyDown: (event: KeyboardEvent<HTMLDivElement>, cardId: string) => void;
+	onColumnDragEnd: () => void;
+	onColumnDragOver: (insertBefore: boolean) => void;
+	onColumnDragStart: (columnId: string) => void;
+	onColumnDrop: () => void;
 	onDeleteCard: (cardId: string) => void;
 	onDeleteColumn: (columnId: string) => void;
 	onMoveCardToColumn: (columnId: string, index: number, card: ContactWithRelations) => void;
@@ -441,7 +555,14 @@ function MyKanbanBoardColumn({
 	}
 
 	return (
-		<KanbanBoardColumn columnId={column.id} key={column.id} onDropOverColumn={handleDropOverColumn}>
+		<KanbanBoardColumn
+			columnId={column.id}
+			key={column.id}
+			isDragging={isDragging}
+			onColumnDragOver={onColumnDragOver}
+			onColumnDrop={onColumnDrop}
+			onDropOverColumn={handleDropOverColumn}
+		>
 			<KanbanBoardColumnHeader>
 				{isEditingTitle ? (
 					<form
@@ -468,10 +589,19 @@ function MyKanbanBoardColumn({
 					</form>
 				) : (
 					<>
-						<KanbanBoardColumnTitle columnId={column.id}>
-							<KanbanColorCircle color={column.color} />
-							{column.title}
-						</KanbanBoardColumnTitle>
+						<div className="flex min-w-0 flex-1 items-center gap-1">
+							<KanbanBoardColumnDragHandle
+								columnId={column.id}
+								onColumnDragEnd={onColumnDragEnd}
+								onColumnDragStart={onColumnDragStart}
+							>
+								<GripVertical className="pointer-events-none size-4" />
+							</KanbanBoardColumnDragHandle>
+							<KanbanBoardColumnTitle columnId={column.id}>
+								<KanbanColorCircle color={column.color} />
+								{column.title}
+							</KanbanBoardColumnTitle>
+						</div>
 
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>

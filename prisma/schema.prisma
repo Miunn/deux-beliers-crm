@@ -82,6 +82,7 @@ model KanbanColumn {
     id String @id @default(cuid())
     name String @db.Text
     color String
+    order Int @default(0)
 
     contacts Contact[]
 }

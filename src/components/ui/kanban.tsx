@@ -354,6 +354,7 @@ Constants
  */
 const DATA_TRANSFER_TYPES = {
 	CARD: "kanban-board-card",
+	COLUMN: "kanban-board-column",
 };
 
 const KANBAN_BOARD_CIRCLE_COLORS_MAP = {
@@ -425,6 +426,7 @@ export function KanbanBoard({ className, ref, ...props }: ComponentProps<"div">)
 					"[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 					className,
 				)}
+				data-kanban-board
 				onScroll={onBoardScroll}
 				ref={boardRef}
 				{...props}
@@ -449,6 +451,126 @@ export function KanbanBoardExtraMargin({ className, ref, ...props }: ComponentPr
 	return <div className={cn("h-1 w-8 flex-shrink-0", className)} ref={ref} {...props} />;
 }
 
+export type KanbanBoardColumnDropZoneProps = {
+	dropIndex: number;
+	onDropColumn: (columnId: string, dropIndex: number) => void;
+};
+
+export function KanbanBoardColumnDropZone({
+	dropIndex,
+	onDropColumn,
+	className,
+	ref: externalRef,
+	...props
+}: ComponentProps<"div"> & KanbanBoardColumnDropZoneProps) {
+	const internalRef = useRef<HTMLDivElement>(null);
+
+	useImperativeHandle(externalRef, () => internalRef.current!);
+
+	const clearActiveZones = useCallback(() => {
+		internalRef.current
+			?.closest("[data-kanban-board]")
+			?.querySelectorAll(".kanban-column-drop-zone.is-active")
+			.forEach((element) => {
+				element.classList.remove("is-active");
+			});
+	}, []);
+
+	return (
+		<div
+			className={cn("kanban-column-drop-zone relative shrink-0 self-stretch", className)}
+			data-drop-index={dropIndex}
+			onDragLeave={(event) => {
+				if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+					event.currentTarget.classList.remove("is-active");
+				}
+			}}
+			onDragOver={(event) => {
+				if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) {
+					event.preventDefault();
+					event.stopPropagation();
+					clearActiveZones();
+					event.currentTarget.classList.add("is-active");
+				}
+			}}
+			onDrop={(event) => {
+				if (!event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) return;
+
+				event.preventDefault();
+				event.stopPropagation();
+				const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.COLUMN);
+				onDropColumn(JSON.parse(data).id as string, dropIndex);
+				clearActiveZones();
+			}}
+			ref={internalRef}
+			{...props}
+		>
+			<div className="kanban-column-drop-zone-indicator pointer-events-none absolute inset-y-0 left-1/2 w-64 -translate-x-1/2 rounded-lg border-2 border-dashed border-transparent" />
+		</div>
+	);
+}
+
+export type KanbanBoardColumnDragHandleProps = {
+	columnId: string;
+	onColumnDragStart?: (columnId: string) => void;
+	onColumnDragEnd?: () => void;
+};
+
+export function KanbanBoardColumnDragHandle({
+	columnId,
+	onColumnDragStart,
+	onColumnDragEnd,
+	className,
+	ref,
+	children,
+	...props
+}: ComponentProps<"div"> & KanbanBoardColumnDragHandleProps) {
+	const { onDragStart: dndOnDragStart, onDragEnd: dndOnDragEnd } = useDndEvents();
+
+	return (
+		<div
+			{...props}
+			aria-label="Drag column"
+			className={cn(
+				"text-muted-foreground flex size-7 shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing",
+				className,
+			)}
+			draggable
+			onMouseDown={(event) => {
+				event.stopPropagation();
+			}}
+			onDragEnd={() => {
+				onColumnDragEnd?.();
+				dndOnDragEnd(columnId);
+			}}
+			onDragStart={(event) => {
+				event.stopPropagation();
+				event.dataTransfer.effectAllowed = "move";
+				event.dataTransfer.setData(DATA_TRANSFER_TYPES.COLUMN, JSON.stringify({ id: columnId }));
+				event.dataTransfer.setData("text/plain", columnId);
+
+				const columnEl = event.currentTarget.closest("[data-column-id]");
+				if (columnEl instanceof HTMLElement) {
+					const rect = columnEl.getBoundingClientRect();
+					event.dataTransfer.setDragImage(
+						columnEl,
+						event.clientX - rect.left,
+						event.clientY - rect.top,
+					);
+				}
+
+				requestAnimationFrame(() => {
+					dndOnDragStart(columnId);
+					onColumnDragStart?.(columnId);
+				});
+			}}
+			ref={ref}
+		>
+			{children}
+		</div>
+	);
+}
+
 /*
 Column
 */
@@ -456,6 +578,9 @@ Column
 export type KanbanBoardColumnProps = {
 	columnId: string;
 	onDropOverColumn?: (dataTransferData: string) => void;
+	onColumnDragOver?: (insertBefore: boolean) => void;
+	onColumnDrop?: () => void;
+	isDragging?: boolean;
 };
 
 export const kanbanBoardColumnClassNames =
@@ -465,31 +590,45 @@ export function KanbanBoardColumn({
 	className,
 	columnId,
 	onDropOverColumn,
+	onColumnDragOver,
+	onColumnDrop,
+	isDragging = false,
 	ref,
 	...props
 }: ComponentProps<"section"> & KanbanBoardColumnProps) {
-	const [isDropTarget, setIsDropTarget] = useState(false);
+	const [isCardDropTarget, setIsCardDropTarget] = useState(false);
 	const { onDragEnd, onDragOver } = useDndEvents();
 
 	return (
 		<section
 			aria-labelledby={`column-${columnId}-title`}
-			className={cn(kanbanBoardColumnClassNames, isDropTarget && "border-primary", className)}
+			className={cn(kanbanBoardColumnClassNames, isCardDropTarget && "border-primary", className)}
+			data-column-id={columnId}
+			data-dragging={isDragging || undefined}
 			onDragLeave={() => {
-				setIsDropTarget(false);
+				setIsCardDropTarget(false);
 			}}
 			onDragOver={(event) => {
 				if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
 					event.preventDefault();
-					setIsDropTarget(true);
+					setIsCardDropTarget(true);
 					onDragOver("", columnId);
+				} else if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) {
+					event.preventDefault();
+					const rect = event.currentTarget.getBoundingClientRect();
+					onColumnDragOver?.(event.clientX < rect.left + rect.width / 2);
 				}
 			}}
 			onDrop={(event) => {
-				const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
-				onDropOverColumn?.(data);
-				onDragEnd(JSON.parse(data).id as string, columnId);
-				setIsDropTarget(false);
+				if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
+					const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
+					onDropOverColumn?.(data);
+					onDragEnd(JSON.parse(data).id as string, columnId);
+					setIsCardDropTarget(false);
+				} else if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) {
+					event.preventDefault();
+					onColumnDrop?.();
+				}
 			}}
 			ref={ref}
 			{...props}
@@ -606,6 +745,7 @@ export function KanbanBoardColumnListItem({
 			//   }
 			// }}
 			onDrop={(event) => {
+				if (!event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) return;
 				event.stopPropagation();
 				const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
 				onDropOverListItem?.(data);
