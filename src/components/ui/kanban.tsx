@@ -379,12 +379,65 @@ Board
 */
 
 export function KanbanBoard({ className, ref, ...props }: ComponentProps<"div">) {
+	const boardRef = useRef<HTMLDivElement>(null);
+	const trackRef = useRef<HTMLDivElement>(null);
+	const spacerRef = useRef<HTMLDivElement>(null);
+
+	useImperativeHandle(ref, () => boardRef.current!);
+
+	useEffect(() => {
+		const board = boardRef.current;
+		const track = trackRef.current;
+		const spacer = spacerRef.current;
+		if (!board || !track || !spacer) return;
+
+		const sync = () => {
+			const rect = board.getBoundingClientRect();
+			track.style.left = `${rect.left}px`;
+			track.style.width = `${rect.width}px`;
+			spacer.style.width = `${board.scrollWidth}px`;
+			track.style.display = board.scrollWidth > board.clientWidth ? "" : "none";
+		};
+
+		sync();
+		const ro = new ResizeObserver(sync);
+		ro.observe(board);
+		return () => ro.disconnect();
+	}, []);
+
+	const onBoardScroll = useCallback(() => {
+		if (trackRef.current && boardRef.current) {
+			trackRef.current.scrollLeft = boardRef.current.scrollLeft;
+		}
+	}, []);
+
+	const onTrackScroll = useCallback(() => {
+		if (boardRef.current && trackRef.current) {
+			boardRef.current.scrollLeft = trackRef.current.scrollLeft;
+		}
+	}, []);
+
 	return (
-		<div
-			className={cn("flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1", className)}
-			ref={ref}
-			{...props}
-		/>
+		<>
+			<div
+				className={cn(
+					"flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1",
+					"[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+					className,
+				)}
+				onScroll={onBoardScroll}
+				ref={boardRef}
+				{...props}
+			/>
+			<div
+				className="fixed bottom-0 z-50 overflow-x-auto overflow-y-hidden"
+				onScroll={onTrackScroll}
+				ref={trackRef}
+				style={{ height: 12 }}
+			>
+				<div ref={spacerRef} style={{ height: 1 }} />
+			</div>
+		</>
 	);
 }
 

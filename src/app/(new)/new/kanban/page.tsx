@@ -23,11 +23,9 @@ export default async function KanbanPage() {
 				<Suspense>
 					<ContactsViewToolbar className="shrink-0" />
 				</Suspense>
-				<div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+				<div className="min-h-0 min-w-0 flex-1 overflow-hidden -mx-4">
 					<KanbanBoardProvider>
-						<div className="h-full min-w-0 w-full overflow-hidden [&>div]:h-full [&>div]:max-w-full">
-							<KanbanDashboard />
-						</div>
+						<KanbanDashboard />
 					</KanbanBoardProvider>
 				</div>
 			</div>

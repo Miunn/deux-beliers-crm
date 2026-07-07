@@ -353,7 +353,7 @@ export function KanbanDashboard() {
 	const jsLoaded = useJsLoaded();
 
 	return (
-		<KanbanBoard ref={scrollContainerReference}>
+		<KanbanBoard ref={scrollContainerReference} className="pl-4">
 			{data.map((column) =>
 				jsLoaded ? (
 					<MyKanbanBoardColumn
