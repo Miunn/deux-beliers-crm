@@ -325,3 +325,7 @@
     --color-kanban-board-circle-yellow: var(--kanban-board-circle-yellow);
     }
 }
+
+[data-column-id][data-dragging] {
+	opacity: 0.4;
+}

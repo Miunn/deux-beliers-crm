@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `KanbanColumn` ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0;

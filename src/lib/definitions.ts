@@ -1,76 +1,77 @@
 import { z } from "zod";
 
 export const NEW_CONTACT_FORM_SCHEMA = z
-  .object({
-    nom: z.string().min(1, { message: "Le nom est requis" }),
-    activite: z.string().optional(),
-    ville: z.string().optional(),
-    contact: z.string().optional(),
-    telephone: z.string().optional(),
-    mail: z.union([
-      z.email({ message: "Adresse mail invalide" }),
-      z.literal(""),
-    ]),
-    observations: z.string().optional(),
-    adresse: z.string().optional(),
-    horaires: z.string().optional(),
-    active: z.boolean().default(true).optional(),
-    kanbanColumnId: z.string().optional(),
-    kanbanPosition: z.number().optional(),
-  })
-  .strict();
+	.object({
+		nom: z.string().min(1, { message: "Le nom est requis" }),
+		activite: z.string().optional(),
+		ville: z.string().optional(),
+		contact: z.string().optional(),
+		telephone: z.string().optional(),
+		mail: z.union([
+			z.email({ message: "Adresse mail invalide" }),
+			z.literal(""),
+		]),
+		observations: z.string().optional(),
+		adresse: z.string().optional(),
+		horaires: z.string().optional(),
+		active: z.boolean().default(true).optional(),
+		kanbanColumnId: z.string().optional(),
+		kanbanPosition: z.number().optional(),
+	})
+	.strict();
 
 export const CREATE_ACTIVITE_FORM_SCHEMA = z
-  .object({
-    label: z.string().min(1, { message: "Le libellé est requis" }),
-  })
-  .strict();
+	.object({
+		label: z.string().min(1, { message: "Le libellé est requis" }),
+	})
+	.strict();
 
 export const CREATE_LABEL_FORM_SCHEMA = z
-  .object({
-    label: z.string().min(1, { message: "Le libellé est requis" }),
-    color: z.string().regex(/^#([0-9a-fA-F]{3}){1,2}$/i, {
-      message: "Couleur hex invalide",
-    }),
-  })
-  .strict();
+	.object({
+		label: z.string().min(1, { message: "Le libellé est requis" }),
+		color: z.string().regex(/^#([0-9a-fA-F]{3}){1,2}$/i, {
+			message: "Couleur hex invalide",
+		}),
+	})
+	.strict();
 
 export const CREATE_NATURE_FORM_SCHEMA = z
-  .object({
-    label: z.string().min(1, { message: "Le libellé est requis" }),
-  })
-  .strict();
+	.object({
+		label: z.string().min(1, { message: "Le libellé est requis" }),
+	})
+	.strict();
 
 export const CREATE_EVENT_FORM_SCHEMA = z
-  .object({
-    date: z.date(),
-    natureId: z.string().optional(),
-    commentaires: z.string().optional(),
-  })
-  .strict();
+	.object({
+		date: z.date(),
+		natureId: z.string().optional(),
+		commentaires: z.string().optional(),
+	})
+	.strict();
 
 export const ACCOUNT_FORM_SCHEMA = z
-  .object({
-    currentPassword: z.string().optional(),
-    password: z.string().optional(),
-    passwordConfirmation: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.password && data.passwordConfirmation) {
-        return data.password === data.passwordConfirmation;
-      }
-      return true;
-    },
-    {
-      message: "Les mots de passe ne correspondent pas",
-      path: ["passwordConfirmation"],
-    },
-  );
+	.object({
+		currentPassword: z.string().optional(),
+		password: z.string().optional(),
+		passwordConfirmation: z.string().optional(),
+	})
+	.refine(
+		(data) => {
+			if (data.password && data.passwordConfirmation) {
+				return data.password === data.passwordConfirmation;
+			}
+			return true;
+		},
+		{
+			message: "Les mots de passe ne correspondent pas",
+			path: ["passwordConfirmation"],
+		},
+	);
 
 export const CREATE_KANBAN_COLUMN_FORM_SCHEMA = z
-  .object({
-    name: z.string(),
-    color: z.string(),
-  })
-  .strict();
+	.object({
+		name: z.string(),
+		color: z.string(),
+		order: z.number().optional(),
+	})
+	.strict();
