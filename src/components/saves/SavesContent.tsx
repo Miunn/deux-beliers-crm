@@ -9,6 +9,8 @@ import BackupHelpDialog from "./BackupHelpDialog";
 import { useSaves } from "@/hooks/use-saves";
 import type { BackupRecord, DiskState } from "@/data/backup-service";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableStatusRow } from "@/components/ui/table-status-row";
 
 function formatDate(value: string) {
 	return new Intl.DateTimeFormat("fr-FR", {
@@ -160,71 +162,93 @@ export default function SavesContent() {
 				<BackupHelpDialog />
 			</div>
 
-			{isLoading ? <p className="text-sm text-muted-foreground mb-8">Chargement…</p> : null}
-			{!isLoading && disk ? <DiskStatePanel disk={disk} /> : null}
+			{disk ? <DiskStatePanel disk={disk} /> : null}
 
 			<Button onClick={handleCreate} disabled={creating} className="mb-6">
 				{creating ? <Loader2 className="animate-spin" /> : <SaveAll />}
 				{creating ? "Création en cours…" : "Créer une sauvegarde maintenant"}
 			</Button>
 
-			{!isLoading && saves?.length === 0 ? (
-				<p className="text-sm text-muted-foreground">Aucune sauvegarde pour le moment.</p>
-			) : null}
-
-			{!isLoading && saves && saves.length > 0 ? (
-				<ul className="divide-y border-y">
-					{saves.map((save) => (
-						<li key={save.id} className="flex items-start justify-between gap-4 py-4 text-sm">
-							<div className="min-w-0 space-y-1">
-								<div className="flex flex-wrap items-center gap-2">
-									<p className="font-medium">{formatDate(save.createdAt)}</p>
-									<span className="text-xs text-muted-foreground rounded-full border px-2 py-0.5">
-										{save.source === "cron" ? "Automatique" : "Manuelle"}
-									</span>
-								</div>
-								<p className="text-muted-foreground">{formatSummary(save)}</p>
-								<p className="text-xs text-muted-foreground">
-									{save.filename} · {formatBytes(save.sizeBytes)}
-								</p>
-							</div>
-
-							<div className="flex items-center gap-2 shrink-0">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => handleDownload(save)}
-									disabled={downloadingId === save.id || deletingId === save.id}
-								>
-									{downloadingId === save.id ? <Loader2 className="animate-spin" /> : <Download />}
-									Télécharger
-								</Button>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="icon"
-											disabled={downloadingId === save.id || deletingId === save.id}
-										>
-											{deletingId === save.id ? (
-												<Loader2 className="animate-spin" />
-											) : (
-												<EllipsisVertical />
-											)}
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="end">
-										<DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(save)}>
-											<Trash />
-											Supprimer
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</div>
-						</li>
-					))}
-				</ul>
-			) : null}
+			<div className="overflow-hidden rounded-md border">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>Date</TableHead>
+							<TableHead>Type</TableHead>
+							<TableHead>Contenu</TableHead>
+							<TableHead>Fichier</TableHead>
+							<TableHead className="text-right">Actions</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{saves && saves.length > 0 ? (
+							saves.map((save) => (
+								<TableRow key={save.id}>
+									<TableCell className="font-medium whitespace-nowrap">
+										{formatDate(save.createdAt)}
+									</TableCell>
+									<TableCell>
+										<span className="text-xs text-muted-foreground rounded-full border px-2 py-0.5">
+											{save.source === "cron" ? "Automatique" : "Manuelle"}
+										</span>
+									</TableCell>
+									<TableCell className="text-muted-foreground">{formatSummary(save)}</TableCell>
+									<TableCell className="text-xs text-muted-foreground">
+										{save.filename} · {formatBytes(save.sizeBytes)}
+									</TableCell>
+									<TableCell className="text-right">
+										<div className="flex items-center justify-end gap-2">
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleDownload(save)}
+												disabled={downloadingId === save.id || deletingId === save.id}
+											>
+												{downloadingId === save.id ? (
+													<Loader2 className="animate-spin" />
+												) : (
+													<Download />
+												)}
+												Télécharger
+											</Button>
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button
+														variant="ghost"
+														size="icon"
+														disabled={downloadingId === save.id || deletingId === save.id}
+													>
+														{deletingId === save.id ? (
+															<Loader2 className="animate-spin" />
+														) : (
+															<EllipsisVertical />
+														)}
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent align="end">
+													<DropdownMenuItem
+														variant="destructive"
+														onClick={() => setDeleteTarget(save)}
+													>
+														<Trash />
+														Supprimer
+													</DropdownMenuItem>
+												</DropdownMenuContent>
+											</DropdownMenu>
+										</div>
+									</TableCell>
+								</TableRow>
+							))
+						) : (
+							<TableStatusRow
+								colSpan={5}
+								isLoading={isLoading}
+								emptyMessage="Aucune sauvegarde pour le moment."
+							/>
+						)}
+					</TableBody>
+				</Table>
+			</div>
 
 			<Dialog
 				open={!!deleteTarget}

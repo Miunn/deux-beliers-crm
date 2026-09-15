@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { Label } from "../../generated/prisma";
+import { Label } from "../../generated/prisma/client";
 
 const fetcher = (url: string): Promise<Label[]> =>
   fetch(url).then((r) => r.json());

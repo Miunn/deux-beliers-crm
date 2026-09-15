@@ -8,6 +8,15 @@ export type CHANGELOG_ENTRY = {
 
 export const CHANGELOG: CHANGELOG_ENTRY[] = [
 	{
+		version: "v1.2.0",
+		date: "11/09/2026",
+		description: "Ajout des bons cadeaux, amélioration de l'interface et mise à jour des dépendances",
+		lines: [
+			{ type: "added", description: "Ajout de la page de gestion des bons cadeaux" },
+			{ type: "security", description: "Mise à jour des versions de dépendances. Utilisation de Next16 et Prisma7" },
+		]
+	},
+	{
 		version: "v1.1.0",
 		date: "01/07/2026",
 		description: "Liaison des rappels aux nouveaux évènements, ajustement de la date de rappel par défaut",

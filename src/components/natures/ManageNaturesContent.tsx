@@ -24,7 +24,8 @@ import {
 	Save,
 	X,
 } from "lucide-react";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableStatusRow } from "@/components/ui/table-status-row";
 
 export default function ManageNaturesContent() {
 	const { data: natures, isLoading, mutate } = useNatures();
@@ -106,81 +107,91 @@ export default function ManageNaturesContent() {
 				<p className="text-sm text-red-600">{form.formState.errors.label.message}</p>
 			)}
 
-			<div className="space-y-2">
-				<ScrollArea className="h-full space-y-2">
-					<div className="max-h-[calc(100vh-16rem)] space-y-2">
-						{isLoading && <div>Chargement…</div>}
-						{natures?.length === 0 && (
-							<div className="text-sm text-muted-foreground">Aucune nature.</div>
-						)}
-						{natures?.map((n) => (
-							<div
-								key={n.id}
-								className="flex items-center justify-between rounded-md border p-2"
-							>
-								{editingId === n.id ? (
-									<div className="flex items-center gap-3 w-full">
-										<Input
-											value={editLabel}
-											onChange={(e) => setEditLabel(e.target.value)}
-											className="flex-1"
-											aria-label="Nom du libellé"
-										/>
-										<Button
-											type="button"
-											size="icon"
-											onClick={saveEdit}
-											disabled={submittingId === n.id}
-										>
-											{submittingId === n.id ? (
-												<Loader2 className="animate-spin" />
-											) : (
-												<Save />
-											)}
-										</Button>
-										<Button type="button" variant="ghost" onClick={cancelEdit} size="icon">
-											<X />
-										</Button>
-									</div>
-								) : (
-									<>
-										<span>{n.label}</span>
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
+			<div className="overflow-hidden rounded-md border">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>Nature</TableHead>
+							<TableHead className="text-right">Actions</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{natures && natures.length > 0 ? (
+							natures.map((n) => (
+								<TableRow key={n.id}>
+									<TableCell>
+										{editingId === n.id ? (
+											<Input
+												value={editLabel}
+												onChange={(e) => setEditLabel(e.target.value)}
+												aria-label="Nom du libellé"
+											/>
+										) : (
+											n.label
+										)}
+									</TableCell>
+									<TableCell className="text-right">
+										{editingId === n.id ? (
+											<div className="flex items-center justify-end gap-1">
 												<Button
 													type="button"
-													variant="ghost"
 													size="icon"
+													onClick={saveEdit}
 													disabled={submittingId === n.id}
 												>
 													{submittingId === n.id ? (
 														<Loader2 className="animate-spin" />
 													) : (
-														<EllipsisVertical />
+														<Save />
 													)}
 												</Button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent>
-												<DropdownMenuItem onClick={() => startEdit(n.id, n.label)}>
-													<Pencil />
-													Modifier
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													variant="destructive"
-													onClick={() => handleDelete(n.id)}
-												>
-													<Trash />
-													Supprimer
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</>
-								)}
-							</div>
-						))}
-					</div>
-					<ScrollBar orientation="vertical" className="-mr-3" />
-				</ScrollArea>
+												<Button type="button" variant="ghost" onClick={cancelEdit} size="icon">
+													<X />
+												</Button>
+											</div>
+										) : (
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														disabled={submittingId === n.id}
+													>
+														{submittingId === n.id ? (
+															<Loader2 className="animate-spin" />
+														) : (
+															<EllipsisVertical />
+														)}
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent>
+													<DropdownMenuItem onClick={() => startEdit(n.id, n.label)}>
+														<Pencil />
+														Modifier
+													</DropdownMenuItem>
+													<DropdownMenuItem
+														variant="destructive"
+														onClick={() => handleDelete(n.id)}
+													>
+														<Trash />
+														Supprimer
+													</DropdownMenuItem>
+												</DropdownMenuContent>
+											</DropdownMenu>
+										)}
+									</TableCell>
+								</TableRow>
+							))
+						) : (
+							<TableStatusRow
+								colSpan={2}
+								isLoading={isLoading}
+								emptyMessage="Aucune nature."
+							/>
+						)}
+					</TableBody>
+				</Table>
 			</div>
 		</div>
 	);

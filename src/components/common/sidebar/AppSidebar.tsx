@@ -14,6 +14,7 @@ import {
 	Settings,
 	SquareKanban,
 	Tags,
+	Ticket,
 	Undo2,
 	Upload,
 } from "lucide-react";
@@ -117,6 +118,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							>
 								<Link href={"/natures"}>
 									<Calendar1 /> <span>Natures d&apos;évènements</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								asChild
+								isActive={isNavActive(pathname, "/vouchers")}
+								tooltip={"Bons de visite"}
+							>
+								<Link href={"/vouchers"}>
+									<Ticket /> <span>Bons de visite</span>
 								</Link>
 							</SidebarMenuButton>
 						</SidebarMenuItem>

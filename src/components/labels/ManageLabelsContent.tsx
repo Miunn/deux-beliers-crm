@@ -24,7 +24,8 @@ import {
 	Trash,
 	X,
 } from "lucide-react";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableStatusRow } from "@/components/ui/table-status-row";
 
 export default function ManageLabelsContent() {
 	const { data: labels, isLoading, mutate } = useLabels();
@@ -120,98 +121,107 @@ export default function ManageLabelsContent() {
 				<p className="text-sm text-red-600">{form.formState.errors.color.message}</p>
 			)}
 
-			<div className="space-y-2">
-				<ScrollArea className="h-full space-y-2">
-					<div className="max-h-[calc(100vh-16rem)] space-y-2">
-						{isLoading && <div>Chargement…</div>}
-						{labels?.length === 0 && (
-							<div className="text-sm text-muted-foreground">Aucun libellé.</div>
-						)}
-						{labels?.map((l) => (
-							<div
-								key={l.id}
-								className="flex items-center justify-between rounded-md border p-2"
-							>
-								{editingId === l.id ? (
-									<div className="flex items-center gap-3 w-full">
-										<span
-											className="inline-block size-4 rounded"
-											style={{ background: editColor }}
-										/>
-										<Input
-											value={editLabel}
-											onChange={(e) => setEditLabel(e.target.value)}
-											className="flex-1"
-											aria-label="Nom du libellé"
-										/>
-										<Input
-											type="color"
-											aria-label="Couleur"
-											className="h-9 w-9 rounded-md border-none p-0"
-											value={editColor}
-											onChange={(e) => setEditColor(e.target.value)}
-										/>
-										<Button
-											type="button"
-											size="icon"
-											onClick={saveEdit}
-											disabled={submittingId === l.id}
-										>
-											{submittingId === l.id ? (
-												<Loader2 className="animate-spin" />
-											) : (
-												<Save />
-											)}
-										</Button>
-										<Button type="button" variant="ghost" onClick={cancelEdit} size="icon">
-											<X />
-										</Button>
-									</div>
-								) : (
-									<>
-										<div className="flex items-center gap-3">
-											<span
-												className="inline-block size-4 rounded"
-												style={{ background: l.color }}
-											/>
-											<span>{l.label}</span>
-										</div>
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
+			<div className="overflow-hidden rounded-md border">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>Libellé</TableHead>
+							<TableHead className="text-right">Actions</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{labels && labels.length > 0 ? (
+							labels.map((l) => (
+								<TableRow key={l.id}>
+									<TableCell>
+										{editingId === l.id ? (
+											<div className="flex items-center gap-3">
+												<span
+													className="inline-block size-4 shrink-0 rounded"
+													style={{ background: editColor }}
+												/>
+												<Input
+													value={editLabel}
+													onChange={(e) => setEditLabel(e.target.value)}
+													className="flex-1"
+													aria-label="Nom du libellé"
+												/>
+												<Input
+													type="color"
+													aria-label="Couleur"
+													className="h-9 w-9 rounded-md border-none p-0"
+													value={editColor}
+													onChange={(e) => setEditColor(e.target.value)}
+												/>
+											</div>
+										) : (
+											<div className="flex items-center gap-3">
+												<span
+													className="inline-block size-4 rounded"
+													style={{ background: l.color }}
+												/>
+												<span>{l.label}</span>
+											</div>
+										)}
+									</TableCell>
+									<TableCell className="text-right">
+										{editingId === l.id ? (
+											<div className="flex items-center justify-end gap-1">
 												<Button
 													type="button"
-													variant="ghost"
 													size="icon"
+													onClick={saveEdit}
 													disabled={submittingId === l.id}
 												>
-													{submittingId === l.id ? (
-														<Loader2 className="animate-spin" />
-													) : (
-														<EllipsisVertical />
-													)}
+													{submittingId === l.id ? <Loader2 className="animate-spin" /> : <Save />}
 												</Button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent>
-												<DropdownMenuItem onClick={() => startEdit(l.id, l.label, l.color)}>
-													<Pencil />
-													Modifier
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													variant="destructive"
-													onClick={() => handleDelete(l.id)}
-												>
-													<Trash />
-													Supprimer
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</>
-								)}
-							</div>
-						))}
-					</div>
-					<ScrollBar orientation="vertical" className="-mr-3" />
-				</ScrollArea>
+												<Button type="button" variant="ghost" onClick={cancelEdit} size="icon">
+													<X />
+												</Button>
+											</div>
+										) : (
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														disabled={submittingId === l.id}
+													>
+														{submittingId === l.id ? (
+															<Loader2 className="animate-spin" />
+														) : (
+															<EllipsisVertical />
+														)}
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent>
+													<DropdownMenuItem onClick={() => startEdit(l.id, l.label, l.color)}>
+														<Pencil />
+														Modifier
+													</DropdownMenuItem>
+													<DropdownMenuItem
+														variant="destructive"
+														onClick={() => handleDelete(l.id)}
+													>
+														<Trash />
+														Supprimer
+													</DropdownMenuItem>
+												</DropdownMenuContent>
+											</DropdownMenu>
+										)}
+									</TableCell>
+								</TableRow>
+							))
+						) : (
+							<TableStatusRow
+								colSpan={2}
+								isLoading={isLoading}
+								emptyMessage="Aucun libellé."
+							/>
+						)}
+					</TableBody>
+				</Table>
 			</div>
 		</div>
 	);

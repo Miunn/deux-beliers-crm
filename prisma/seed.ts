@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { auth } from "@/lib/auth";
 
 async function main() {

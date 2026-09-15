@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "../../generated/prisma";
+import { Prisma } from "../../generated/prisma/client";
 
 const get = async () => {
 	return prisma.kanbanColumn.findMany({ orderBy: { order: "asc" } });

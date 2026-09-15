@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { useLabels } from "@/hooks/use-labels";
-import { Contact, Label } from "../../../generated/prisma";
+import { Contact, Label } from "../../../generated/prisma/client";
 import { updateContactLabels } from "@/actions/contacts";
 import { contactStore } from "@/stores/contacts-store";
 import { toast } from "sonner";

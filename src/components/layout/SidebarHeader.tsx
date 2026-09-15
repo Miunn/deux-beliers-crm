@@ -32,6 +32,8 @@ function pathToTitle(path: string): string {
 			return "Paramètres";
 		case "/changelog":
 			return "Changelog";
+		case "/vouchers":
+			return "Bons de visite";
 		default:
 			return "";
 	}

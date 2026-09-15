@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { KanbanColumn } from "../../../generated/prisma";
+import { KanbanColumn } from "../../../generated/prisma/client";
 
 const fetcher = (url: string): Promise<KanbanColumn[]> =>
   fetch(url).then((r) => r.json());

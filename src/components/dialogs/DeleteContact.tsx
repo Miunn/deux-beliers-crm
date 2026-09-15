@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { Contact } from "../../../generated/prisma";
+import { Contact } from "../../../generated/prisma/client";
 import { Button } from "../ui/button";
 import {
 	Dialog,

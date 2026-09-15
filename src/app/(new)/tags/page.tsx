@@ -3,6 +3,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import ManageLabelsContent from "@/components/labels/ManageLabelsContent";
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export default async function TagsPage() {
 	const hdrs = await headers();
 	const session = await auth.api.getSession({

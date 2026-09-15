@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { Activite } from "../../generated/prisma";
+import { Activite } from "../../generated/prisma/client";
 
 const fetcher = (url: string): Promise<Activite[]> =>
   fetch(url).then((res) => res.json());

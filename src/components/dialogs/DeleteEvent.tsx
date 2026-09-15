@@ -14,7 +14,7 @@ import {
 } from "../ui/dialog";
 import { deleteEvent } from "@/actions/events";
 import { toast } from "sonner";
-import { Event, Nature } from "../../../generated/prisma";
+import { Event, Nature } from "../../../generated/prisma/client";
 
 export default function DeleteEvent({
   event,

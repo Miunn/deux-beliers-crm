@@ -1,4 +1,4 @@
-import { Activite, Contact, Label } from "../../generated/prisma";
+import { Activite, Contact, Label } from "../../generated/prisma/client";
 
 export type ContactEventLite = {
 	id: string;

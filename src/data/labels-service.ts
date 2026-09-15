@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "../../generated/prisma";
+import { Prisma } from "../../generated/prisma/client";
 
 const getLabels = async () => {
   return prisma.label.findMany({

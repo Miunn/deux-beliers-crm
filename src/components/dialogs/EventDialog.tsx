@@ -19,7 +19,7 @@ import { useEventsByContact } from "@/hooks/use-events";
 import { ContactWithRelations } from "@/types/contact-types";
 import { contactStore } from "@/stores/contacts-store";
 import { useNatures } from "@/hooks/use-natures";
-import { Event, Nature } from "../../../generated/prisma";
+import { Event, Nature } from "../../../generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { addDays, addMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { Label } from "../../generated/prisma";
+import { Label } from "../../generated/prisma/client";
 import { ContactEventLite, ContactWithRelations } from "@/types/contact-types";
 
 type SyncContactEventInput = {

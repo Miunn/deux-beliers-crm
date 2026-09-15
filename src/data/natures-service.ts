@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "../../generated/prisma";
+import { Prisma } from "../../generated/prisma/client";
 
 const getNatures = async () => {
   return prisma.nature.findMany({ orderBy: { label: "asc" } });

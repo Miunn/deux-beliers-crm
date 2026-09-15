@@ -14,7 +14,7 @@ import {
 import { useLabels } from "@/hooks/use-labels";
 import { updateContactLabels } from "@/actions/contacts";
 import { toast } from "sonner";
-import { Contact, Label } from "../../../generated/prisma";
+import { Contact, Label } from "../../../generated/prisma/client";
 import { useSWRConfig } from "swr";
 
 export default function ContactLabelsDialog({

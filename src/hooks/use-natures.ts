@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { Nature } from "../../generated/prisma";
+import { Nature } from "../../generated/prisma/client";
 
 const fetcher = (url: string): Promise<Nature[]> =>
   fetch(url).then((r) => r.json());

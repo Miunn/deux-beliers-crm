@@ -15,6 +15,7 @@ import { ArrowDown, ArrowUp, SearchIcon, XIcon } from "lucide-react";
 import React from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableStatusRow } from "@/components/ui/table-status-row";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
 import { Input } from "./input";
@@ -35,6 +36,8 @@ interface DataTableProps<TData, TValue> {
 	showReminderWithinSevenDaysFilter?: boolean;
 	showEventDateRangeFilter?: boolean;
 	showLabelsFilter?: boolean;
+	isLoading?: boolean;
+	emptyMessage?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +49,8 @@ export function DataTable<TData, TValue>({
 	showReminderWithinSevenDaysFilter = false,
 	showEventDateRangeFilter = false,
 	showLabelsFilter = false,
+	isLoading = false,
+	emptyMessage = "Aucun contact",
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -215,11 +220,11 @@ export function DataTable<TData, TValue>({
 								</TableRow>
 							))
 						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
-									Aucun contact
-								</TableCell>
-							</TableRow>
+							<TableStatusRow
+								colSpan={columns.length}
+								isLoading={isLoading}
+								emptyMessage={emptyMessage}
+							/>
 						)}
 					</TableBody>
 				</Table>

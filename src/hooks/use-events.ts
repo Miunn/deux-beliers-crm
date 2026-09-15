@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import { useMemo } from "react";
-import { Event, Nature, Contact } from "../../generated/prisma";
+import { Event, Nature, Contact } from "../../generated/prisma/client";
 
 export type EventWithNature = Event & { nature: Nature | null };
 
