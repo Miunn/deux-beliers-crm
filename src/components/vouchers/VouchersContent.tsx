@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	ChevronLeft,
 	ChevronRight,
@@ -8,7 +8,7 @@ import {
 	ChevronsRight,
 	SearchIcon,
 } from "lucide-react";
-import { useVouchers } from "@/hooks/use-vouchers";
+import { useVoucherProducts, useVouchers } from "@/hooks/use-vouchers";
 import type { Voucher, VoucherStatus } from "@/types/voucher-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ export default function VouchersContent() {
 		page,
 		per_page: perPage,
 	});
+	const { products, error: productsError, isLoading: productsLoading } = useVoucherProducts();
+	const productNames = useMemo(() => new Map(products.map((product) => [product.id, product.name])), [products]);
 
 	const handleStatusChange = (value: string) => {
 		setStatus(value as VoucherStatus | "all");
@@ -129,6 +131,7 @@ export default function VouchersContent() {
 			</div>
 
 			{error ? <p className="text-sm text-destructive">{error.message}</p> : null}
+			{productsError ? <p className="text-sm text-destructive">{productsError.message}</p> : null}
 
 			<div className="overflow-hidden rounded-md border">
 				<Table>
@@ -138,7 +141,7 @@ export default function VouchersContent() {
 							<TableHead>Statut</TableHead>
 							<TableHead>Destinataire</TableHead>
 							<TableHead>Acheteur</TableHead>
-							<TableHead>Commande</TableHead>
+							<TableHead>Produit</TableHead>
 							<TableHead>Créé le</TableHead>
 							<TableHead>Expire le</TableHead>
 							<TableHead>Utilisé le</TableHead>
@@ -148,7 +151,12 @@ export default function VouchersContent() {
 					<TableBody key={`${status}-${search}-${page}-${perPage}`}>
 						{vouchers && vouchers.length > 0 ? (
 							vouchers.map((voucher) => (
-								<VoucherRow key={voucher.id} voucher={voucher} onUpdated={() => void mutate()} />
+								<VoucherRow
+									key={voucher.id}
+									voucher={voucher}
+									productLabel={productLabel(voucher.product_id, productNames, productsLoading)}
+									onUpdated={() => void mutate()}
+								/>
 							))
 						) : (
 							<TableStatusRow colSpan={9} isLoading={isLoading} emptyMessage="Aucun bon trouvé" />
@@ -222,7 +230,23 @@ export default function VouchersContent() {
 	);
 }
 
-function VoucherRow({ voucher, onUpdated }: { voucher: Voucher; onUpdated?: () => void }) {
+function productLabel(productId: number, productNames: Map<number, string>, productsLoading: boolean) {
+	if (productId <= 0) return "—";
+	const name = productNames.get(productId);
+	if (name) return name;
+	if (productsLoading) return "—";
+	return `Produit #${productId}`;
+}
+
+function VoucherRow({
+	voucher,
+	productLabel,
+	onUpdated,
+}: {
+	voucher: Voucher;
+	productLabel: string;
+	onUpdated?: () => void;
+}) {
 	return (
 		<TableRow>
 			<TableCell className="font-mono font-medium">{voucher.code}</TableCell>
@@ -236,7 +260,7 @@ function VoucherRow({ voucher, onUpdated }: { voucher: Voucher; onUpdated?: () =
 				</div>
 			</TableCell>
 			<TableCell className="max-w-[200px] truncate">{voucher.buyer_email || "—"}</TableCell>
-			<TableCell className="tabular-nums">{voucher.order_id > 0 ? `#${voucher.order_id}` : "—"}</TableCell>
+			<TableCell className="max-w-[220px] truncate">{productLabel}</TableCell>
 			<TableCell className="whitespace-nowrap text-sm">{formatDateTime(voucher.created_at)}</TableCell>
 			<TableCell className="whitespace-nowrap text-sm">{formatDateTime(voucher.expires_at)}</TableCell>
 			<TableCell className="whitespace-nowrap text-sm">{formatDateTime(voucher.redeemed_at)}</TableCell>
