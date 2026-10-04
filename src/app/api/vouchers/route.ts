@@ -15,6 +15,13 @@ const CREATE_VOUCHER_SCHEMA = z.object({
 });
 
 const VALID_STATUSES = new Set<VoucherStatus>(["sent", "booked", "redeemed", "expired", "cancelled"]);
+const DATE_PARAM = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseDateParam(value: string): string {
+	if (!DATE_PARAM.test(value)) return "";
+	const date = new Date(`${value}T00:00:00`);
+	return Number.isNaN(date.getTime()) ? "" : value;
+}
 
 export async function GET(req: NextRequest) {
 	const session = await auth.api.getSession({ headers: req.headers });
@@ -23,6 +30,9 @@ export async function GET(req: NextRequest) {
 	const { searchParams } = req.nextUrl;
 	const statusParam = searchParams.get("status") ?? "";
 	const search = searchParams.get("search") ?? "";
+	const productIdParam = Number(searchParams.get("product_id") ?? "0");
+	const expiresFrom = parseDateParam(searchParams.get("expires_from") ?? "");
+	const expiresTo = parseDateParam(searchParams.get("expires_to") ?? "");
 	const pageParam = Number(searchParams.get("page") ?? "1");
 	const perPageParam = Number(searchParams.get("per_page") ?? "20");
 
@@ -35,11 +45,23 @@ export async function GET(req: NextRequest) {
 	if (!Number.isFinite(perPageParam) || perPageParam < 1 || perPageParam > 100) {
 		return NextResponse.json({ error: "per_page invalide" }, { status: 400 });
 	}
+	if (!Number.isFinite(productIdParam) || productIdParam < 0 || !Number.isInteger(productIdParam)) {
+		return NextResponse.json({ error: "product_id invalide" }, { status: 400 });
+	}
+	if ((searchParams.get("expires_from") ?? "") !== "" && !expiresFrom) {
+		return NextResponse.json({ error: "expires_from invalide" }, { status: 400 });
+	}
+	if ((searchParams.get("expires_to") ?? "") !== "" && !expiresTo) {
+		return NextResponse.json({ error: "expires_to invalide" }, { status: 400 });
+	}
 
 	try {
 		const data = await fetchVouchers({
 			status: statusParam as VoucherStatus | "",
 			search,
+			product_id: productIdParam > 0 ? productIdParam : undefined,
+			expires_from: expiresFrom || undefined,
+			expires_to: expiresTo || undefined,
 			page: pageParam,
 			per_page: perPageParam,
 		});

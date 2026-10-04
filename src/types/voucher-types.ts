@@ -29,6 +29,9 @@ export type VouchersResponse = {
 export type VouchersQuery = {
 	status?: VoucherStatus | "";
 	search?: string;
+	product_id?: number;
+	expires_from?: string;
+	expires_to?: string;
 	page?: number;
 	per_page?: number;
 };

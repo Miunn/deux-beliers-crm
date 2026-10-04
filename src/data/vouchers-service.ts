@@ -79,6 +79,9 @@ export async function fetchVouchers(query: VouchersQuery = {}): Promise<Vouchers
 
 	if (query.status) url.searchParams.set("status", query.status);
 	if (query.search) url.searchParams.set("search", query.search);
+	if (query.product_id && query.product_id > 0) url.searchParams.set("product_id", String(query.product_id));
+	if (query.expires_from) url.searchParams.set("expires_from", query.expires_from);
+	if (query.expires_to) url.searchParams.set("expires_to", query.expires_to);
 	url.searchParams.set("page", String(Math.max(1, query.page ?? 1)));
 	url.searchParams.set("per_page", String(Math.min(100, Math.max(1, query.per_page ?? 20))));
 

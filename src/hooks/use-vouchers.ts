@@ -5,6 +5,9 @@ function buildVouchersUrl(query: VouchersQuery): string {
 	const params = new URLSearchParams();
 	if (query.status) params.set("status", query.status);
 	if (query.search) params.set("search", query.search);
+	if (query.product_id && query.product_id > 0) params.set("product_id", String(query.product_id));
+	if (query.expires_from) params.set("expires_from", query.expires_from);
+	if (query.expires_to) params.set("expires_to", query.expires_to);
 	params.set("page", String(query.page ?? 1));
 	params.set("per_page", String(query.per_page ?? 20));
 	return `/api/vouchers?${params.toString()}`;

@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type SetStateAction } from "react";
+import { format } from "date-fns";
 import {
+	ChevronDownIcon,
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 	SearchIcon,
 } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 import { useVoucherProducts, useVouchers } from "@/hooks/use-vouchers";
 import type { Voucher, VoucherStatus } from "@/types/voucher-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import RangeCalendarPresets from "@/components/ui/range-calendar-presets";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableStatusRow } from "@/components/ui/table-status-row";
@@ -30,6 +35,11 @@ const STATUS_OPTIONS: { value: VoucherStatus | "all"; label: string }[] = [
 	{ value: "expired", label: "Expiré" },
 	{ value: "cancelled", label: "Annulé" },
 ];
+
+function formatDateParam(date: Date | undefined): string | undefined {
+	if (!date) return undefined;
+	return format(date, "yyyy-MM-dd");
+}
 
 function formatDateTime(value: string | null) {
 	if (!value) return "—";
@@ -55,6 +65,8 @@ function statusBadgeClassName(status: VoucherStatus) {
 
 export default function VouchersContent() {
 	const [status, setStatus] = useState<VoucherStatus | "all">("all");
+	const [productId, setProductId] = useState<number>(0);
+	const [expiresRange, setExpiresRange] = useState<DateRange | undefined>(undefined);
 	const [searchInput, setSearchInput] = useState("");
 	const [search, setSearch] = useState("");
 	const [page, setPage] = useState(1);
@@ -68,9 +80,15 @@ export default function VouchersContent() {
 		return () => window.clearTimeout(timer);
 	}, [searchInput]);
 
+	const expiresFrom = formatDateParam(expiresRange?.from);
+	const expiresTo = formatDateParam(expiresRange?.to);
+
 	const { vouchers, total, totalPages, error, isLoading, mutate } = useVouchers({
 		status: status === "all" ? "" : status,
 		search,
+		product_id: productId > 0 ? productId : undefined,
+		expires_from: expiresFrom,
+		expires_to: expiresTo,
 		page,
 		per_page: perPage,
 	});
@@ -79,6 +97,16 @@ export default function VouchersContent() {
 
 	const handleStatusChange = (value: string) => {
 		setStatus(value as VoucherStatus | "all");
+		setPage(1);
+	};
+
+	const handleProductChange = (value: string) => {
+		setProductId(Number(value));
+		setPage(1);
+	};
+
+	const handleExpiresRangeChange = (value: SetStateAction<DateRange | undefined>) => {
+		setExpiresRange(value);
 		setPage(1);
 	};
 
@@ -93,7 +121,7 @@ export default function VouchersContent() {
 				Bons de visite brasserie ({total} bon{total > 1 ? "s" : ""}), créés via WooCommerce ou manuellement.
 			</p>
 
-			<div className="flex items-center gap-3">
+			<div className="flex flex-wrap items-center gap-3">
 				<div className="relative min-w-[200px] max-w-xs flex-1">
 					<Input
 						className="ps-9"
@@ -119,6 +147,38 @@ export default function VouchersContent() {
 						))}
 					</SelectContent>
 				</Select>
+
+				<Select
+					value={String(productId)}
+					onValueChange={handleProductChange}
+					disabled={productsLoading}
+				>
+					<SelectTrigger className="w-[220px] shrink-0">
+						<SelectValue placeholder="Produit" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="0">Tous les produits</SelectItem>
+						{products.map((product) => (
+							<SelectItem key={product.id} value={String(product.id)}>
+								{product.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button variant="outline" className="min-w-56 justify-between font-normal">
+							{expiresRange?.from
+								? `${expiresRange.from.toLocaleDateString("fr-FR")}-${expiresRange.to?.toLocaleDateString("fr-FR") ?? ""}`
+								: "Date d'expiration"}
+							<ChevronDownIcon />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="w-auto overflow-hidden p-0" align="start">
+						<RangeCalendarPresets date={expiresRange} setDate={handleExpiresRangeChange} />
+					</PopoverContent>
+				</Popover>
 
 				<div className="ms-auto shrink-0">
 					<CreateVoucherDialog
@@ -148,7 +208,7 @@ export default function VouchersContent() {
 							<TableHead className="text-right">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
-					<TableBody key={`${status}-${search}-${page}-${perPage}`}>
+					<TableBody key={`${status}-${productId}-${expiresFrom ?? ""}-${expiresTo ?? ""}-${search}-${page}-${perPage}`}>
 						{vouchers && vouchers.length > 0 ? (
 							vouchers.map((voucher) => (
 								<VoucherRow
