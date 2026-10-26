@@ -125,7 +125,7 @@ export default function VouchersContent() {
 				<div className="relative min-w-[200px] max-w-xs flex-1">
 					<Input
 						className="ps-9"
-						placeholder="Code, e-mail ou n° commande"
+						placeholder="Code, e-mail, téléphone ou n° commande"
 						type="search"
 						value={searchInput}
 						onChange={(event) => setSearchInput(event.target.value)}
@@ -317,6 +317,9 @@ function VoucherRow({
 				<div className="min-w-0">
 					<p className="truncate">{voucher.recipient_name || "—"}</p>
 					<p className="truncate text-xs text-muted-foreground">{voucher.recipient_email}</p>
+					{voucher.phone ? (
+						<p className="truncate text-xs text-muted-foreground">{voucher.phone}</p>
+					) : null}
 				</div>
 			</TableCell>
 			<TableCell className="max-w-[200px] truncate">{voucher.buyer_email || "—"}</TableCell>

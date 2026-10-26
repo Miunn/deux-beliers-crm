@@ -10,6 +10,11 @@ const CREATE_VOUCHER_SCHEMA = z.object({
 	code: z.string().optional(),
 	message: z.string().optional(),
 	buyer_email: z.union([z.literal(""), z.email("Adresse e-mail invalide")]).optional(),
+	phone: z
+		.string()
+		.max(40, "Téléphone trop long (40 caractères maximum)")
+		.regex(/^[0-9+\s().\-]*$/, "Téléphone invalide")
+		.optional(),
 	product_id: z.number().int().min(0).optional(),
 	send_email: z.boolean().optional(),
 });
@@ -98,6 +103,7 @@ export async function POST(req: NextRequest) {
 		code: parsed.data.code,
 		message: parsed.data.message,
 		buyer_email: parsed.data.buyer_email || undefined,
+		phone: parsed.data.phone?.trim() ?? "",
 		product_id: parsed.data.product_id,
 		send_email: parsed.data.send_email ?? false,
 	};

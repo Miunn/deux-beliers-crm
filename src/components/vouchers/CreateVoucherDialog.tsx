@@ -30,6 +30,11 @@ const CREATE_VOUCHER_FORM_SCHEMA = z.object({
 	code: z.string().optional(),
 	product_id: z.number().int().min(0, "ID produit invalide"),
 	buyer_email: z.union([z.literal(""), z.string().email("Adresse e-mail invalide")]).optional(),
+	phone: z
+		.string()
+		.max(40, "Téléphone trop long (40 caractères maximum)")
+		.regex(/^[0-9+\s().\-]*$/, "Caractères autorisés : chiffres, +, espaces, parenthèses, points et tirets")
+		.optional(),
 	message: z.string().optional(),
 	send_email: z.boolean(),
 });
@@ -49,6 +54,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 			code: "",
 			product_id: 0,
 			buyer_email: "",
+			phone: "",
 			message: "",
 			send_email: false,
 		},
@@ -73,6 +79,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 					code: values.code?.trim() ?? "",
 					product_id: values.product_id,
 					...(values.buyer_email ? { buyer_email: values.buyer_email } : {}),
+					phone: values.phone?.trim() ?? "",
 					message: values.message ?? "",
 					send_email: values.send_email,
 				}),
@@ -165,6 +172,20 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 									<FormLabel>Nom du destinataire</FormLabel>
 									<FormControl>
 										<Input placeholder="Marie Dupont" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="phone"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Téléphone</FormLabel>
+									<FormControl>
+										<Input type="tel" placeholder="06 12 34 56 78" autoComplete="tel" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>

@@ -38,6 +38,10 @@ const EDIT_VOUCHER_FORM_SCHEMA = z.object({
 	code: z.string().min(1, "Code requis"),
 	product_id: z.number().int().min(0, "ID produit invalide"),
 	buyer_email: z.union([z.literal(""), z.string().email("Adresse e-mail invalide")]),
+	phone: z
+		.string()
+		.max(40, "Téléphone trop long (40 caractères maximum)")
+		.regex(/^[0-9+\s().\-]*$/, "Caractères autorisés : chiffres, +, espaces, parenthèses, points et tirets"),
 	message: z.string(),
 	status: z.enum(["sent", "booked", "redeemed", "expired", "cancelled"]),
 	expires_at: z.string(),
@@ -64,6 +68,7 @@ function valuesFromVoucher(voucher: Voucher): EditVoucherFormValues {
 		code: voucher.code,
 		product_id: voucher.product_id,
 		buyer_email: voucher.buyer_email ?? "",
+		phone: voucher.phone ?? "",
 		message: voucher.message ?? "",
 		status: voucher.status,
 		expires_at: toDatetimeLocal(voucher.expires_at),
@@ -82,6 +87,7 @@ function buildUpdatePayload(values: EditVoucherFormValues, voucher: Voucher) {
 	if (values.code !== voucher.code) payload.code = values.code;
 	if (values.product_id !== voucher.product_id) payload.product_id = values.product_id;
 	if (values.buyer_email !== (voucher.buyer_email ?? "")) payload.buyer_email = values.buyer_email;
+	if (values.phone.trim() !== (voucher.phone ?? "")) payload.phone = values.phone.trim();
 	if (values.message !== (voucher.message ?? "")) payload.message = values.message;
 	if (values.status !== voucher.status) payload.status = values.status;
 	if (nextExpiresAt !== currentExpiresAt) payload.expires_at = nextExpiresAt;
@@ -208,6 +214,20 @@ export default function EditVoucherDialog({ voucher, onUpdated }: { voucher: Vou
 										<FormLabel>Nom du destinataire</FormLabel>
 										<FormControl>
 											<Input {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="phone"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Téléphone</FormLabel>
+										<FormControl>
+											<Input type="tel" autoComplete="tel" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>

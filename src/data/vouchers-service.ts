@@ -174,6 +174,7 @@ export async function createVoucher(
 			code: input.code ?? "",
 			message: input.message ?? "",
 			...(input.buyer_email?.trim() ? { buyer_email: input.buyer_email.trim() } : {}),
+			phone: input.phone?.trim() ?? "",
 			product_id: input.product_id ?? 0,
 			send_email: input.send_email ?? false,
 		}),

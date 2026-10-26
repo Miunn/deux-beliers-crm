@@ -7,6 +7,7 @@ export type Voucher = {
 	status_label: string;
 	recipient_email: string;
 	recipient_name: string;
+	phone: string;
 	buyer_email: string;
 	message: string | null;
 	order_id: number;
@@ -42,6 +43,7 @@ export type CreateVoucherInput = {
 	code?: string;
 	message?: string;
 	buyer_email?: string;
+	phone?: string;
 	product_id?: number;
 	send_email?: boolean;
 };
@@ -68,6 +70,7 @@ export type UpdateVoucherInput = {
 	recipient_name?: string;
 	name?: string;
 	buyer_email?: string;
+	phone?: string | null;
 	message?: string;
 	product_id?: number;
 	code?: string;
