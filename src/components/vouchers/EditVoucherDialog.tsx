@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoucherProducts } from "@/hooks/use-vouchers";
 import type { UpdateVoucherResponse, Voucher, VoucherStatus } from "@/types/voucher-types";
+import VoucherFormSection from "./VoucherFormSection";
 import VoucherProductSelect from "./VoucherProductSelect";
 
 const STATUS_OPTIONS: { value: VoucherStatus; label: string }[] = [
@@ -38,6 +39,10 @@ const EDIT_VOUCHER_FORM_SCHEMA = z.object({
 	code: z.string().min(1, "Code requis"),
 	product_id: z.number().int().min(0, "ID produit invalide"),
 	buyer_email: z.union([z.literal(""), z.string().email("Adresse e-mail invalide")]),
+	buyer_phone: z
+		.string()
+		.max(40, "Téléphone trop long (40 caractères maximum)")
+		.regex(/^[0-9+\s().\-]*$/, "Caractères autorisés : chiffres, +, espaces, parenthèses, points et tirets"),
 	phone: z
 		.string()
 		.max(40, "Téléphone trop long (40 caractères maximum)")
@@ -68,6 +73,7 @@ function valuesFromVoucher(voucher: Voucher): EditVoucherFormValues {
 		code: voucher.code,
 		product_id: voucher.product_id,
 		buyer_email: voucher.buyer_email ?? "",
+		buyer_phone: voucher.buyer_phone ?? "",
 		phone: voucher.phone ?? "",
 		message: voucher.message ?? "",
 		status: voucher.status,
@@ -87,6 +93,7 @@ function buildUpdatePayload(values: EditVoucherFormValues, voucher: Voucher) {
 	if (values.code !== voucher.code) payload.code = values.code;
 	if (values.product_id !== voucher.product_id) payload.product_id = values.product_id;
 	if (values.buyer_email !== (voucher.buyer_email ?? "")) payload.buyer_email = values.buyer_email;
+	if (values.buyer_phone.trim() !== (voucher.buyer_phone ?? "")) payload.buyer_phone = values.buyer_phone.trim();
 	if (values.phone.trim() !== (voucher.phone ?? "")) payload.phone = values.phone.trim();
 	if (values.message !== (voucher.message ?? "")) payload.message = values.message;
 	if (values.status !== voucher.status) payload.status = values.status;
@@ -168,7 +175,7 @@ export default function EditVoucherDialog({ voucher, onUpdated }: { voucher: Vou
 			</Tooltip>
 
 			<Dialog open={open} onOpenChange={handleOpenChange}>
-				<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+				<DialogContent className="max-h-[90vh] gap-3 overflow-y-auto py-4 sm:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>Modifier le bon</DialogTitle>
 						<DialogDescription>
@@ -177,196 +184,223 @@ export default function EditVoucherDialog({ voucher, onUpdated }: { voucher: Vou
 					</DialogHeader>
 
 					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<FormField
-								control={form.control}
-								name="buyer_email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>E-mail de l&apos;acheteur (PDF envoyé à cette adresse)</FormLabel>
-										<FormControl>
-											<Input type="email" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+							<div className="grid gap-3 sm:grid-cols-2">
+								<VoucherFormSection title="Acheteur">
+									<FormField
+										control={form.control}
+										name="buyer_email"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>E-mail</FormLabel>
+												<FormControl>
+													<Input type="email" {...field} />
+												</FormControl>
+												<FormDescription>E-mail où envoyer le PDF du bon.</FormDescription>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 
-							<FormField
-								control={form.control}
-								name="recipient_email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>E-mail du destinataire</FormLabel>
-										<FormControl>
-											<Input type="email" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+									<FormField
+										control={form.control}
+										name="buyer_phone"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Téléphone</FormLabel>
+												<FormControl>
+													<Input type="tel" autoComplete="tel" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</VoucherFormSection>
 
-							<FormField
-								control={form.control}
-								name="recipient_name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Nom du destinataire</FormLabel>
-										<FormControl>
-											<Input {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+								<VoucherFormSection title="Destinataire">
+									<FormField
+										control={form.control}
+										name="recipient_email"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>E-mail</FormLabel>
+												<FormControl>
+													<Input type="email" {...field} />
+												</FormControl>
+												<FormDescription>Pour la prise de rendez-vous.</FormDescription>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 
-							<FormField
-								control={form.control}
-								name="phone"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Téléphone</FormLabel>
-										<FormControl>
-											<Input type="tel" autoComplete="tel" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+									<FormField
+										control={form.control}
+										name="phone"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Téléphone</FormLabel>
+												<FormControl>
+													<Input type="tel" autoComplete="tel" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</VoucherFormSection>
 
-							<FormField
-								control={form.control}
-								name="code"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Code</FormLabel>
-										<FormControl>
-											<Input {...field} />
-										</FormControl>
-										<FormDescription>Doit rester unique.</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="status"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Statut</FormLabel>
-										<Select value={field.value} onValueChange={field.onChange}>
-											<FormControl>
-												<SelectTrigger className="w-full">
-													<SelectValue />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												{STATUS_OPTIONS.map((option) => (
-													<SelectItem key={option.value} value={option.value}>
-														{option.label}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="product_id"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Produit</FormLabel>
-										<VoucherProductSelect
-											value={field.value}
-											onChange={field.onChange}
-											products={productOptions}
-											isLoading={productsLoading}
+								<VoucherFormSection title="Bon" className="sm:col-span-2">
+									<div className="grid gap-3 sm:grid-cols-2">
+										<FormField
+											control={form.control}
+											name="recipient_name"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Nom à utiliser</FormLabel>
+													<FormControl>
+														<Input {...field} />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
 										/>
-										{productsError ? (
-											<p className="text-sm text-destructive">{productsError.message}</p>
-										) : null}
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
 
-							<FormField
-								control={form.control}
-								name="message"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Message</FormLabel>
-										<FormControl>
-											<Textarea rows={3} {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+										<FormField
+											control={form.control}
+											name="product_id"
+											render={({ field }) => (
+												<FormItem className="min-w-0">
+													<FormLabel>Produit</FormLabel>
+													<VoucherProductSelect
+														value={field.value}
+														onChange={field.onChange}
+														products={productOptions}
+														isLoading={productsLoading}
+													/>
+													{productsError ? (
+														<p className="text-sm text-destructive">
+															{productsError.message}
+														</p>
+													) : null}
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-							<FormField
-								control={form.control}
-								name="expires_at"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Expire le</FormLabel>
-										<FormControl>
-											<Input type="datetime-local" {...field} />
-										</FormControl>
-										<FormDescription>
-											Si la date est passée, le bon sera marqué comme expiré. Si elle est future
-											et que le bon était expiré, il redevient non utilisé.
-										</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+										<FormField
+											control={form.control}
+											name="message"
+											render={({ field }) => (
+												<FormItem className="sm:col-span-2">
+													<FormLabel>Message</FormLabel>
+													<FormControl>
+														<Textarea rows={3} {...field} />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-							<div className="grid grid-cols-2 gap-3">
-								<FormField
-									control={form.control}
-									name="order_id"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>N° commande</FormLabel>
-											<FormControl>
-												<Input
-													type="number"
-													min={0}
-													value={field.value}
-													onChange={(event) =>
-														field.onChange(Number(event.target.value) || 0)
-													}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="order_item_id"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>N° ligne</FormLabel>
-											<FormControl>
-												<Input
-													type="number"
-													min={0}
-													value={field.value}
-													onChange={(event) =>
-														field.onChange(Number(event.target.value) || 0)
-													}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+										<FormField
+											control={form.control}
+											name="code"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Code</FormLabel>
+													<FormControl>
+														<Input {...field} />
+													</FormControl>
+													<FormDescription>Doit rester unique.</FormDescription>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="status"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Statut</FormLabel>
+													<Select value={field.value} onValueChange={field.onChange}>
+														<FormControl>
+															<SelectTrigger className="w-full">
+																<SelectValue />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{STATUS_OPTIONS.map((option) => (
+																<SelectItem key={option.value} value={option.value}>
+																	{option.label}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="expires_at"
+											render={({ field }) => (
+												<FormItem className="col-span-2">
+													<FormLabel>Expire le</FormLabel>
+													<FormControl>
+														<Input type="datetime-local" {...field} />
+													</FormControl>
+													<FormDescription>
+														Si la date est passée, le bon sera marqué comme expiré. Si elle
+														est future et que le bon était expiré, il redevient non utilisé.
+													</FormDescription>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="order_id"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>N° commande</FormLabel>
+													<FormControl>
+														<Input
+															type="number"
+															min={0}
+															value={field.value}
+															onChange={(event) =>
+																field.onChange(Number(event.target.value) || 0)
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="order_item_id"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>N° ligne</FormLabel>
+													<FormControl>
+														<Input
+															type="number"
+															min={0}
+															value={field.value}
+															onChange={(event) =>
+																field.onChange(Number(event.target.value) || 0)
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+								</VoucherFormSection>
 							</div>
 
 							<DialogFooter>

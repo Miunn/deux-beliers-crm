@@ -13,6 +13,15 @@ const UPDATE_VOUCHER_SCHEMA = z
 		recipient_name: z.string().optional(),
 		name: z.string().optional(),
 		buyer_email: z.union([z.literal(""), z.email("Adresse e-mail de l'acheteur invalide")]).optional(),
+		buyer_phone: z
+			.union([
+				z
+					.string()
+					.max(40, "Téléphone trop long (40 caractères maximum)")
+					.regex(/^[0-9+\s().\-]*$/, "Téléphone invalide"),
+				z.null(),
+			])
+			.optional(),
 		phone: z
 			.union([
 				z

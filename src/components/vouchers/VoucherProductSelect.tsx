@@ -29,17 +29,30 @@ export default function VoucherProductSelect({
 		);
 	}
 
+	const selectedName = products.find((product) => product.id === value)?.name;
+
 	return (
 		<Select value={String(value)} onValueChange={(next) => onChange(Number(next))}>
 			<FormControl>
-				<SelectTrigger className="w-full">
+				<SelectTrigger
+					title={selectedName}
+					className="w-full min-w-0 overflow-hidden *:data-[slot=select-value]:block! *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:truncate"
+				>
 					<SelectValue placeholder="Aucun" />
 				</SelectTrigger>
 			</FormControl>
-			<SelectContent>
+			<SelectContent
+				align="start"
+				className="w-(--radix-select-trigger-width) max-w-(--radix-select-trigger-width)"
+			>
 				<SelectItem value="0">Aucun</SelectItem>
 				{products.map((product) => (
-					<SelectItem key={product.id} value={String(product.id)}>
+					<SelectItem
+						key={product.id}
+						value={String(product.id)}
+						title={product.name}
+						className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
+					>
 						{product.name}
 					</SelectItem>
 				))}

@@ -322,7 +322,12 @@ function VoucherRow({
 					) : null}
 				</div>
 			</TableCell>
-			<TableCell className="max-w-[200px] truncate">{voucher.buyer_email || "—"}</TableCell>
+			<TableCell className="max-w-[200px]">
+				<p className="truncate">{voucher.buyer_email || "—"}</p>
+				{voucher.buyer_phone ? (
+					<p className="truncate text-xs text-muted-foreground">{voucher.buyer_phone}</p>
+				) : null}
+			</TableCell>
 			<TableCell className="max-w-[220px] truncate">{productLabel}</TableCell>
 			<TableCell className="whitespace-nowrap text-sm">{formatDateTime(voucher.created_at)}</TableCell>
 			<TableCell className="whitespace-nowrap text-sm">{formatDateTime(voucher.expires_at)}</TableCell>

@@ -6,7 +6,13 @@ export type CHANGELOG_ENTRY = {
 };
 
 export const CHANGELOG: CHANGELOG_ENTRY[] = [
-  {
+	{
+    version: "v1.2.2",
+    date: "29/10/2026",
+    description: "Ajustement du formulaire des bons",
+    lines: [{ type: "changed", description: "Ajustement visuel du formulaire des bons cadeaux et ajout des nouveaux champs" }],
+  },
+	{
     version: "v1.2.1",
     date: "04/10/2026",
     description: "Ajout de filtres sur les bon cadeaux",

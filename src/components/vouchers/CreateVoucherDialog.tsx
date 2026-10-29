@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useVoucherProducts } from "@/hooks/use-vouchers";
 import type { CreateVoucherResponse } from "@/types/voucher-types";
+import VoucherFormSection from "./VoucherFormSection";
 import VoucherProductSelect from "./VoucherProductSelect";
 
 const CREATE_VOUCHER_FORM_SCHEMA = z.object({
@@ -30,6 +31,11 @@ const CREATE_VOUCHER_FORM_SCHEMA = z.object({
 	code: z.string().optional(),
 	product_id: z.number().int().min(0, "ID produit invalide"),
 	buyer_email: z.union([z.literal(""), z.string().email("Adresse e-mail invalide")]).optional(),
+	buyer_phone: z
+		.string()
+		.max(40, "Téléphone trop long (40 caractères maximum)")
+		.regex(/^[0-9+\s().\-]*$/, "Caractères autorisés : chiffres, +, espaces, parenthèses, points et tirets")
+		.optional(),
 	phone: z
 		.string()
 		.max(40, "Téléphone trop long (40 caractères maximum)")
@@ -54,6 +60,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 			code: "",
 			product_id: 0,
 			buyer_email: "",
+			buyer_phone: "",
 			phone: "",
 			message: "",
 			send_email: false,
@@ -79,6 +86,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 					code: values.code?.trim() ?? "",
 					product_id: values.product_id,
 					...(values.buyer_email ? { buyer_email: values.buyer_email } : {}),
+					buyer_phone: values.buyer_phone?.trim() ?? "",
 					phone: values.phone?.trim() ?? "",
 					message: values.message ?? "",
 					send_email: values.send_email,
@@ -120,7 +128,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 					Créer un bon
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-lg">
+			<DialogContent className="max-h-[90vh] gap-3 overflow-y-auto py-4 sm:max-w-3xl">
 				<DialogHeader>
 					<DialogTitle>Créer un bon de visite</DialogTitle>
 					<DialogDescription>
@@ -130,123 +138,152 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 				</DialogHeader>
 
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-						<FormField
-							control={form.control}
-							name="buyer_email"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>E-mail de l&apos;acheteur (PDF envoyé à cette adresse)</FormLabel>
-									<FormControl>
-										<Input type="email" placeholder="jean@example.com" {...field} />
-									</FormControl>
-									<FormDescription>
-										E-mail où envoyer le PDF. Laisser vide pour utiliser l&apos;e-mail du
-										destinataire.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>E-mail du destinataire</FormLabel>
-									<FormControl>
-										<Input type="email" placeholder="marie@example.com" {...field} />
-									</FormControl>
-									<FormDescription>Pour la prise de rendez-vous.</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nom du destinataire</FormLabel>
-									<FormControl>
-										<Input placeholder="Marie Dupont" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="phone"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Téléphone</FormLabel>
-									<FormControl>
-										<Input type="tel" placeholder="06 12 34 56 78" autoComplete="tel" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="code"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Code</FormLabel>
-									<FormControl>
-										<Input placeholder="DB-XXXX" {...field} />
-									</FormControl>
-									<FormDescription>
-										Optionnel. Laisser vide pour générer un code automatiquement. Doit être unique.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="product_id"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Produit</FormLabel>
-									<VoucherProductSelect
-										value={field.value}
-										onChange={field.onChange}
-										products={products}
-										isLoading={productsLoading}
-									/>
-									{productsError ? (
-										<p className="text-sm text-destructive">{productsError.message}</p>
-									) : (
-										<FormDescription>
-											Produits voucher WooCommerce. Aucun si le bon n&apos;est pas lié à un
-											produit.
-										</FormDescription>
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+						<div className="grid gap-3 sm:grid-cols-2">
+							<VoucherFormSection title="Acheteur">
+								<FormField
+									control={form.control}
+									name="buyer_email"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>E-mail</FormLabel>
+											<FormControl>
+												<Input type="email" placeholder="jean@example.com" {...field} />
+											</FormControl>
+											<FormDescription>
+												E-mail où envoyer le PDF.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
 									)}
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+								/>
 
-						<FormField
-							control={form.control}
-							name="message"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Message</FormLabel>
-									<FormControl>
-										<Textarea placeholder="Joyeux anniversaire" rows={3} {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+								<FormField
+									control={form.control}
+									name="buyer_phone"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Téléphone</FormLabel>
+											<FormControl>
+												<Input
+													type="tel"
+													placeholder="06 12 34 56 78"
+													autoComplete="tel"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</VoucherFormSection>
+
+							<VoucherFormSection title="Destinataire">
+								<FormField
+									control={form.control}
+									name="email"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>E-mail</FormLabel>
+											<FormControl>
+												<Input type="email" placeholder="marie@example.com" {...field} />
+											</FormControl>
+											<FormDescription>Pour la prise de rendez-vous.</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="phone"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Téléphone</FormLabel>
+											<FormControl>
+												<Input
+													type="tel"
+													placeholder="06 98 76 54 32"
+													autoComplete="tel"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</VoucherFormSection>
+
+							<VoucherFormSection title="Bon cadeau" className="sm:col-span-2">
+								<div className="grid gap-3 sm:grid-cols-2">
+									<FormField
+										control={form.control}
+										name="name"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Nom à utiliser</FormLabel>
+												<FormControl>
+													<Input placeholder="Marie Dupont" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="product_id"
+										render={({ field }) => (
+											<FormItem className="min-w-0">
+												<FormLabel>Produit</FormLabel>
+												<VoucherProductSelect
+													value={field.value}
+													onChange={field.onChange}
+													products={products}
+													isLoading={productsLoading}
+												/>
+												{productsError ? (
+													<p className="text-sm text-destructive">{productsError.message}</p>
+												) : null}
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="message"
+										render={({ field }) => (
+											<FormItem className="sm:col-span-2">
+												<FormLabel>Message</FormLabel>
+												<FormControl>
+													<Textarea placeholder="Joyeux anniversaire" rows={3} {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="code"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Code</FormLabel>
+												<FormControl>
+													<Input placeholder="DB-XXXX" {...field} />
+												</FormControl>
+												<FormDescription>
+													Optionnel. Laisser vide pour générer un code automatiquement. Doit
+													être unique.
+												</FormDescription>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+							</VoucherFormSection>
+						</div>
 
 						<FormField
 							control={form.control}
@@ -263,7 +300,7 @@ export default function CreateVoucherDialog({ onCreated }: { onCreated?: () => v
 										<div className="space-y-1 leading-none">
 											<FormLabel className="font-normal">Envoyer l&apos;e-mail du bon</FormLabel>
 											<FormDescription>
-												Décochez pour créer le bon sans envoyer le PDF par e-mail.
+												Cocher pour créer le bon et envoyer le PDF par e-mail.
 											</FormDescription>
 										</div>
 									</div>
